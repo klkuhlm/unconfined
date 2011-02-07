@@ -1,0 +1,56 @@
+function s = run_mod(params0,times)
+fid = fopen('modified.txt', 'w');
+%format long eng;
+Nk = 8; %Number of terms in Laplace inversion Fourier series
+N=0; %First zero of BesselJ0 at which to start acceleration
+M=10; %Number of zeros of BesselJ0 to use in Hankel transform inversion
+J0=load('besJ0zeros.dat');
+estimates = exp(params0)
+
+Kr = estimates(1); %Vertical hydraulic conductivity
+kappa = estimates(2); %Horizontal hydraulic conductivity
+Ss = estimates(3); %Specific storage
+Sy = estimates(4); %Specific yield
+
+Q = 320.0; %pumping rate in gpm
+rw = 0.0254e-16; %Wellbore radius
+b = 52.669; %Saturated thickness
+d = 4.0234; %Depth to top of test interval
+l = 18.288; %Depth to bottom of test interval
+z = 34.564; %Vertical position of observation point
+r = 6.5837; %Radial position of observation point
+Lc = b;
+
+bD = b/Lc;
+dD = d/Lc;
+lD = l/Lc;
+rDw = rw/Lc;
+rD = r/Lc;
+zD = z/Lc;
+
+alpha = Kr/Ss;
+sig = Sy/(Lc*Ss);
+Tc = (Lc^2)/alpha;
+Hc = Q*6.309e-5/(4*pi*b*Kr);
+
+params(1) = kappa;
+params(2) = sig;
+params(3) = bD;
+params(4) = dD;
+params(5) = lD;
+params(6) = rDw;
+params(7)= rDw^2/(2*(l-d)*Ss);
+params(8) = 0.0; %\beta_D, the linearization parameter of Malama (2011)
+                 %\beta_D = 0 corresponds to Neuman (1972, 1974)
+
+tD = 60*times/Tc;
+Ntimes = length(tD);
+sD = zeros(1,Ntimes);
+for n=1:Ntimes
+    sD(n) = dehoog2(tD(n),rD,zD,1.2*tD(n),Nk,N,M,J0,params);
+    %sD(n) = lap_invert(N,M,tD(n),rD,zD,J0, params);
+    fprintf(fid, '%e %e\n',tD(n)*Tc/60,Hc*sD(n));
+end
+s = Hc*sD;
+%save('modified.txt', 'times', 's', '-ASCII')
+fclose(fid);
