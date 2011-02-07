@@ -1,31 +1,4 @@
 
-!! this file has _two_ modules in it 
-
-!! ######################################################################
-!! ######################################################################
-
-module shared_data
-  use constants, only : DP
-  use inverse_Laplace_transform, only : INVLT
-  implicit none
-
-  ! variables to pass using modules
-
-  ! parameters to change between calculations
-  real(DP), save :: tsval  ! time - passed through hankel integral to Lap xform
-
-  ! aquifer parameters (secondary - computed from above)
-  real(DP), save :: bD, lD, dD, rDw, CD
-  real(DP), save :: alphaD, gamma, kappa
-  real(DP), save, dimension(2) :: beta
-
-  type(INVLT), save :: lap
-
-end module shared_data
-
-!! ######################################################################
-!! ######################################################################
-
 module utilities
 implicit none
 private
