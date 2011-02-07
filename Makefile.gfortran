@@ -1,0 +1,17 @@
+# -*-Makefile-*-
+
+##################################################
+# flags / settings for latest gfortran compiler
+
+DEBUG = -O0 -g -Wall -Wextra -fbacktrace
+DFLAGS += -frange-check -fcheck=all -finit-real=snan -finit-integer=-99999
+PERF = -O2 -march=native -fwhole-file -fopenmp 
+F90 = gfortran-4.6
+CPP = -cpp
+FREE = -free
+PERFLDFLAGS = ${PERF}
+##################################################
+
+## common things between both compilers go here
+#include Makefile.mpfun
+include Makefile

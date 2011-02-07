@@ -1,0 +1,140 @@
+! this module implements the F.R. de Hoog, J.H. Knight, and A.N. Stokes
+! numerical inverse Laplace transform algorithm.
+! see "An improved method for numerical inversion of Laplace
+!     transforms", SIAM J. Sci. Stat. Comp., 3, 357-366, 1982.
+
+module inverse_Laplace_Transform
+  use constants, only : DP
+  implicit none
+
+  type :: INVLT
+     ! Inverse Laplace Transform parameters
+
+     ! abcissa of convergence, LT tolerance
+     real(DP) :: alpha = -999., tol = -999.
+
+     ! number of Fourier series terms
+     integer :: M = -999
+  end type INVLT
+  
+  private
+  public :: deHoog_invlap, deHoog_pvalues, INVLT
+  
+  interface deHoog_invlap
+     module procedure deHoog_invlap_vect, deHoog_invlap_scalt
+  end interface
+
+contains
+  
+  !! an implementation of the de Hoog et al. method
+  !! assumes proper f(p) have been computed for the p
+  !! required for the vector of t passed to this function
+  !! -- only one log-cycle of time should be passed at once --
+  !! (no error checking done in this regard)
+  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  function deHoog_invLap_vect(t,tee,fp,lap) result(ft)
+    use constants, only : DP, EP, PI
+
+    real(DP), intent(in) :: tee              ! scaling factor (previously T=2*tmax, but potentially adjustable)
+    real(DP), intent(in), dimension(:) :: t   ! vector of times
+    type(INVLT), intent(in) :: lap            ! structure of inputs
+    complex(EP), intent(in), dimension(0:2*lap%M) :: fp
+    real(EP), dimension(size(t)) :: ft        ! output
+
+    complex(EP), dimension(0:2*lap%M,0:lap%M) :: e
+    complex(EP), dimension(0:2*lap%M,1:lap%M) :: q
+    complex(EP), dimension(0:2*lap%M) :: d
+    complex(EP), dimension(-1:2*lap%M,size(t)) :: A,B
+    complex(EP), dimension(size(t)) :: z,brem,rem
+    integer :: r, rq, n, max, nt, M
+    real(EP) :: gamma
+
+    M = lap%M
+    nt = size(t)
+
+    ! there will be problems is fp(:)==0, or any values are NaN
+    if(maxval(abs(fp)) > tiny(1.0_EP) .and. .not. any(isnan(abs(fp)))) then
+
+       ! Re(p) -- this is the de Hoog parameter c
+       gamma = lap%alpha - log(lap%tol)/(2.0*tee)
+
+       ! initialize Q-D table 
+       e(0:2*M,0) = cmplx(0.0,0.0,EP)
+       q(0,1) = fp(1)/(fp(0)/2.0) ! half first term
+       q(1:2*M-1,1) = fp(2:2*M)/fp(1:2*M-1)
+
+       ! rhombus rule for filling in triangular Q-D table
+       do r = 1,M
+          ! start with e, column 1, 0:2*M-2
+          max = 2*(M-r)
+          e(0:max,r) = q(1:max+1,r) - q(0:max,r) + e(1:max+1,r-1)
+          if (r /= M) then
+             ! start with q, column 2, 0:2*M-3
+             rq = r+1
+             max = 2*(M-rq)+1
+             q(0:max,rq) = q(1:max+1,rq-1) * e(1:max+1,rq-1) / e(0:max,rq-1)
+          end if
+       end do
+
+       ! build up continued fraction coefficients
+       d(0) = fp(0)/2.0 ! half first term
+       forall(r = 1:M)
+          d(2*r-1) = -q(0,r) ! even terms
+          d(2*r)   = -e(0,r) ! odd terms
+       end forall
+
+       ! seed A and B vectors for recurrence
+       A(-1,1:nt) = 0.0
+       A(0,1:nt) = d(0)
+       B(-1:0,1:nt) = 1.0
+
+       ! base of the power series
+       z(1:nt) = exp(cmplx(0.0,1.0,EP)*PI*t(:)/tee)
+
+       ! coefficients of Pade approximation
+       ! using recurrence for all but last term
+       do n = 1,2*M-1
+          A(n,:) = A(n-1,:) + d(n)*A(n-2,:)*z(:)
+          B(n,:) = B(n-1,:) + d(n)*B(n-2,:)*z(:)
+       end do
+
+       ! "improved remainder" to continued fraction
+       brem(1:nt) = (1.0 + (d(2*M-1) - d(2*M))*z(:))/2.0
+       rem(1:nt) = -brem*(1.0 - sqrt(1.0 + d(2*M)*z(:)/brem**2))
+
+       ! last term of recurrence using new remainder
+       A(2*M,:) = A(2*M-1,:) + rem*A(2*M-2,:)
+       B(2*M,:) = B(2*M-1,:) + rem*B(2*M-2,:)
+
+       ! diagonal Pade approximation
+       ! F=A/B represents accelerated trapezoid rule
+       ft(1:nt) =  exp(gamma*t(:))/tee * real(A(2*M,:)/B(2*M,:))
+
+    else  !! entire f(p) vector is zero
+       ft = 0.0
+       write(*,*) 'f(t) not computed: '
+    end if
+  end function deHoog_invLap_vect
+
+  function deHoog_invLap_scalt(t,tee,fp,lap) result(ft)
+    use constants, only : DP,EP
+    real(DP), intent(in) ::  t, tee 
+    type(INVLT), intent(in) :: lap
+    complex(EP), intent(in), dimension(0:2*lap%M) :: fp
+    real(EP) :: ft ! output
+    
+    ft = sum(deHoog_invLap_vect([t],tee,fp,lap))
+  end function deHoog_invLap_scalt
+  
+  function deHoog_pvalues(tee,lap) result(p)
+    use constants, only : EP, DP, PIEP
+    type(INVLT), intent(in) :: lap
+    real(DP), intent(in) :: tee
+    complex(EP), dimension(2*lap%M+1) :: p
+    integer :: i
+
+    forall (i=0:2*lap%M)
+       p(i+1) = cmplx(real(lap%alpha,EP) - log(real(lap%tol,EP))/(2.0_EP*tee), PIEP*i/tee, EP)
+    end forall
+  end function deHoog_pvalues
+end module inverse_Laplace_Transform

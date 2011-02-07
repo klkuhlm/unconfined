@@ -1,0 +1,13 @@
+F  F                  	     :: suppress output to screen?, output dimensionless t?
+20.00000000000               :: initial saturated thickness
+1.93D+1  1.90D+1     	     :: l,d; depth to bottom, top of test interval
+2.50D-2  1.30D-2     	     :: rw,rc; wellbore, tubing radius
+5.920582594E-4  1.0D0                 :: Kr,kappa
+6.000000000E-4  .250000000000         :: Ss,Sy
+9.81D+0  1.20D-6             :: g,nu; grav acc, kinematic viscosity at 15C
+40  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
+7  4                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
+1  1  12  100                :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
+-2  4  400                   :: logspace times; lo, hi, # times to compute
+T  26  data.dat             :: compute times?, # times to read, filename for times (1 time/line)
+data.out

@@ -1,0 +1,19 @@
+# -*-Makefile-*-
+
+##################################################
+# flags / settings for Intel 8.1 compiler
+
+## you can remove the -parallel flag, it can cause compatibility problems
+
+DEBUG = -O0 -g -warn all -check all -debug full -DDEBUG -traceback
+INTEL = -DINTEL
+PERF = -O3 -ipo -static -openmp
+F90 =  ifort
+CPP = -cpp
+FREE = -free
+PERFLDFLAGS = ${PERF}
+##################################################
+
+## common things between both compilers go here
+#include Makefile.mpfun
+include Makefile
