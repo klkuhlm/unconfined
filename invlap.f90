@@ -6,19 +6,9 @@
 module inverse_Laplace_Transform
   use constants, only : DP
   implicit none
-
-  type :: INVLT
-     ! Inverse Laplace Transform parameters
-
-     ! abcissa of convergence, LT tolerance
-     real(DP) :: alpha = -999., tol = -999.
-
-     ! number of Fourier series terms
-     integer :: M = -999
-  end type INVLT
   
   private
-  public :: deHoog_invlap, deHoog_pvalues, INVLT
+  public :: deHoog_invlap, deHoog_pvalues
   
   interface deHoog_invlap
      module procedure deHoog_invlap_vect, deHoog_invlap_scalt
