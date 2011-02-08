@@ -30,10 +30,7 @@ Program Driver
   type(formation) :: f
   type(solution) :: s
 
-  real(DP) :: x, dx
-
-  integer :: i, numt, terms, minlogsplit, maxlogsplit, np
-
+  integer :: i, unit
   
   ! vectors of results and intermediate steps
 
@@ -44,24 +41,31 @@ Program Driver
   real(DP) :: tee
 
   !! k parameter in tanh-sinh quadrature (order is 2^k - 1)
-  integer ::  m, nn, jj, j, numtfile, numtcomp
+  integer ::  m, nn, jj, j
 
   ! read in data from file, do minor error checking
   ! and allocate some solution vectors
   call read_input(w,f,s,lap,hank,gl,ts)
   
-  call write_header(w,f,s,lap,hank,gl,ts,20)
+  l%np = 2*l%M+1  ! number of Laplace transform Fourier series coefficients
+  ts%N = 2**ts%k - 1
+
+  allocate(finint(l%np), infint(l%np), totlap(l%np), p(l%np), &
+       & splitv(s%nt), dt(s%nt), ts%w(ts%N), ts%a(ts%N), fa(ts%N,l%np), ii(ts%N), &
+       & tmp(ts%nst,l%np), ts%kk(ts%nst), ts%NN(ts%nst), ts%hh(ts%nst))
+
+  unit = 20
+  call write_header(w,f,s,lap,hank,gl,ts,unit)
      
   ! loop over all requested times
-  do i = 1, numt
+  do i = 1, s%nt
      if (.not. quiet) then
         write(*,'(I4,A,ES11.4)') i,' td ',td(i)
      end if
-     tsval = td(i)
 
-     tskk(1:nst) = [(tsk-m, m=nst-1,0,-1)]
-     tsNN(1:nst) = 2**tskk - 1
-     tshh(1:nst) = 4.0_EP/(2**tskk)
+     ts%kk(1:nst) = [(ts%k-m, m=ts%nst-1,0,-1)]
+     ts%NN(1:nst) = 2**ts%kk - 1
+     ts%hh(1:nst) = 4.0_EP/(2**ts%kk)
 
      ! compute abcissa and for highest-order case (others are subsets)
      call tanh_sinh_setup(tskk(nst),j0zero(splitv(i))/rDw,tsw(1:tsNN(nst)),tsa(1:tsNN(nst)))
@@ -127,9 +131,9 @@ Program Driver
 
      ! write results to file (as we go)
      if (dimless) then
-        write (20,'(3(1x,ES24.15E3))') td(i), totint
+        write (unit,'(3(1x,ES24.15E3))') td(i), totint
      else
-        write (20,'(3(1x,ES24.15E3))') ts(i), totint
+        write (unit,'(3(1x,ES24.15E3))') ts(i), totint
      end if
      
   end do

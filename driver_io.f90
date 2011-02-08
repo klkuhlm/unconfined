@@ -1,5 +1,6 @@
 module io
 implicit none
+
 private
 public :: read_input, write_header
 
@@ -18,9 +19,15 @@ contains
     type(solution), intent(inout) :: s
 
     integer :: ioerr, terms
+
+    ! intermediate steps in vsplit
     integer :: zerorange, minlogsplit, maxlogsplit, splitrange
+
+    ! used to compute times
     integer :: numtfile, numtcomp, minlogt, maxlogt
-    real(DP) :: x, dx
+
+    ! used to compute J0 zeros
+    real(DP) :: x, dx 
 
     intrinsic :: get_command_argument
 
@@ -34,7 +41,8 @@ contains
 
     open(unit=19, file=infile, status='old', action='read',iostat=ioerr)
     if(ioerr /= 0) then
-       write(*,'(A)') 'ERROR opening main input file '//trim(infilename)//' for reading'
+       write(*,'(A)') 'ERROR opening main input file '//trim(infilename)//&
+            & ' for reading'
        stop
     end if
   
@@ -60,11 +68,15 @@ contains
     read(19,*) f%gamma
 
     if (.not. s%quiet) then
-       write(*,'(A,2(L1,1X))') 'quiet?, dimless output? ', s%quiet, s%dimless
+       write(*,'(A,2(L1,1X))') 'quiet?, dimless output? ', &
+            &s%quiet, s%dimless
        write(*,'(A,'//s%rfmt//')') 'b (initial aquier sat thickness):',f%b  
-       write(*,'(A,2('//s%rfmt//',1X))') 'l,d (screen bot&top from aquifer top):',w%l,w%d  
-       write(*,'(A,2('//s%rfmt//',1X))') 'rw,rc (well and casing radii):',w%rw,w%rc  
-       write(*,'(A,3('//s%rfmt//',1X))') 'Kr,kappa,gamma',f%Kr, f%kappa, f%gamma
+       write(*,'(A,2('//s%rfmt//',1X))') 'l,d (screen bot&top from above):',&
+            & w%l, w%d  
+       write(*,'(A,2('//s%rfmt//',1X))') 'rw,rc (well and casing radii):',&
+            & w%rw, w%rc  
+       write(*,'(A,3('//s%rfmt//',1X))') 'Kr,kappa,gamma',&
+            & f%Kr, f%kappa, f%gamma
        write(*,'(A,2('//s%rfmt//',1X))') 'Ss,Sy',f%Ss, f%Sy
     end if
 
@@ -120,18 +132,15 @@ contains
 
     ! output filename
     read(19,*) s%outfilename                        
-    
+    close(19)
+
     if (s%computetimes) then
-       s%numt = numtcomp
+       s%nt = numtcomp
     else
-       s%numt = numtfile
+       s%nt = numtfile
     end if
 
-    ! solution vectors
-!    allocate(finint(2*lap%M+1), infint(2*lap%M+1), totlap(2*lap%M+1), p(2*lap%M+1),&
-!         & splitv(numt), dt(numt))
-
-    allocate(s%t(s%numt), s%tD(s%numt), splitv(s%numt))
+    allocate(s%t(s%nt), s%tD(s%nt), splitv(s%nt))
 
     if (s%computetimes) then
        ! computing times 
@@ -192,14 +201,15 @@ contains
        write(*,'(A,L1)') 'compute times? ',s%computetimes
        if(s%computetimes) then
           write(*,'(A,3(I0,1X))') 'log10(tmin), log10(tmax), num times ',&
-               & minlogt,maxlogt,numtcomp
+               & minlogt, maxlogt, numtcomp
        else
           write(*,'(A,I0,1X,A)') 'num times, filename for t inputs ',&
-               & numtfile,trim(timefname)
+               & numtfile, trim(timefilename)
        end if
     end if
 
     ! compute zeros of J0 bessel function
+    ! (quicker / more accurate than reading from file)
     !************************************
     ! asymptotic estimate of zeros - initial guess
     forall (i=0:terms-1) h%j0zero(i+1) = (i + 0.75)*PI
@@ -226,15 +236,6 @@ contains
     splitrange = maxlogsplit - minlogsplit + 1 
     splitv = minval(h%j0split(:)) + &
          & int(zerorange*((maxlogsplit - log10(s%tD))/splitrange))
- 
-    !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-    ! finite portion of Hankel integral for each time level
-    
-    l%np = 2*l%M+1  ! number of Laplace transform Fourier series coefficients
-
-    ts%N = 2**ts%k - 1
-    allocate(ts%w(ts%N),ts%a(ts%N),fa(ts%N,l%np),ii(ts%N),tmp(ts%nst,l%np),&
-         & ts%kk(ts%nst),ts%NN(ts%nst),ts%hh(ts%nst))
 
   end subroutine read_input
 
@@ -260,16 +261,24 @@ contains
     end if
   
     ! echo input parameters at head of output file
-    write(20,'(A,L1)') '# quiet? ', s%quiet
-    write(20,'(A,'//s%rfmt//')') '# b (initial aquier sat thickness): ',f%b
-    write(20,'(A,2('//s%rfmt//',1X))') '# l,d (packer bot & top from top of aquifer): ',w%l,w%d  
-    write(20,'(A,2('//s%rfmt//',1X))') '# rw,rc (well and casing radii): ',w%rw,w%rc  
-    write(20,'(A,2('//s%rfmt//',1X))') '# Kr,kappa: ',f%Kr, f%kappa
-    write(20,'(A,2('//s%rfmt//',1X))') '# Ss,Sy: ',f%Ss, f%Sy
-    write(20,'(A,I0,2('//s%rfmt//',1X))') '# deHoog M, alpha, tol: ',l%M, l%alpha, l%tol
-    write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, num extrapolation steps: ',ts%k, ts%nst
-    write(20,'(A,4(I0,1X))'), '# GL quad: J0 split, # zeros accel, GL-order: ',h%j0split(:), gl%naccel, gl%order
-    write(20,'(A,L1)') '# compute times?: ',s%computetimes
+    write(20,'(A,L1)') '# quiet?, dimensionless? ::', &
+         & s%quiet, s%dimless
+    write(20,'(A,'//s%rfmt//')') '# b (initial aquier sat thickness) ::', &
+         & f%b
+    write(20,'(A,2('//s%rfmt//',1X))') '# l,d (screen bot & top) ::',&
+         & w%l, w%d  
+    write(20,'(A,2('//s%rfmt//',1X))') '# rw,rc (well/casing radii) ::',&
+         & w%rw, w%rc  
+    write(20,'(A,2('//s%rfmt//',1X))') '# Kr,kappa ::', f%Kr, f%kappa
+    write(20,'(A,2('//s%rfmt//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
+    write(20,'(A,'//s%rfmt//')') '# gamma :: ',f%gamma
+    write(20,'(A,I0,2('//s%rfmt//',1X))') '# deHoog M, alpha, tol ::',&
+         & l%M, l%alpha, l%tol
+    write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps ::',&
+         & ts%k, ts%nst
+    write(20,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order ::',&
+         & h%j0split(:), gl%naccel, gl%order
+    write(20,'(A,L1)') '# times ::',s%numt
     if (s%dimless) then
        write (20,'(A,/,A,/,A)') '#','#         t_D                       H^{-1}[ L^{-1}[ f_D ]] ',&
             & '#------------------------------------------------------------'

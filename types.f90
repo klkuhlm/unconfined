@@ -60,9 +60,9 @@ module types
 
   type :: well
      ! parameters related to well/completion
-     real(DP) :: l = -999.  ! distance from aquifer top to screen/packer top
-     real(DP) :: d = -999.  ! distance from aquifer top to screen/packer bottom
-     real(DP) :: rw = -999., rc = -999. ! well / casing radius
+     real(DP) :: l = -999. ! aquifer top to screen/packer top dist.
+     real(DP) :: d = -999. ! aquifer top to screen/packer bottom dist.
+     real(DP) :: rw = -999., rc = -999. ! well / casing radii
 
      ! dimensionless parameters
      real(DP) :: lD = -999.  ! dimensionless l
@@ -78,7 +78,8 @@ module types
      real(DP) :: b = -999.  ! aquifer thickness
      real(DP) :: Kr = -999. ! radial hydraulic conductivity
      real(DP) :: kappa  = -999.  ! Kz/Kr ratio
-     real(DP) :: Ss = -999., Sy = -999. ! specific storage, specific yield
+     real(DP) :: Ss = -999. ! specific storage
+     real(DP) :: Sy = -999. ! specific yield
      real(DP) :: gamma = -999.  ! dimensionless skin (1=no skin)
 
      ! computed aquifer parameters
@@ -96,8 +97,9 @@ module types
      logical :: quiet = .false.  ! output debugging to stdout?
      logical :: dimless = .false.  ! output dimensionless solution?
 
-     ! either the number of times to be computed, or the number of times read from file
-     integer :: numt = -999  
+     ! either the number of times to be computed,
+     ! or the number of times read from file
+     integer :: nt = -999  
 
      ! vector of times to compute solution at
      real(DP), allocatable :: t(:), tD(:)
