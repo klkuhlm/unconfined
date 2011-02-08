@@ -19,6 +19,4 @@ module constants
   !! 0.693147180559945309417232121458177_EP
   real(EP), parameter :: LN2EP = log(2.0_EP) 
 
-  real(EP), parameter :: EONE = 1.0_EP
-
 end module constants
