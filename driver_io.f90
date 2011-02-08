@@ -111,7 +111,7 @@ contains
 
     if(ts%k - ts%nst < 2) then
        write(*,'(2(A,I0),A)') 'Tanh-Sinh k is too low (',ts%k,') for given level&
-            & of Richardson extrapolation (',ts%nst,').  Increase tsk or decrease nst.'
+            & of Richardson extrapolation (',ts%nst,').  Increase k or decrease nst.'
        stop
     end if
 
@@ -194,10 +194,12 @@ contains
        write(*,'(A,'//s%rfmt//')') 'r_{D,w}: ',w%rDw
        write(*,'(A,'//s%rfmt//')') 'b_D: ',w%bD
        write(*,'(A,'//s%rfmt//')') 'l_D: ',w%lD
-       write(*,'(A,I0,2('//s%rfmt//',1X))') 'deHoog: M,alpha,tol: ',l%M, l%alpha, l%tol
-       write(*,'(A,2(I0,1X))'), 'tanh-sinh: k, num extrapolation steps ',ts%k, ts%nst
-       write(*,'(A,4(I0,1X))'), 'GL: J0 split, num zeros accel, GL-order ',h%j0split(:),&
-            & gl%naccel, gl%order
+       write(*,'(A,I0,2('//s%rfmt//',1X))') 'deHoog: M,alpha,tol: ', &
+            & l%M, l%alpha, l%tol
+       write(*,'(A,2(I0,1X))'), 'tanh-sinh: k, num extrapolation steps ', &
+            & ts%k, ts%nst
+       write(*,'(A,4(I0,1X))'), 'GL: J0 split, num zeros accel, GL-order ',&
+            & h%j0split(:), gl%naccel, gl%order
        write(*,'(A,L1)') 'compute times? ',s%computetimes
        if(s%computetimes) then
           write(*,'(A,3(I0,1X))') 'log10(tmin), log10(tmax), num times ',&
@@ -280,10 +282,12 @@ contains
          & h%j0split(:), gl%naccel, gl%order
     write(20,'(A,L1)') '# times ::',s%numt
     if (s%dimless) then
-       write (20,'(A,/,A,/,A)') '#','#         t_D                       H^{-1}[ L^{-1}[ f_D ]] ',&
+       write (20,'(A,/,A,/,A)') '#','#         t_D                       '//&
+            & 'H^{-1}[ L^{-1}[ f_D ]] ',&
             & '#------------------------------------------------------------'
     else
-       write (20,'(A,/,A,/,A)') '#','#         t                         H^{-1}[ L^{-1}[ f ]]   ',&
+       write (20,'(A,/,A,/,A)') '#','#         t                         '//&
+            & 'H^{-1}[ L^{-1}[ f ]]   ',&
             & '#------------------------------------------------------------'
     end if
 

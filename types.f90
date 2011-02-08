@@ -38,13 +38,12 @@ module types
      integer :: naccel = -999, err -999
 
      ! abcissa and weights
-     real(EP), allocatable :: GLx(:),GLw(:)
+     real(EP), allocatable :: x(:),w(:)
 
      ! order of integration
      integer :: order = -999
 
-     ! error in polynomial extrapolation
-     complex(EP) :: polerr
+
 
   end type GaussLobatto
   
@@ -56,6 +55,9 @@ module types
      real(EP), allocatable :: w(:), a(:), hh(:)
      integer, allocatable :: kk(:), NN(:), ii(:)
      
+     ! error in polynomial extrapolation
+     complex(EP) :: polerr
+
   end type TanhSinh
 
   type :: well

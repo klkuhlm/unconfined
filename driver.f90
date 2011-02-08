@@ -22,10 +22,10 @@ Program Driver
 
   implicit none
 
-  type(invLaplace) :: lap
-  type(invHankel) :: hank
-  type(GaussLobatto) :: gl
-  type(TanhSinh) :: ts
+  type(invLaplace) :: l
+  type(invHankel) :: h
+  type(GaussLobatto) :: g
+  type(TanhSinh) :: t
   type(well) :: w
   type(formation) :: f
   type(solution) :: s
@@ -34,74 +34,79 @@ Program Driver
   
   ! vectors of results and intermediate steps
 
-  real(DP), allocatable  :: ts(:), td(:), dt(:) 
+  real(DP), allocatable  ::  dt(:) 
   complex(EP), allocatable :: fa(:,:)
   complex(EP), allocatable :: finint(:), infint(:), totlap(:), p(:)
   real(EP) :: totint
-  real(DP) :: tee
+  real(DP) :: tee, arg
 
   !! k parameter in tanh-sinh quadrature (order is 2^k - 1)
   integer ::  m, nn, jj, j
 
   ! read in data from file, do minor error checking
   ! and allocate some solution vectors
-  call read_input(w,f,s,lap,hank,gl,ts)
+  call read_input(w,f,s,l,h,g,t)
   
   l%np = 2*l%M+1  ! number of Laplace transform Fourier series coefficients
-  ts%N = 2**ts%k - 1
+  t%N = 2**t%k - 1
 
   allocate(finint(l%np), infint(l%np), totlap(l%np), p(l%np), &
-       & splitv(s%nt), dt(s%nt), ts%w(ts%N), ts%a(ts%N), fa(ts%N,l%np), ii(ts%N), &
-       & tmp(ts%nst,l%np), ts%kk(ts%nst), ts%NN(ts%nst), ts%hh(ts%nst))
+       & h%splitv(s%nt), dt(s%nt), t%w(t%N), t%a(t%N), fa(t%N,l%np), ii(t%N), &
+       & tmp(t%nst,l%np), t%kk(t%nst), t%NN(t%nst), t%hh(t%nst))
 
   unit = 20
-  call write_header(w,f,s,lap,hank,gl,ts,unit)
+  call write_header(w,f,s,l,h,g,t,unit)
      
   ! loop over all requested times
   do i = 1, s%nt
      if (.not. quiet) then
-        write(*,'(I4,A,ES11.4)') i,' td ',td(i)
+        write(*,'(I4,A,ES11.4)') i,' td ',s%tD(i)
      end if
 
-     ts%kk(1:nst) = [(ts%k-m, m=ts%nst-1,0,-1)]
-     ts%NN(1:nst) = 2**ts%kk - 1
-     ts%hh(1:nst) = 4.0_EP/(2**ts%kk)
+     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+     ! finite portion of Hankel integral (Tanh-Sinh quadrature)
+     ! integrate from origin (a=0) to the J0 zero identified in input
+
+     t%kk(:) = [(t%k-m, m=t%nst-1,0,-1)]
+     t%NN(:) = 2**t%kk - 1
+     t%hh(:) = 4.0_EP/(2**t%kk)
 
      ! compute abcissa and for highest-order case (others are subsets)
-     call tanh_sinh_setup(tskk(nst),j0zero(splitv(i))/rDw,tsw(1:tsNN(nst)),tsa(1:tsNN(nst)))
+     arg = h%j0zero(h%splitv(i))/w%rDw
+     call tanh_sinh_setup(t,t%k,arg)
 
      ! compute solution at densest set of abcissa
-     !$OMP PARALLEL DO PRIVATE(nn) SHARED(fa,tsa,tsNN,nst)
-     do nn=1,tsNN(nst)
-        fa(nn,1:np) = unconfined_wellbore_slug(tsa(nn))
+     !$OMP PARALLEL DO PRIVATE(nn) SHARED(fa,t,s)
+     do nn=1,t%NN(t%nst)
+        fa(nn,1:np) = laplace_hankel_soln(t%a(nn),s%tD(i))
      end do
      !$OMP END PARALLEL DO
 
-     tmp(nst,1:np) = (j0zero(splitv(i))/rDw)/2.0_DP*sum(spread(tsw(:),2,np)*fa(:,:),dim=1)
+     tmp(t%nst,:) = arg/2.0_DP*sum(spread(ts%w(:),2,s%np)*fa(:,:),dim=1)
 
-     do j=nst-1,1,-1
+     do j=t%nst-1,1,-1
         !  only need to re-compute weights for each subsequent step
-        call tanh_sinh_setup(tskk(j),j0zero(splitv(i))/rDw,tsw(1:tsNN(j)),tsa(1:tsNN(j)))
+        call tanh_sinh_setup(t,t%kk(j),arg)
 
         ! compute index vector, to slice up solution 
         ! for nst'th turn count regular integers
         ! for (nst-1)'th turn count even integers
         ! for (nst-2)'th turn count every 4th integer, etc...
-        ii(1:tsNN(j)) = [( m* 2**(nst-j), m=1,tsNN(j) )]
+        ii(1:t%NN(j)) = [( m* 2**(t%nst-j), m=1,t%NN(j) )]
 
         ! estimate integral with subset of function evaluations and appropriate weights
-        tmp(j,1:np) = (j0zero(splitv(i))/rDw)/2.0_DP* &
-             & sum(spread(tsw(1:tsNN(j)),2,np)*fa(ii(1:tsNN(j)),1:np),dim=1)
+        tmp(j,1:np) = arg/2.0_DP*sum(spread(tsw(1:t%NN(j)),2,s%np)*&
+                                          & fa(ii(1:t%NN(j)),1:s%np),dim=1)
      end do
 
-     if (nst > 1) then
+     if (t%nst > 1) then
         !$OMP PARALLEL DO PRIVATE(jj,PolErr) SHARED(tshh,tmp,finint)
-        do jj=1,np
-           call polint(tshh(1:nst),tmp(1:nst,jj),0.0_EP,finint(jj),PolErr)
+        do jj=1,s%np
+           call polint(t%hh(1:nst),tmp(1:nst,jj),0.0_EP,finint(jj),t%PolErr)
         end do
         !$OMP END PARALLEL DO
      else
-        finint(:) = tmp(1,1:np)
+        finint(:) = tmp(1,1:s%np)
      end if
 
 
@@ -110,14 +115,12 @@ Program Driver
      ! integrate between zeros of Bessel function, extrapolate 
      ! area from series of areas of alternating sign
 
-     if(.not. allocated(GLx)) then
-        allocate(Glx(GLorder-2),GLw(GLorder-2))
-        call gauss_lobatto_setup(GLorder,GLx,GLw)  ! get weights and abcissa
+     if(.not. allocated(g%x)) then
+        allocate(g%x(g%order-2),g%w(g%order-2))
+        call gauss_lobatto_setup(g)  ! get weights and abcissa
      end if
 
-     tsval = td(i)
-
-     infint(1:np) = inf_integral(unconfined_wellbore_slug,splitv(i),naccel,&
+     infint(1:np) = inf_integral(laplace_hankel_soln,h%splitv(i),naccel,&
           &glorder,j0zero,GLx,GLw)
 
      ! perform numerical inverse Laplace transform and sum infinite and finite
@@ -149,6 +152,7 @@ contains
   function inf_integral(integrand,split,num,ord,zeros,GLx,GLw) result(integral)
     use constants, only : DP,EP
     use shared_data, only : rdw, lap
+    use types, only : GaussLobatto, invHankel, solution
     implicit none
 
     interface 
@@ -160,13 +164,17 @@ contains
        end function integrand
     end interface
 
+    type(GaussLobatto), intent(inout) :: gl
+    type(invHankel), intent(inout) :: hank
+    type(solution), intent(inout) :: s
+
     integer, intent(in) :: split
     integer, intent(in) :: num,ord
     real(DP), dimension(:), intent(in) :: zeros
 
-    real(EP), dimension(ord-2) :: GLy
-    complex(EP), dimension(ord-2,2*lap%M+1) :: GLz
-    real(EP), dimension(:), intent(in) :: GLx,GLw
+!!$    real(EP), dimension(ord-2) :: GLy
+!!$    complex(EP), dimension(ord-2,2*lap%M+1) :: GLz
+!!$    real(EP), dimension(:), intent(in) :: GLx,GLw
     complex(EP), dimension(num,2*lap%M+1) :: area
     real(EP) :: lob,hib,width
     complex(EP), dimension(2*lap%M+1) :: integral
@@ -201,13 +209,14 @@ contains
   end function inf_integral
 
   !! ###################################################
-  subroutine tanh_sinh_setup(k,s,w,a)
+  pure subroutine tanh_sinh_setup(t,k,s)
     use constants, only : PIOV2EP
+    use types, only : TanhSinh
     implicit none
     
-    integer, intent(in) :: k
+    type(TanhSinh), intent(inout) :: t
     real(DP), intent(in) :: s
-    real(EP), intent(out), dimension(2**k-1) :: w, a
+    integer, intent(in) :: k
 
     integer :: N,r,i
     real(EP) :: h
@@ -219,39 +228,44 @@ contains
     h = 4.0_EP/2**k
     allocate(u(2,N))
        
-    u(1,1:N) = PIOV2EP*cosh(h*[(i, i=-r,r)])
-    u(2,1:N) = PIOV2EP*sinh(h*[(i, i=-r,r)])
+    forall (i=-r:r)
+       u(1,i+r+1) = PIOV2EP*cosh(h*i)
+       u(2,i+r+1) = PIOV2EP*sinh(h*i)
+    end forall
     
-    a(1:N) = tanh(u(2,1:N))
-    w(1:N) = u(1,1:N)/cosh(u(2,:))**2
-    w(1:N) = 2.0_EP*w(1:N)/sum(w(1:N))
+    t%a(:) = tanh(u(2,1:N))
+    t%w(:) = u(1,:)/cosh(u(2,:))**2
+
+    deallocate(u)
+
+    t%w(:) = 2.0_EP*t%w(:)/sum(t%w(:))
 
     ! map the -1<=x<=1 interval onto 0<=a<=s
-    a = (a + 1.0_EP)*s/2.0_EP
+    t%a = (t%a + 1.0_EP)*s/2.0_EP
 
   end subroutine tanh_sinh_setup
 
 
   !! ###################################################
-  subroutine gauss_lobatto_setup(ord,abcissa,weight)
+  subroutine gauss_lobatto_setup(gl)
     use constants, only : PIEP, EP
+    use types, only : GaussLobatto
     implicit none
-    integer, intent(in) :: ord
-    real(EP), intent(out), dimension(ord-2) :: weight, abcissa
-    real(EP), dimension(ord,ord) :: P
-    real(EP), dimension(ord) :: x,xold,w
+    type(GaussLobatto), intent(inout) :: gl
+    real(EP), dimension(gl%order,gl%order) :: P
+    real(EP), dimension(gl%order) :: x, xold, w
     integer :: i, N, N1, k
 
     ! leave out the endpoints (abcissa = +1 & -1), since 
     ! they will be the zeros of the Bessel functions
     ! (therefore, e.g., 5th order integration only uses 3 points)
-    ! code copied from Matlab routine by Greg von Winckel, at
+    ! code modified from Matlab routine by Greg von Winckel, at
     ! http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=4775
 
-    N = ord-1
+    N = gl%order-1
     N1 = N+1
     ! first guess
-    x = cos(PIEP*[(i, i=0,N)]/N)
+    forall (i=0:N) x(i+1) = cos(PIEP*i/N)
     ! initialize Vandermonde matrix
     P = 0.0
     xold = 2.0
@@ -274,9 +288,9 @@ contains
     
     w = 2.0/(N*N1*P(:,N1)**2)
 
-    ! leave off endpoints
-    abcissa = x(2:ord-1)
-    weight = w(2:ord-1)
+    ! leave off endpoints (BF defined as zero there)
+    gl%x = x(2:gl%order-1)
+    gl%w = w(2:gl%order-1)
 
   end subroutine gauss_lobatto_setup
 
