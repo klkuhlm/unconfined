@@ -3,12 +3,13 @@ module lap_hank_soln
   implicit none
 
   private
-  public :: unconfined_wellbore_slug
+  public :: 
 
 contains
 
-  function unconfined_wellbore_slug(dum) result(fp)
-    use shared_data, only :  tsval,bD,dD,lD,alphaD,beta,gamma,rDw,CD,kappa,lap
+  function unconfined_wellbore_slug(dum,tD,s,w,f) result(fp)
+!!$    use shared_data, only :  tsval,bD,dD,lD,alphaD,beta,gamma,rDw,CD,kappa,lap
+    use types, only : solution, well, formation
     use constants, only : EP,DP,EONE
     use utilities, only : ccosh, csinh
     use inverse_Laplace_Transform, only : dehoog_pvalues
@@ -20,12 +21,16 @@ contains
 
     implicit none
     real(EP), intent(in) :: dum  ! scalar integration variable (Hankel parameter)
-    complex(EP), dimension(2*lap%M+1) :: fp
+    real(DP), intent(in) :: tD  ! dimensionless time 
+    type(solution) :: s
+    type(well) :: w
+    type(formation) :: f
+    complex(EP), dimension(s%np) :: fp
 
-    complex(EP), dimension(2*lap%M+1) :: p
-    complex(EP), dimension(2*lap%M+1) :: eta, eps, wD, Omega
-    complex(DP), dimension(2*lap%M+1) :: K1, xiw
-    complex(EP), dimension(0:2,2*lap%M+1) :: delta
+    complex(EP), dimension(s%np) :: p
+    complex(EP), dimension(s%np) :: eta, eps, wD, Omega
+    complex(DP), dimension(s%np) :: K1, xiw
+    complex(EP), dimension(0:2,s%np) :: delta
     real(EP) :: lDs,dDs
     integer :: i, np,nz,ierr
     logical :: nans

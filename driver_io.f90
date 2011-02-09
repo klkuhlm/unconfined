@@ -19,6 +19,7 @@ contains
     type(solution), intent(inout) :: s
 
     integer :: ioerr, terms
+    character(39) :: fmt
 
     ! intermediate steps in vsplit
     integer :: zerorange, minlogsplit, maxlogsplit, splitrange
@@ -46,8 +47,8 @@ contains
        stop
     end if
   
-    ! suppress output to screen, write dimensionless output?
-    read(19,*) s%quiet, s%dimless  
+    ! suppress output to screen, write dimensionless output?, which model to use?
+    read(19,*) s%quiet, s%dimless, s%model  
 
     ! initial saturated aquifer thickness [L]
     read(19,*) f%b
@@ -64,6 +65,9 @@ contains
     ! aquifer specific storage [1/L] and specific yield [-]
     read(19,*) f%Ss, f%Sy
 
+    ! unsaturated zone thickness [L] and exponential sorbtive parameter [1/L]
+    read(19,*) f%usl, f%usalpha 
+    
     ! dimensionless skin
     read(19,*) f%gamma
 
@@ -129,6 +133,32 @@ contains
 
     ! compute times?, # times in file, time file          
     read(19,*) s%computetimes, numtfile, s%timefilename    
+
+    ! read in time behavior
+    read(19,'(I3)', advance='no') s%timeType 
+    if (s%timeType > -1) then
+       ! functional time behavior (two or fewer parameters)
+       allocate(s%timePar(2))
+       read(19,*) s%timePar(:)
+       if (.not. s%quiet) then
+          write(*,'(A)') s%timeDescrip(s%timeType)
+          write(*,'(A,2(1X,'//s%rfmt//'))') 'time behavior, par1, par2 ::', &
+               & s%timeType, s%timePar(:)
+       end if
+    else
+       ! arbitrarily long piecewise-constant time behavior 
+       allocate(s%timePar(-2*s%timeType+1))
+       read(19,*) s%timePar(:)
+       if (.not. s%quiet) then
+          fmt = '(A,    ('//s%rfmt//',1X),A,    ('//s%rfmt//',1X))'
+          write(fmt(8:11),'(I4.4)')  size(s%timePar(:-s%timeType+1),1)
+          write(fmt(26:29),'(I4.4)') size(s%timePar(-s%timeType+2:),1)
+          write(*,'(A)') s%timeDescrip(9)
+          write(*,fmt) 'time behavior:  ti, tf | Q multiplier each step :: ', &
+               & s%timeType,s%timePar(:-s%timeType+1),'| ',&
+               & s%timePar(-s%timeType+2:)
+       end if
+    end if
 
     ! output filename
     read(19,*) s%outfilename                        

@@ -80,7 +80,7 @@ Program Driver
      ! compute solution at densest set of abcissa
      !$OMP PARALLEL DO PRIVATE(nn) SHARED(fa,t,s)
      do nn=1,t%NN(t%nst)
-        fa(nn,1:np) = laplace_hankel_soln(t%a(nn),s%tD(i))
+        fa(nn,1:np) = laplace_hankel_soln(t%a(nn),s%tD(i),s%np)
      end do
      !$OMP END PARALLEL DO
 
@@ -156,13 +156,13 @@ contains
     implicit none
 
     interface 
-       function integrand(a,s,t) result(H)
+       function integrand(a,t,np) result(H)
          use constants, only : DP,EP
          use types, only : solution
-         type(solution) :: sol
          real(EP), intent(in) :: a
          real(DP), intent(in) :: t
-         complex(EP), dimension(sol%np) :: H
+         integer, intent(in) :: np
+         complex(EP), dimension(np) :: H
        end function integrand
     end interface
 
@@ -173,9 +173,11 @@ contains
     integer, intent(in) :: split
     real(DP), intent(in) :: tD
 
+    ! series of areas between consecutive J0 zeros
     complex(EP), dimension(num,s%np) :: area
-    real(EP) :: lob,hib,width  ! size of integration interval
-    complex(EP), dimension(s%np) :: integral
+    ! size of each integration interval
+    real(EP) :: lob,hib,width  
+    complex(EP), dimension(s%np) :: integral  ! results
     integer :: i, j, k, np
 
     do j = split+1, split+g%nacc
@@ -188,7 +190,7 @@ contains
           
        !$OMP PARALLEL DO PRIVATE(k) SHARED(g,np)
        do k=1,ord-2
-          g%z(k,1:s%np) = integrand( g%y(k),tD )
+          g%z(k,1:s%np) = integrand( g%y(k), tD, s%np )
        end do
        !$OMP END PARALLEL DO
           
@@ -376,7 +378,7 @@ contains
     c=ya
     d=ya
     ho=xa-x
-    ns =  sum(minloc(abs(x-xa))) ! sum turns 1-element vector to a scalar
+    ns = sum(minloc(abs(x-xa))) ! sum turns 1-element vector to a scalar
     y=ya(ns)
     ns=ns-1
     do m=1,n-1

@@ -1,8 +1,7 @@
-
 module utilities
-implicit none
-private
-public :: ccosh, csinh, logspace
+  implicit none
+  private
+  public :: ccosh, csinh, logspace
 
 contains
   pure elemental function ccosh(z) result(f)
