@@ -16,7 +16,7 @@ module types
      integer :: M = -999
 
      ! length of solution vector (2*M+1)
-     integer :: np
+     integer :: np = -999
 
   end type invLaplace
 
@@ -24,26 +24,25 @@ module types
      ! inverse Hankel transform parameters
 
      ! zeros of J0 Bessel function
-     real(DP), allocatable :: j0zero(:)
+     real(DP), allocatable :: j0z(:) ! locations of zeros of J0 bessel fnc
      integer :: splitrange = -999, zerorange = -999
-     integer, allocatable :: splitv(:)
+     integer, allocatable :: sv(:) ! split index  vector
 
-     integer, dimension(2) :: j0split = [-999, -999]
+     ! min/max j0 split between infinite/fininte integrals
+     integer, dimension(2) :: j0s = [-999, -999] 
 
   end type invHankel
 
   type :: GaussLobatto
      ! parameters specific to GL quadrature
 
-     integer :: naccel = -999, err -999
+     integer :: nacc = -999, err -999
 
      ! abcissa and weights
-     real(EP), allocatable :: x(:),w(:)
+     real(EP), allocatable :: x(:), w(:)
 
      ! order of integration
-     integer :: order = -999
-
-
+     integer :: ord = -999
 
   end type GaussLobatto
   
@@ -51,7 +50,6 @@ module types
      ! parameters specific to tanh-sinh quadrature
 
      integer :: k = -999, N = -999, nst = -999
-     complex(EP), allocatable :: tmp(:,:)
      real(EP), allocatable :: w(:), a(:), hh(:)
      integer, allocatable :: kk(:), NN(:), ii(:)
      

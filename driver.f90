@@ -31,11 +31,13 @@ Program Driver
   type(solution) :: s
 
   integer :: i, unit
-  
+  real(DP), parameter :: TEE_MULT = 2.0_DP
+
   ! vectors of results and intermediate steps
 
   real(DP), allocatable  ::  dt(:) 
   complex(EP), allocatable :: fa(:,:)
+  complex(EP), allocatable :: tmp(:,:)
   complex(EP), allocatable :: finint(:), infint(:), totlap(:), p(:)
   real(EP) :: totint
   real(DP) :: tee, arg
@@ -72,7 +74,7 @@ Program Driver
      t%hh(:) = 4.0_EP/(2**t%kk)
 
      ! compute abcissa and for highest-order case (others are subsets)
-     arg = h%j0zero(h%splitv(i))/w%rDw
+     arg = h%j0z(h%sv(i))/w%rDw
      call tanh_sinh_setup(t,t%k,arg)
 
      ! compute solution at densest set of abcissa
@@ -116,16 +118,15 @@ Program Driver
      ! area from series of areas of alternating sign
 
      if(.not. allocated(g%x)) then
-        allocate(g%x(g%order-2),g%w(g%order-2))
+        allocate(g%x(g%ord-2),g%w(g%ord-2))
         call gauss_lobatto_setup(g)  ! get weights and abcissa
      end if
 
-     infint(1:np) = inf_integral(laplace_hankel_soln,h%splitv(i),naccel,&
-          &glorder,j0zero,GLx,GLw)
+     infint(1:np) = inf_integral(laplace_hankel_soln,h%sv(i),h,g,w,lap,tD(i))
 
      ! perform numerical inverse Laplace transform and sum infinite and finite
      ! portions of Hankel integral
-     tee = td(i)*2.0
+     tee = td(i)*TEE_MULT
      p = dehoog_pvalues(tee,lap)
      totlap(1:np) = finint(1:np) + infint(1:np) ! omega
      totlap(1:np) = beta(1) + beta(2)*p + gamma*totlap(1:np)/2.0 ! f
@@ -149,62 +150,56 @@ contains
   !! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
   !! ###################################################
-  function inf_integral(integrand,split,num,ord,zeros,GLx,GLw) result(integral)
+  function inf_integral(integrand,split,h,g,w,tD) result(integral)
     use constants, only : DP,EP
-    use shared_data, only : rdw, lap
-    use types, only : GaussLobatto, invHankel, solution
+    use types, only : GaussLobatto, invHankel, solution, well
     implicit none
 
     interface 
-       function integrand(a) result(H)
-         use constants, only : EP
-         use shared_data, only : lap
+       function integrand(a,s,t) result(H)
+         use constants, only : DP,EP
+         use types, only : solution
+         type(solution) :: sol
          real(EP), intent(in) :: a
-         complex(EP), dimension(2*lap%M+1) :: H
+         real(DP), intent(in) :: t
+         complex(EP), dimension(sol%np) :: H
        end function integrand
     end interface
 
     type(GaussLobatto), intent(inout) :: gl
-    type(invHankel), intent(inout) :: hank
+    type(invHankel), intent(in) :: hank
     type(solution), intent(inout) :: s
-
+    type(well), intent(in) :: w
     integer, intent(in) :: split
-    integer, intent(in) :: num,ord
-    real(DP), dimension(:), intent(in) :: zeros
+    real(DP), intent(in) :: tD
 
-!!$    real(EP), dimension(ord-2) :: GLy
-!!$    complex(EP), dimension(ord-2,2*lap%M+1) :: GLz
-!!$    real(EP), dimension(:), intent(in) :: GLx,GLw
-    complex(EP), dimension(num,2*lap%M+1) :: area
-    real(EP) :: lob,hib,width
-    complex(EP), dimension(2*lap%M+1) :: integral
+    complex(EP), dimension(num,s%np) :: area
+    real(EP) :: lob,hib,width  ! size of integration interval
+    complex(EP), dimension(s%np) :: integral
     integer :: i, j, k, np
 
-    np = 2*lap%M+1
-
-    do j = split+1, split+num
-       lob = real(zeros(j-1)/rdw,EP) ! lower bound
-       hib = real(zeros(j)/rdw,EP)   ! upper bound
-       width = real(hib,EP) - real(lob,EP)
+    do j = split+1, split+g%nacc
+       lob = real(h%j0z(j-1)/w%rDw,EP) ! lower bound
+       hib = real(h%j0z(j)/w%rDw,EP)   ! upper bound
+       width = hib - lob
        
        ! transform GL abcissa to global coordinates
-       GLy(:) = (width*GLx(:) + (hib + lob))/2.0
+       g%y(:) = (width*g%x(:) + (hib+lob))/2.0
           
-       !$OMP PARALLEL DO PRIVATE(k) SHARED(GLz,GLy,ord,np)
+       !$OMP PARALLEL DO PRIVATE(k) SHARED(g,np)
        do k=1,ord-2
-          GLz(k,1:np) = integrand( GLy(k) )
+          g%z(k,1:s%np) = integrand( g%y(k),tD )
        end do
        !$OMP END PARALLEL DO
           
-       area(j-split,1:np) = width/2.0* sum(GLz(1:ord-2,:)*spread(GLw(1:ord-2),2,np),dim=1)
+       area(j-split,1:s%np) = width/2.0* &
+            & sum(g%z(1:ord-2,:)*spread(g%w(1:ord-2),2,np),dim=1)
     end do
  
-    !$OMP PARALLEL DO PRIVATE(i) SHARED(area,integral,num)
-    do i=1,np
+    do i=1,s%np
        ! accelerate each series independently
        integral(i) = wynn_epsilon(area(1:num,i))
     end do
-    !$OMP END PARALLEL DO
     
   end function inf_integral
 
@@ -316,7 +311,7 @@ contains
 
     ! build up partial sums, but check for problems
     check: do i=1,np
-       if((abs(series(i)) > huge(0.0D0)).or.(series(i) /= series(i))) then
+       if((abs(series(i)) > huge(1.0_EP)).or.(series(i) /= series(i))) then
           ! +/- Infinity or NaN ? truncate series to avoid corrupting accelerated sum
           np = i-1
           if(np < MINTERMS) then
@@ -338,7 +333,7 @@ contains
     do j=0,np-2 
        do m = 1,np-(j+1)
           denom = eps(m+1,j) - eps(m,j)
-          if(abs(denom) > tiny(EONE)) then ! check for div by zero
+          if(abs(denom) > spacing(0.0)) then ! check for div by zero
              eps(m,j+1) = eps(m+1,j-1) + EONE/denom
           else
              accsum = real(eps(m+1,j),DP)
@@ -364,6 +359,9 @@ contains
     ! xa and ya are given x and y locations to fit an nth degree polynomial
     ! through.  results is a value y at given location x, with error estimate dy
 
+    ! x is real and extended-precision
+    ! y is complex and extended-precision
+
     use constants, only : DP, EP
     IMPLICIT NONE
     REAL(EP), DIMENSION(:), INTENT(IN) :: xa
@@ -373,20 +371,18 @@ contains
     INTEGER :: m,n,ns
     COMPLEX(EP), DIMENSION(size(xa)) :: c,d,den
     REAL(EP), DIMENSION(size(xa)) :: ho
-    integer, dimension(1) :: tmp
 
     n=size(xa)
     c=ya
     d=ya
     ho=xa-x
-    tmp = minloc(abs(x-xa))
-    ns = tmp(1)
+    ns =  sum(minloc(abs(x-xa))) ! sum turns 1-element vector to a scalar
     y=ya(ns)
     ns=ns-1
     do m=1,n-1
        den(1:n-m)=ho(1:n-m)-ho(1+m:n)
-       if (any(abs(den(1:n-m)) == 0.0)) then
-          print *, 'polint: calculation failure'
+       if (any(abs(den(1:n-m)) < spacing(0.0))) then
+          write(*,*) 'polint: calculation failure',abs(den(1:n-m))
           stop
        end if
        den(1:n-m)=(c(2:n-m+1)-d(1:n-m))/den(1:n-m)
