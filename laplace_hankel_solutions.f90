@@ -2,10 +2,29 @@
 module lap_hank_soln
   implicit none
 
-  private
-  public :: 
-
 contains
+
+  function laplace_hankel_solution(dum,tD,s,w,f) result(fp)
+    use types, only : solution, well, formation
+
+#ifdef INTEL
+    use ifport, only : dbesj0 
+#endif
+    
+    implicit none
+    
+    complex(EP), dimension(s%np) :: soln
+
+
+    select case()
+
+    ! solution always evaluated in test well
+    fp = dum*dbesj0(real(dum*rDw,DP)) * Omega(1:np)
+
+  end function laplace_hankel_solution
+  
+
+  function theis() result(fp)
 
   function unconfined_wellbore_slug(dum,tD,s,w,f) result(fp)
 !!$    use shared_data, only :  tsval,bD,dD,lD,alphaD,beta,gamma,rDw,CD,kappa,lap
@@ -15,9 +34,7 @@ contains
     use inverse_Laplace_Transform, only : dehoog_pvalues
     use complex_bessel, only : cbesk
 
-#ifdef INTEL
-    use ifport, only : dbesj0 
-#endif
+
 
     implicit none
     real(EP), intent(in) :: dum  ! scalar integration variable (Hankel parameter)
@@ -79,8 +96,6 @@ contains
        goto 222
     end if
     
-    ! solution always evaluated in test well
-    fp = dum*dbesj0(real(dum*rDw,DP)) * Omega(1:np)
 
   end function unconfined_wellbore_slug
 end module lap_hank_soln

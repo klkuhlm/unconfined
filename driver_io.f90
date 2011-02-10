@@ -5,12 +5,17 @@ private
 public :: read_input, write_header
 
 contains
-  subroutine read_input(w,f,s,l,h,gl,ts)
+  subroutine read_input(w,f,s,lap,h,gl,ts)
     use constants, only : DP, PI
     use types
     use utilities, only : logspace
     
-    type(invLaplace), intent(inout) :: l
+    ! only needed for intel compiler
+#ifdef INTEL
+    use ifport, only : dbesj0, dbesj1     
+#endif
+
+    type(invLaplace), intent(inout) :: lap
     type(invHankel), intent(inout) :: h
     type(GaussLobatto), intent(inout) :: gl
     type(TanhSinh), intent(inout) :: ts
@@ -95,16 +100,16 @@ contains
     end if
   
     ! Laplace transform (deHoog et al) parameters
-    read(19,*) l%M, l%alpha, l%tol
+    read(19,*) lap%M, lap%alpha, lap%tol
 
-    if (l%M < 2) then
-       write(*,'(A,I0)')  'deHoog # FS terms must be >= 1 M=',l%M
+    if (lap%M < 2) then
+       write(*,'(A,I0)')  'deHoog # FS terms must be >= 1 M=',lap%M
        stop 
     end if
 
-    if (l%tol < epsilon(l%tol)) then
-       l%tol = epsilon(l%tol)
-       write(*,'(A,'//s%rfmt//')') 'WARNING: increased INVLAP tolerance to ',l%tol 
+    if (lap%tol < epsilon(lap%tol)) then
+       lap%tol = epsilon(lap%tol)
+       write(*,'(A,'//s%rfmt//')') 'WARNING: increased INVLAP tolerance to ',lap%tol 
     end if
 
     ! tanh-sinh quadrature parameters
@@ -135,28 +140,28 @@ contains
     read(19,*) s%computetimes, numtfile, s%timefilename    
 
     ! read in time behavior
-    read(19,'(I3)', advance='no') s%timeType 
-    if (s%timeType > -1) then
+    read(19,'(I3)', advance='no') lap%timeType 
+    if (lap%timeType > -1) then
        ! functional time behavior (two or fewer parameters)
-       allocate(s%timePar(2))
-       read(19,*) s%timePar(:)
+       allocate(lap%timePar(2))
+       read(19,*) lap%timePar(:)
        if (.not. s%quiet) then
-          write(*,'(A)') s%timeDescrip(s%timeType)
+          write(*,'(A)') lap%timeDescrip(lap%timeType)
           write(*,'(A,2(1X,'//s%rfmt//'))') 'time behavior, par1, par2 ::', &
-               & s%timeType, s%timePar(:)
+               & lap%timeType, lap%timePar(:)
        end if
     else
        ! arbitrarily long piecewise-constant time behavior 
-       allocate(s%timePar(-2*s%timeType+1))
-       read(19,*) s%timePar(:)
+       allocate(lap%timePar(-2*lap%timeType+1))
+       read(19,*) lap%timePar(:)
        if (.not. s%quiet) then
           fmt = '(A,    ('//s%rfmt//',1X),A,    ('//s%rfmt//',1X))'
-          write(fmt(8:11),'(I4.4)')  size(s%timePar(:-s%timeType+1),1)
-          write(fmt(26:29),'(I4.4)') size(s%timePar(-s%timeType+2:),1)
-          write(*,'(A)') s%timeDescrip(9)
+          write(fmt(8:11),'(I4.4)')  size(lap%timePar(:-lap%timeType+1),1)
+          write(fmt(26:29),'(I4.4)') size(lap%timePar(-lap%timeType+2:),1)
+          write(*,'(A)') lap%timeDescrip(9)
           write(*,fmt) 'time behavior:  ti, tf | Q multiplier each step :: ', &
-               & s%timeType,s%timePar(:-s%timeType+1),'| ',&
-               & s%timePar(-s%timeType+2:)
+               & lap%timeType,lap%timePar(:-lap%timeType+1),'| ',&
+               & lap%timePar(-lap%timeType+2:)
        end if
     end if
 
@@ -225,7 +230,7 @@ contains
        write(*,'(A,'//s%rfmt//')') 'b_D: ',w%bD
        write(*,'(A,'//s%rfmt//')') 'l_D: ',w%lD
        write(*,'(A,I0,2('//s%rfmt//',1X))') 'deHoog: M,alpha,tol: ', &
-            & l%M, l%alpha, l%tol
+            & lap%M, lap%alpha, lap%tol
        write(*,'(A,2(I0,1X))'), 'tanh-sinh: k, num extrapolation steps ', &
             & ts%k, ts%nst
        write(*,'(A,4(I0,1X))'), 'GL: J0 split, num zeros accel, GL-order ',&
@@ -271,10 +276,10 @@ contains
 
   end subroutine read_input
 
-  subroutine write_header(w,f,s,l,h,gl,ts,unit)
+  subroutine write_header(w,f,s,lap,h,gl,ts,unit)
     use types
     
-    type(invLaplace), intent(in) :: l
+    type(invLaplace), intent(in) :: lap
     type(invHankel), intent(in) :: h
     type(GaussLobatto), intent(in) :: gl
     type(TanhSinh), intent(in) :: ts
@@ -305,7 +310,7 @@ contains
     write(20,'(A,2('//s%rfmt//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
     write(20,'(A,'//s%rfmt//')') '# gamma :: ',f%gamma
     write(20,'(A,I0,2('//s%rfmt//',1X))') '# deHoog M, alpha, tol ::',&
-         & l%M, l%alpha, l%tol
+         & lap%M, lap%alpha, lap%tol
     write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps ::',&
          & ts%k, ts%nst
     write(20,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order ::',&

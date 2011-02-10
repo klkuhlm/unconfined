@@ -1,9 +1,4 @@
-Program Driver
-
-  ! only needed for intel compiler
-#ifdef INTEL
-  use ifport, only : dbesj0, dbesj1     
-#endif
+program Driver
 
   ! type definitions 
   use types
@@ -22,19 +17,18 @@ Program Driver
 
   implicit none
 
-  type(invLaplace) :: l
-  type(invHankel) :: h
-  type(GaussLobatto) :: g
-  type(TanhSinh) :: t
+  type(invLaplace) :: lap
+  type(invHankel) :: hank
+  type(GaussLobatto) :: gl
+  type(TanhSinh) :: ts
   type(well) :: w
   type(formation) :: f
-  type(solution) :: s
-
+  type(solution) :: sol
   integer :: i, unit
   real(DP), parameter :: TEE_MULT = 2.0_DP
+  integer, parameter :: UNIT = 20
 
   ! vectors of results and intermediate steps
-
   real(DP), allocatable  ::  dt(:) 
   complex(EP), allocatable :: fa(:,:)
   complex(EP), allocatable :: tmp(:,:)
@@ -47,23 +41,25 @@ Program Driver
 
   ! read in data from file, do minor error checking
   ! and allocate some solution vectors
-  call read_input(w,f,s,l,h,g,t)
+  call read_input(w,f,s,lap,hank,gl,t)
   
   l%np = 2*l%M+1  ! number of Laplace transform Fourier series coefficients
   t%N = 2**t%k - 1
 
-  allocate(finint(l%np), infint(l%np), totlap(l%np), p(l%np), &
+  allocate(finint(l%np), infint(l%np), totlap(l%np), l%p(l%np), &
        & h%splitv(s%nt), dt(s%nt), t%w(t%N), t%a(t%N), fa(t%N,l%np), ii(t%N), &
        & tmp(t%nst,l%np), t%kk(t%nst), t%NN(t%nst), t%hh(t%nst))
 
-  unit = 20
-  call write_header(w,f,s,l,h,g,t,unit)
+  call write_header(w,f,s,lap,hank,gl,t,UNIT)
      
   ! loop over all requested times
   do i = 1, s%nt
      if (.not. quiet) then
         write(*,'(I4,A,ES11.4)') i,' td ',s%tD(i)
      end if
+     
+     ! currently using 'optimal' p values for each time
+     l%p(1:s%np) = dehoog_pvalues(TEE_MULT*s%tD(i),lap)
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      ! finite portion of Hankel integral (Tanh-Sinh quadrature)
@@ -119,10 +115,10 @@ Program Driver
 
      if(.not. allocated(g%x)) then
         allocate(g%x(g%ord-2),g%w(g%ord-2))
-        call gauss_lobatto_setup(g)  ! get weights and abcissa
+        call gauss_lobatto_setup(gl)  ! get weights and abcissa
      end if
 
-     infint(1:np) = inf_integral(laplace_hankel_soln,h%sv(i),h,g,w,lap,tD(i))
+     infint(1:np) = inf_integral(laplace_hankel_soln,h%sv(i),hank,gl,w,lap,tD(i))
 
      ! perform numerical inverse Laplace transform and sum infinite and finite
      ! portions of Hankel integral
@@ -135,9 +131,9 @@ Program Driver
 
      ! write results to file (as we go)
      if (dimless) then
-        write (unit,'(3(1x,ES24.15E3))') td(i), totint
+        write (UNIT,'(3(1x,ES24.15E3))') td(i), totint
      else
-        write (unit,'(3(1x,ES24.15E3))') ts(i), totint
+        write (UNIT,'(3(1x,ES24.15E3))') ts(i), totint
      end if
      
   end do
@@ -156,7 +152,7 @@ contains
     implicit none
 
     interface 
-       function integrand(a,t,np) result(H)
+       function integrand(a,t,s,w,f) result(H)
          use constants, only : DP,EP
          use types, only : solution
          real(EP), intent(in) :: a
@@ -357,7 +353,7 @@ contains
 
   !! ###################################################
   ! polynomial extrapolation modified from numerical recipes f90 (section 3.1)
-  SUBROUTINE polint(xa,ya,x,y,dy)
+  subroutine polint(xa,ya,x,y,dy)
     ! xa and ya are given x and y locations to fit an nth degree polynomial
     ! through.  results is a value y at given location x, with error estimate dy
 
@@ -365,14 +361,14 @@ contains
     ! y is complex and extended-precision
 
     use constants, only : DP, EP
-    IMPLICIT NONE
-    REAL(EP), DIMENSION(:), INTENT(IN) :: xa
+    implicit none
+    real(EP), dimension(:), intent(IN) :: xa
     complex(EP), dimension(:), intent(in) :: ya
-    REAL(EP), INTENT(IN) :: x
-    complex(EP), INTENT(OUT) :: y,dy
-    INTEGER :: m,n,ns
-    COMPLEX(EP), DIMENSION(size(xa)) :: c,d,den
-    REAL(EP), DIMENSION(size(xa)) :: ho
+    real(EP), intent(IN) :: x
+    complex(EP), intent(OUT) :: y,dy
+    integer :: m,n,ns
+    complex(EP), dimension(size(xa)) :: c,d,den
+    real(EP), dimension(size(xa)) :: ho
 
     n=size(xa)
     c=ya
@@ -398,6 +394,6 @@ contains
        end if
        y=y+dy
     end do
-  END SUBROUTINE polint
+  end subroutine polint
 
 end program Driver

@@ -1,13 +1,12 @@
 
 module types
-  use constants, only : DP
+  use constants, only : DP, EP
   implicit none
 
   public
 
+  ! Inverse Laplace Transform parameters
   type :: invLaplace
-     ! Inverse Laplace Transform parameters
-
      ! abcissa of convergence, LT tolerance
      real(DP) :: alpha = -999., tol = -999.
 
@@ -17,106 +16,7 @@ module types
      ! length of solution vector (2*M+1)
      integer :: np = -999
 
-  end type invLaplace
-
-  type :: invHankel
-     ! inverse Hankel transform parameters
-
-     ! zeros of J0 Bessel function
-     real(DP), allocatable :: j0z(:) ! locations of zeros of J0 bessel fnc
-     integer :: splitrange = -999, zerorange = -999
-     integer, allocatable :: sv(:) ! split index  vector
-
-     ! min/max j0 split between infinite/fininte integrals
-     integer, dimension(2) :: j0s = [-999, -999] 
-
-  end type invHankel
-
-  type :: GaussLobatto
-     ! parameters specific to GL quadrature
-
-     integer :: nacc = -999, err -999
-
-     ! abcissa and weights
-     real(EP), allocatable :: x(:), w(:)
-
-     ! order of integration
-     integer :: ord = -999
-
-  end type GaussLobatto
-  
-  type :: TanhSinh
-     ! parameters specific to tanh-sinh quadrature
-
-     integer :: k = -999, N = -999, nst = -999
-     real(EP), allocatable :: w(:), a(:), hh(:)
-     integer, allocatable :: kk(:), NN(:), ii(:)
-     
-     ! error in polynomial extrapolation
-     complex(EP) :: polerr = (-999., -999.)
-
-  end type TanhSinh
-
-  type :: well
-     ! parameters related to well/completion
-     real(DP) :: l = -999. ! aquifer top to screen/packer top dist.
-     real(DP) :: d = -999. ! aquifer top to screen/packer bottom dist.
-     real(DP) :: rw = -999., rc = -999. ! well / casing radii
-
-     ! dimensionless parameters
-     real(DP) :: lD = -999.  ! dimensionless l
-     real(DP) :: dD = -999.  ! dimensionless d
-     real(DP) :: bD = -999.  ! dimensionless screen length
-     real(DP) :: rDw = -999. ! dimensionless rw
-
-  end type well
-
-  type :: formation
-     ! parameters related to formation/aquifer
-          
-     real(DP) :: b = -999.  ! aquifer thickness
-     real(DP) :: Kr = -999. ! radial hydraulic conductivity
-     real(DP) :: kappa  = -999.  ! Kz/Kr ratio
-     real(DP) :: Ss = -999. ! specific storage
-     real(DP) :: Sy = -999. ! specific yield
-     real(DP) :: gamma = -999.  ! dimensionless skin (1=no skin)
-     real(DP) :: usL = -999. ! thickness of unsaturated zone
-     real(DP) :: usalpha = -999. ! unzaturated zone sorbtive number
-
-     ! computed aquifer parameters
-     real(DP) :: sigma = -999.  ! Sy/(Ss*b)
-     real(DP) :: alphaD = -999. ! kappa/sigma
-
-  end type formation
-
-  type(time) :: solution
-     ! parameters related to numerical solution
-
-     real(DP) :: Lc = -999.  ! characteristic length
-     real(DP) :: Tc = -999.  ! characteristic time
-
-     ! which unconfined model to use?
-     integer :: model = -999
-     ! 1 = Boulton 195?
-     ! 2 = Neuman 1974 
-     ! 3 = Moench 199?
-     ! 4 = Mishra/Neuman 2011
-     ! 5 = Malama 2011
-
-     logical :: quiet = .false.  ! output debugging to stdout?
-     logical :: dimless = .false.  ! output dimensionless solution?
-
-     ! either the number of times to be computed,
-     ! or the number of times read from file
-     integer :: nt = -999  
-
-     ! vector of times to compute solution at
-     real(DP), allocatable :: t(:), tD(:)
-
-     integer, parameter :: NUMCHAR = 128
-     character(NUMCHAR) :: outfilename, infilename, timefilename
-
-     character(7) :: rfmt = 'ES14.07'
+     complex(EP), allocatable :: p(:)
 
      ! time behavior / parameters 
      ! 1 = step on,              tpar(1)  = on time
@@ -143,13 +43,103 @@ module types
           &  'rectified triangular wave; tpar(1) = 1/4 period of wave; tpar(2) = start time',&
           &  'rectified square wave; tpar(1) = 1/2 period of wave; tpar(2) = start time',&
           &  'piecewise constant rate (n steps); tpar(1:n)=ti; tpar(n+1)=tfinal; tpar(n+2:)=Q']
-
+     
      ! type of time behavior  (see above)
      integer :: timeType = -999
 
      ! parameters related to different time behaviors (on, off, etc)
-     real(DP), allocatable :: timePar(:)
+     real(EP), allocatable :: timePar(:)
 
+  end type invLaplace
+
+  ! inverse Hankel transform parameters
+  type :: invHankel
+     ! zeros of J0 Bessel function
+     real(DP), allocatable :: j0z(:) ! locations of zeros of J0 bessel fnc
+     integer :: splitrange = -999, zerorange = -999
+     integer, allocatable :: sv(:) ! split index  vector
+
+     ! min/max j0 split between infinite/fininte integrals
+     integer, dimension(2) :: j0s = [-999, -999] 
+  end type invHankel
+
+  ! parameters specific to GL quadrature
+  type :: GaussLobatto
+     integer :: nacc = -999, err -999
+
+     ! abcissa and weights
+     real(EP), allocatable :: x(:), w(:)
+
+     ! order of integration
+     integer :: ord = -999
+  end type GaussLobatto
+
+  ! parameters specific to tanh-sinh quadrature  
+  type :: TanhSinh
+     integer :: k = -999, N = -999, nst = -999
+     real(EP), allocatable :: w(:), a(:), hh(:)
+     integer, allocatable :: kk(:), NN(:), ii(:)
+     
+     ! error in polynomial extrapolation
+     complex(EP) :: polerr = (-999., -999.)
+  end type TanhSinh
+
+  ! parameters related to well/completion
+  type :: well
+     real(DP) :: l = -999. ! aquifer top to screen/packer top dist.
+     real(DP) :: d = -999. ! aquifer top to screen/packer bottom dist.
+     real(DP) :: rw = -999., rc = -999. ! well / casing radii
+
+     ! dimensionless parameters
+     real(DP) :: lD = -999.  ! dimensionless l
+     real(DP) :: dD = -999.  ! dimensionless d
+     real(DP) :: bD = -999.  ! dimensionless screen length
+     real(DP) :: rDw = -999. ! dimensionless rw
+  end type well
+
+  ! parameters related to formation/aquifer
+  type :: formation
+     real(DP) :: b = -999.  ! aquifer thickness
+     real(DP) :: Kr = -999. ! radial hydraulic conductivity
+     real(DP) :: kappa  = -999.  ! Kz/Kr ratio
+     real(DP) :: Ss = -999. ! specific storage
+     real(DP) :: Sy = -999. ! specific yield
+     real(DP) :: gamma = -999.  ! dimensionless skin (1=no skin)
+     real(DP) :: usL = -999. ! thickness of unsaturated zone
+     real(DP) :: usalpha = -999. ! unzaturated zone sorbtive number
+
+     ! computed aquifer parameters
+     real(DP) :: sigma = -999.  ! Sy/(Ss*b)
+     real(DP) :: alphaD = -999. ! kappa/sigma
+  end type formation
+
+  ! parameters related to numerical solution
+  type(time) :: solution
+     real(DP) :: Lc = -999.  ! characteristic length
+     real(DP) :: Tc = -999.  ! characteristic time
+
+     ! which unconfined model to use?
+     integer :: model = -999
+     ! 1 = Boulton 195?
+     ! 2 = Neuman 1974 
+     ! 3 = Moench 199?
+     ! 4 = Mishra/Neuman 2011
+     ! 5 = Malama 2011
+
+     logical :: quiet = .false.  ! output debugging to stdout?
+     logical :: dimless = .false.  ! output dimensionless solution?
+
+     ! either the number of times to be computed,
+     ! or the number of times read from file
+     integer :: nt = -999  
+
+     ! vector of times to compute solution at
+     real(DP), allocatable :: t(:), tD(:)
+
+     integer, parameter :: NUMCHAR = 128
+     character(NUMCHAR) :: outfilename, infilename, timefilename
+
+     character(7) :: rfmt = 'ES14.07'
 
   end type solution
 
