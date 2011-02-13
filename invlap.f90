@@ -24,10 +24,11 @@ contains
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   function deHoog_invLap_vect(t,tee,fp,lap) result(ft)
     use constants, only : DP, EP, PI
+    use types, only : invLaplace
 
     real(DP), intent(in) :: tee              ! scaling factor (previously T=2*tmax, but potentially adjustable)
     real(DP), intent(in), dimension(:) :: t   ! vector of times
-    type(INVLT), intent(in) :: lap            ! structure of inputs
+    type(invLaplace), intent(in) :: lap            ! structure of inputs
     complex(EP), intent(in), dimension(0:2*lap%M) :: fp
     real(EP), dimension(size(t)) :: ft        ! output
 
@@ -108,8 +109,9 @@ contains
 
   function deHoog_invLap_scalt(t,tee,fp,lap) result(ft)
     use constants, only : DP,EP
+    use types, only : invLaplace
     real(DP), intent(in) ::  t, tee 
-    type(INVLT), intent(in) :: lap
+    type(invLaplace), intent(in) :: lap
     complex(EP), intent(in), dimension(0:2*lap%M) :: fp
     real(EP) :: ft ! output
     
@@ -118,7 +120,8 @@ contains
   
   function deHoog_pvalues(tee,lap) result(p)
     use constants, only : EP, DP, PIEP
-    type(INVLT), intent(in) :: lap
+    use types, only : invLaplace
+    type(invLaplace), intent(in) :: lap
     real(DP), intent(in) :: tee
     complex(EP), dimension(2*lap%M+1) :: p
     integer :: i

@@ -241,10 +241,15 @@ contains
        if (s%piezometer) then
           s%z(1) = z%zTop
        else
-          ! calc points spread out evenly along obs well screen
-          s%z(1:s%zOrd) = linspace(s%zBot, s%zTop, s%zOrd)
+          if (s%zOrd > 1) then
+             ! calc points spread out evenly along obs well screen
+             s%z(1:s%zOrd) = linspace(s%zBot, s%zTop, s%zOrd)
+          else
+             ! one point goes to middle of interval
+             s%z(1) = (s%zBot + s%zTop)/2.0 
+          end if
        end if
-       
+
        open(unit=22, file=trim(timeFileName), status='old', &
             & action='read',iostat=ioerr)
        if(ioerr /= 0) then
@@ -348,15 +353,31 @@ contains
        end if
     end if
     
+    ! determine which layer z point(s) are in
+    allocate(s%zLay(shape(s%z)))
+    where(s%z(:) <= w%l)
+       ! above well screen
+       s%zLay = 1
+    elsewhere
+       where(s%z(:) < w%d)
+          ! beside well screen
+          s%zLay = 2
+       elsewhere
+          ! below well screen
+          s%zLay = 3
+       end where
+    end where
+    
     ! output filename
     read(19,*) s%outfilename                        
     close(19)
 
     ! ## compute dimensionless quantities #####
 
-    ! characteristic length / time
+    ! characteristic length / time / head
     s%Lc = f%b
     s%Tc = f%b**2/(f%Kr/f%Ss)
+    s%Hc = 2*PI*f%Kr*f%b/w%Q  
     
     ! compute derived or dimensionless properties
     f%sigma = f%Sy/(f%Ss*f%b)
@@ -430,7 +451,7 @@ contains
 
   end subroutine read_input
 
-  subroutine write_header(w,f,s,lap,h,gl,ts,unit)
+  subroutine write_timeseries_header(w,f,s,lap,h,gl,ts,unit)
     use types
     
     type(invLaplace), intent(in) :: lap
@@ -480,6 +501,6 @@ contains
             & '#------------------------------------------------------------'
     end if
 
-  end subroutine write_header
+  end subroutine write_timeseries_header
 end module io
 

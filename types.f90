@@ -79,8 +79,6 @@ module types
      real(EP), allocatable :: w(:), a(:), hh(:)
      integer, allocatable :: kk(:), NN(:), ii(:)
      
-     ! error in polynomial extrapolation
-     complex(EP) :: polerr = (-999., -999.)
   end type TanhSinh
 
   ! parameters related to well/completion
@@ -114,8 +112,11 @@ module types
 
   ! parameters related to numerical solution
   type(time) :: solution
-     real(DP) :: Lc = -999.  ! characteristic length
-     real(DP) :: Tc = -999.  ! characteristic time
+  
+     ! characteristic quantities for non-dimensionalizing
+     real(DP) :: Lc = -999.  ! length
+     real(DP) :: Tc = -999.  ! time
+     real(DP) :: Hc = -999.  ! head
 
      ! which unconfined model to use?
      integer :: model = -999
@@ -144,6 +145,9 @@ module types
      real(DP), allocatable :: r(:), rD(:) 
      real(DP), allocatable :: z(:), zD(:)
 
+     ! which layer (above, in, or below screen) each z point falls in
+     integer, allocatable :: zlay(:)
+
      ! top/bot of monitoring well screen 
      real(DP) :: zTop = -999., zBot = -999. 
      ! order of quadrature at monitoring well screen
@@ -152,7 +156,8 @@ module types
      integer, parameter :: NUMCHAR = 128
      character(NUMCHAR) :: outfilename, infilename
 
-     character(7) :: rfmt = 'ES14.07'
+     character(7), parameter :: RFMT = 'ES14.07'  ! format for space/time
+     character(9), parameter :: HFMT = 'ES24.15E3'  ! format for results
 
   end type solution
 

@@ -24,17 +24,19 @@ program Driver
   type(well) :: w
   type(formation) :: f
   type(solution) :: sol
-  integer :: i, unit
+  integer :: i, ii, k, unit
   real(DP), parameter :: TEE_MULT = 2.0_DP
   integer, parameter :: UNIT = 20
 
   ! vectors of results and intermediate steps
-  real(DP), allocatable  ::  dt(:) 
-  complex(EP), allocatable :: fa(:,:)
-  complex(EP), allocatable :: tmp(:,:)
-  complex(EP), allocatable :: finint(:), infint(:), totlap(:), p(:)
-  real(EP) :: totint
+  complex(EP), allocatable :: fa(:,:,:)
+  complex(EP), allocatable :: tmp(:,:,:)
+  complex(EP), allocatable :: finint(:,:), infint(:,:), totlap(:,:)
+  real(EP), allocatable(:) :: totint(:)
+  real(EP) :: totobs
   real(DP) :: tee, arg
+  complex(DP) :: dy
+
 
   !! k parameter in tanh-sinh quadrature (order is 2^k - 1)
   integer ::  m, nn, jj, j
@@ -46,19 +48,24 @@ program Driver
   l%np = 2*l%M+1  ! number of Laplace transform Fourier series coefficients
   t%N = 2**t%k - 1
 
-  allocate(finint(l%np), infint(l%np), totlap(l%np), l%p(l%np), &
-       & h%splitv(s%nt), dt(s%nt), t%w(t%N), t%a(t%N), fa(t%N,l%np), ii(t%N), &
-       & tmp(t%nst,l%np), t%kk(t%nst), t%NN(t%nst), t%hh(t%nst))
+  allocate(finint(l%np,s%nz), infint(l%np,s%nz), totlap(l%np,s%nz), l%p(l%np), &
+       & h%splitv(s%nt), t%w(t%N), t%a(t%N), fa(t%N,l%np,s%nz), ii(t%N), &
+       & tmp(t%nst,l%np,s%nz), t%kk(t%nst), t%NN(t%nst), t%hh(t%nst))
 
-  call write_header(w,f,s,lap,hank,gl,t,UNIT)
-     
-  ! loop over all requested times
+  if (s%timeSeries) then
+     call write_timeseries_header(w,f,s,lap,hank,gl,t,UNIT)
+  else
+     call write_contour_header(w,f,s,lap,hank,gl,t,UNIT)
+  end if
+       
+  ! loop over all desired calculation times
   do i = 1, s%nt
      if (.not. quiet) then
         write(*,'(I4,A,ES11.4)') i,' td ',s%tD(i)
      end if
      
      ! currently using 'optimal' p values for each time
+     ! TODO: compute optimal p values for a vector of times
      l%p(1:s%np) = dehoog_pvalues(TEE_MULT*s%tD(i),lap)
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -69,136 +76,176 @@ program Driver
      t%NN(:) = 2**t%kk - 1
      t%hh(:) = 4.0_EP/(2**t%kk)
 
-     ! compute abcissa and for highest-order case (others are subsets)
-     arg = h%j0z(h%sv(i))/w%rDw
-     call tanh_sinh_setup(t,t%k,arg)
+     ! loop over all desired calculation radial distances
+     do ii = 1, s%nr
 
-     ! compute solution at densest set of abcissa
-     !$OMP PARALLEL DO PRIVATE(nn) SHARED(fa,t,s)
-     do nn=1,t%NN(t%nst)
-        fa(nn,1:np) = laplace_hankel_soln(t%a(nn),s%tD(i),s%np)
-     end do
-     !$OMP END PARALLEL DO
+        ! compute abcissa and for highest-order case (others are subsets)
+        ! split between finite & infinite integrals
+        arg = h%j0z(h%sv(i))/s%rD(ii) 
+        call tanh_sinh_setup(t,t%k,arg)
 
-     tmp(t%nst,:) = arg/2.0_DP*sum(spread(ts%w(:),2,s%np)*fa(:,:),dim=1)
-
-     do j=t%nst-1,1,-1
-        !  only need to re-compute weights for each subsequent step
-        call tanh_sinh_setup(t,t%kk(j),arg)
-
-        ! compute index vector, to slice up solution 
-        ! for nst'th turn count regular integers
-        ! for (nst-1)'th turn count even integers
-        ! for (nst-2)'th turn count every 4th integer, etc...
-        ii(1:t%NN(j)) = [( m* 2**(t%nst-j), m=1,t%NN(j) )]
-
-        ! estimate integral with subset of function evaluations and appropriate weights
-        tmp(j,1:np) = arg/2.0_DP*sum(spread(tsw(1:t%NN(j)),2,s%np)*&
-                                          & fa(ii(1:t%NN(j)),1:s%np),dim=1)
-     end do
-
-     if (t%nst > 1) then
-        !$OMP PARALLEL DO PRIVATE(jj,PolErr) SHARED(tshh,tmp,finint)
-        do jj=1,s%np
-           call polint(t%hh(1:nst),tmp(1:nst,jj),0.0_EP,finint(jj),t%PolErr)
+        ! compute solution at densest set of abcissa
+        !$OMP PARALLEL DO PRIVATE(nn) SHARED(fa,t,s)
+        do nn = 1,t%NN(t%nst)
+           fa(nn,1:l%np,1:s%nz) = laplace_hankel_soln(t%a(nn), s%tD(i), s%np, s%nz)
         end do
         !$OMP END PARALLEL DO
-     else
-        finint(:) = tmp(1,1:s%np)
-     end if
 
+        tmp(t%nst,1:l%np,1:s%nz) = arg/2.0 * &
+             & sum(spread(spread(ts%w(:),2,l%np),3,s%nz)*fa(:,:,:),dim=1)
 
-     !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-     ! "infinite" portion of Hankel  integral for each time level
-     ! integrate between zeros of Bessel function, extrapolate 
-     ! area from series of areas of alternating sign
+        do j=t%nst-1,1,-1
+           !  only need to re-compute weights for each subsequent step
+           call tanh_sinh_setup(t,t%kk(j),arg)
 
-     if(.not. allocated(g%x)) then
-        allocate(g%x(g%ord-2),g%w(g%ord-2))
-        call gauss_lobatto_setup(gl)  ! get weights and abcissa
-     end if
+           ! compute index vector, to slice up solution 
+           ! for nst'th turn count regular integers
+           ! for (nst-1)'th turn count even integers
+           ! for (nst-2)'th turn count every 4th integer, etc...
+           ii(1:t%NN(j)) = [( m* 2**(t%nst-j), m=1,t%NN(j) )]
 
-     infint(1:np) = inf_integral(laplace_hankel_soln,h%sv(i),hank,gl,w,lap,tD(i))
+           ! estimate integral with subset of function evaluations and appropriate weights
+           tmp(j,1:l%np,1:s%nz) = arg/2.0 * &
+                & sum(spread(spread(tsw(1:t%NN(j)),2,s%np),3,s%nz) * &
+                & fa(ii(1:t%NN(j)),:,:),dim=1)
+        end do
+        
+        if (t%nst > 1) then
+           ! perform Richardson extrapolation to spacing -> zero
+           !$OMP PARALLEL DO PRIVATE(jj,k,dy) SHARED(t,tmp,finint)
+           do jj = 1,l%np
+              do k = 1,s%nz
+                 call polint(t%hh(1:nst), tmp(1:nst,jj,k), 0.0_EP, finint(jj,k), dy)
+              end do
+           end do
+           !$OMP END PARALLEL DO
+        else
+           ! no extrapolation, just use the densest (only) estimate
+           finint(1:l%np,s:%nz) = tmp(1,1:s%np,1:s%nz)
+        end if
 
-     ! perform numerical inverse Laplace transform and sum infinite and finite
-     ! portions of Hankel integral
-     tee = td(i)*TEE_MULT
-     p = dehoog_pvalues(tee,lap)
-     totlap(1:np) = finint(1:np) + infint(1:np) ! omega
-     totlap(1:np) = beta(1) + beta(2)*p + gamma*totlap(1:np)/2.0 ! f
-     totlap(1:np) = totlap(:)/(1.0 + p(:)*totlap(:))  ! Psi
-     totint = dehoog_invlap(td(i),tee,totlap(1:np),lap) 
+        !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+        ! "infinite" portion of Hankel  integral for each time level
+        ! integrate between zeros of Bessel function, extrapolate 
+        ! area from series of areas of alternating sign
+        ! TODO: use higher-order GL quadrature for lower-order zeros?
 
-     ! write results to file (as we go)
-     if (dimless) then
-        write (UNIT,'(3(1x,ES24.15E3))') td(i), totint
-     else
-        write (UNIT,'(3(1x,ES24.15E3))') ts(i), totint
-     end if
-     
+        if(.not. allocated(g%x)) then
+           allocate(g%x(g%ord-2),g%w(g%ord-2))
+           call gauss_lobatto_setup(gl)  ! get weights and abcissa
+        end if
+
+        infint(1:l%np,1:s%nz) = inf_integral(laplace_hankel_soln, &
+             & arg, h, gl, s%rD(ii), s%nz, l%np, s%tD(i))
+
+        totlap(1:l%np,1:s%nz) = finint(1:l%np,1:s%nz) + infint(1:l%np,1:s%nz) 
+
+        !$OMP PARALLEL DO PRIVATE(k) SHARED(totint,l,s,totlap)
+        do k = 1,s%nz
+           totint(k) = dehoog_invlap(s%tD(i),s%tD(i)*TEE_MULT,totlap(1:np,k),l) 
+        end do
+        !$OMP END PARALLEL DO
+
+        ! do trapezoid rule across monitoring well screen if necessary
+        ! result is divided by length of interval to get average value
+        if (s%timeseries) then
+           if(.not. s%piezometer .and. s%zOrd > 1) then
+              ! weights are uniform, except for endpoints
+              ! divide by interval length
+              totObs = (totint(1)/2.0 + sum(totint(2:s%zOrd)) + &
+                   & totint(s%zOrd)/2.0)/(s%zOrd-1)
+           else
+              totObs = totint(1) ! one point, interval has no length
+           end if
+        end if
+        
+        ! write results to file
+        if (s%timeSeries) then
+           if (s%dimless) then
+              ! dimensionless time series output
+              write (UNIT,'('//s%RFMT//',1X,2('//s%HFMT//',1X))') &
+                   & td(i), totObs ! TODO add derivative wrt logt
+           else
+              ! dimensional time series output
+              write (UNIT,'('//s%RFMT//',1X,2('//s%HFMT//',1X))') &
+                   & t(i), totObs*s%Hc ! TODO add derivative wrt logt
+           end if
+        else
+           if (s%dimless) then
+              ! dimensionless contour map output
+              do k = 1,s%nz
+                 write (UNIT,'(2('//s%RFMT//',1X),2('//s%HFMT//',1X))') &
+                      & s%zD(k), s%rD(ii), totint(k) ! TODO add derivative wrt logt
+              end do
+           else
+              ! dimensional contour map output
+              do k = 1,s%nz
+                 write (UNIT,'(2('//s%RFMT//',1X),2('//s%HFMT//',1X))') &
+                      & s%z(k), s%r(ii), totint(k)*s%Hc ! TODO add derivative wrt logt
+              end do
+           end if
+        end if
+     end do
   end do
-  deallocate(finint,infint,ts,td,splitv,dt)
 
 contains
 
-  !! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
-  !!   end of program flow
-  !! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
-
   !! ###################################################
-  function inf_integral(integrand,split,h,g,w,tD) result(integral)
+  function inf_integral(integrand,split,h,g,rD,nz,np,tD) result(integral)
     use constants, only : DP,EP
-    use types, only : GaussLobatto, invHankel, solution, well
+    use types, only : GaussLobatto, invHankel
     implicit none
 
     interface 
-       function integrand(a,t,s,w,f) result(H)
+       function integrand(a,t,s,w,f) result(Hout)
          use constants, only : DP,EP
          use types, only : solution
          real(EP), intent(in) :: a
          real(DP), intent(in) :: t
          integer, intent(in) :: np
-         complex(EP), dimension(np) :: H
+         complex(EP), dimension(np) :: Hout
        end function integrand
     end interface
 
     type(GaussLobatto), intent(inout) :: gl
     type(invHankel), intent(in) :: hank
-    type(solution), intent(inout) :: s
-    type(well), intent(in) :: w
-    integer, intent(in) :: split
-    real(DP), intent(in) :: tD
+    integer, intent(in) :: split, np, nz
+    real(DP), intent(in) :: tD, rD
 
     ! series of areas between consecutive J0 zeros
-    complex(EP), dimension(num,s%np) :: area
+    complex(EP), dimension(num,np,s%nz) :: area
     ! size of each integration interval
-    real(EP) :: lob,hib,width  
-    complex(EP), dimension(s%np) :: integral  ! results
+    real(EP) :: lob, hib, width  
+    complex(EP), dimension(np,s%nz) :: integral  ! results
     integer :: i, j, k, np
 
     do j = split+1, split+g%nacc
-       lob = real(h%j0z(j-1)/w%rDw,EP) ! lower bound
-       hib = real(h%j0z(j)/w%rDw,EP)   ! upper bound
+       lob = real(h%j0z(j-1)/rD,EP) ! lower bound
+       hib = real(h%j0z(j)/rD,EP)   ! upper bound
        width = hib - lob
        
        ! transform GL abcissa to global coordinates
        g%y(:) = (width*g%x(:) + (hib+lob))/2.0
           
        !$OMP PARALLEL DO PRIVATE(k) SHARED(g,np)
-       do k=1,ord-2
-          g%z(k,1:s%np) = integrand( g%y(k), tD, s%np )
+       do k = 1,ord-2
+          g%z(k,1:np,1:nz) = integrand( g%y(k), tD, np nz)
        end do
        !$OMP END PARALLEL DO
           
-       area(j-split,1:s%np) = width/2.0* &
-            & sum(g%z(1:ord-2,:)*spread(g%w(1:ord-2),2,np),dim=1)
+       area(j-split,1:np,1:nz) = width/2.0*sum(g%z(1:ord-2,:,:)* &
+            & spread(spread(g%w(1:ord-2),2,np),3,nz),dim=1)
     end do
  
-    do i=1,s%np
-       ! accelerate each series independently
-       integral(i) = wynn_epsilon(area(1:num,i))
+    !$OMP PARALLEL DO PRIVATE(i,j) SHARED(area,integral)
+    do i = 1,np
+       do j = 1,nz
+          ! accelerate each series independently
+          integral(i,j) = wynn_epsilon(area(1:num,i,j))
+       end do
     end do
-    
+    !$OMP END PARALLEL DO
+
   end function inf_integral
 
   !! ###################################################
