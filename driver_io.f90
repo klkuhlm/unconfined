@@ -8,7 +8,7 @@ contains
   subroutine read_input(w,f,s,lap,h,gl,ts)
     use constants, only : DP, PI
     use types
-    use utilities, only : logspace
+    use utilities, only : logspace, linspace
     
     ! only needed for intel compiler
 #ifdef INTEL
@@ -27,10 +27,12 @@ contains
     character(39) :: fmt
 
     ! intermediate steps in vsplit
-    integer :: zerorange, minlogsplit, maxlogsplit, splitrange
+    integer :: zrange, minlsp, maxlsp, spRange
 
-    ! used to compute times
+    ! used to compute times/spaces
     integer :: numtfile, numtcomp, minlogt, maxlogt
+    integer :: numRComp, numZComp
+    real(DP) :: minR, maxR, minZ, maxZ
 
     character(NUMCHAR) :: timeFileName, spaceFileName
     real(DP) :: tval, rval
@@ -236,6 +238,13 @@ contains
        end if
        allocate(s%z(s%zOrd), s%zD(s%zOrd))
        
+       if (s%piezometer) then
+          s%z(1) = z%zTop
+       else
+          ! calc points spread out evenly along obs well screen
+          s%z(1:s%zOrd) = linspace(s%zBot, s%zTop, s%zOrd)
+       end if
+       
        open(unit=22, file=trim(timeFileName), status='old', &
             & action='read',iostat=ioerr)
        if(ioerr /= 0) then
@@ -343,10 +352,10 @@ contains
     read(19,*) s%outfilename                        
     close(19)
 
-    ! characteristic length
-    s%Lc = f%b
+    ! ## compute dimensionless quantities #####
 
-    ! characteristic time 
+    ! characteristic length / time
+    s%Lc = f%b
     s%Tc = f%b**2/(f%Kr/f%Ss)
     
     ! compute derived or dimensionless properties
@@ -354,13 +363,16 @@ contains
     f%alphaD = f%kappa/f%sigma
 
     ! dimensionless lengths
-    w%rDw = w%rw/s%Lc
     w%bD = (w%l - w%d)/s%Lc
     w%lD = w%l/s%Lc
     w%dD = w%d/s%Lc
+    s%zD(:) = s%z(:)/s%Lc
+    s%rD(:) = z%r(:)/s%Lc
 
     ! dimensionless times
-    s%tD(:) = s%t(:)/s%Tc
+    s%tD(:) = s%t(:)/Tc
+
+    ! ## echo computed quantities #####
 
     if (.not. s%quiet) then
        write(*,'(A,'//s%rfmt//')') 'kappa:   ',f%kappa
@@ -368,31 +380,31 @@ contains
        write(*,'(A,'//s%rfmt//')') 'alpha_D: ',f%alphaD
        write(*,'(A,'//s%rfmt//')') 'Tc:  ',s%Tc
        write(*,'(A,'//s%rfmt//')') 'Lc:  ',s%Lc
-       write(*,'(A,'//s%rfmt//')') 'r_{D,w}: ',w%rDw
        write(*,'(A,'//s%rfmt//')') 'b_D: ',w%bD
        write(*,'(A,'//s%rfmt//')') 'l_D: ',w%lD
+       fmt = '(A,I0,1X,    (ES09.03,1X)               '
+       write(fmt(10:13),'(I4.4)') s%nz
+       write(*,fmt) 'z  : ',s%nz,s%z
+       write(*,fmt) 'z_D: ',s%nz,s%zD
+       write(fmt(10:13),'(I4.4)') s%nr
+       write(*,fmt) 'r  : ',s%nr,s%r 
+       write(*,fmt) 'r_D: ',s%nr,s%rD
+       write(fmt(10:13),'(I4.4)') s%nt
+       write(*,fmt) 't  : ',s%nt,s%t
+       write(*,fmt) 't_D: ',s%nt,s%tD
        write(*,'(A,I0,2('//s%rfmt//',1X))') 'deHoog: M,alpha,tol: ', &
             & lap%M, lap%alpha, lap%tol
        write(*,'(A,2(I0,1X))'), 'tanh-sinh: k, num extrapolation steps ', &
             & ts%k, ts%nst
        write(*,'(A,4(I0,1X))'), 'GL: J0 split, num zeros accel, GL-order ',&
             & h%j0split(:), gl%naccel, gl%order
-       write(*,'(A,L1)') 'compute times? ',s%computetimes
-       if(s%computetimes) then
-          write(*,'(A,3(I0,1X))') 'log10(tmin), log10(tmax), num times ',&
-               & minlogt, maxlogt, numtcomp
-       else
-          write(*,'(A,I0,1X,A)') 'num times, filename for t inputs ',&
-               & numtfile, trim(timefilename)
-       end if
     end if
 
     terms = maxval(h%j0s(:)) + gl%nacc + 1
-    allocate(h%j0z(terms))
+    allocate(h%j0z(terms), h%sv(s%numt))
 
-    ! compute zeros of J0 bessel function
-    ! (quicker / more accurate than reading from file)
-    !************************************
+    ! ## compute zeros of J0 bessel function #####
+
     ! asymptotic estimate of zeros - initial guess
     forall (i=0:terms-1) h%j0zero(i+1) = (i + 0.75)*PI
     do i=1,terms
@@ -408,16 +420,13 @@ contains
        h%j0zero(i) = x
     end do
     
-    allocate(splitv(s%numt))
-
     ! split between finite/infinite part should be 
     ! small for large time, large for small time
-    zerorange = maxval(h%j0split(:)) - minval(h%j0split(:))
-    minlogsplit = floor(minval(log10(s%tD)))   ! min log(td) -> maximum split
-    maxlogsplit = ceiling(maxval(log10(s%tD))) ! max log(td) -> minimum split
-    splitrange = maxlogsplit - minlogsplit + 1 
-    splitv = minval(h%j0split(:)) + &
-         & int(zerorange*((maxlogsplit - log10(s%tD))/splitrange))
+    zRange = maxval(h%j0s(:)) - minval(h%j0s(:))
+    minLSp = floor(minval(log10(s%tD)))   ! min log(td) -> maximum split
+    maxLSp = ceiling(maxval(log10(s%tD))) ! max log(td) -> minimum split
+    spRange = maxlsp - minlsp + 1 
+    h%sv = minval(h%j0s(:)) + int(zrange*((maxlsp - log10(s%tD))/spRange))
 
   end subroutine read_input
 

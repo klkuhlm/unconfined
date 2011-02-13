@@ -56,7 +56,6 @@ module types
   type :: invHankel
      ! zeros of J0 Bessel function
      real(DP), allocatable :: j0z(:) ! locations of zeros of J0 bessel fnc
-     integer :: splitrange = -999, zerorange = -999
      integer, allocatable :: sv(:) ! split index  vector
 
      ! min/max j0 split between infinite/fininte integrals
