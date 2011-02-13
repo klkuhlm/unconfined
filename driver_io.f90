@@ -203,21 +203,39 @@ contains
     read(19,*) spaceFileName, rval ! either rval or data in file used
 
     ! if computing contour or profile, these aren't used
-    if (s%piezometer) then
-       ! point observation depth
-       read(19,*) w%pztop
-    else
-       ! observation location with a finite screen
-       read(19,*) w%pztop, w%pzbot
+    ! point observation depth
+    ! only top used if piezometer
+    read(19,*) s%zTop, s%zBot, s%zOrd 
+
+    if (s%zTop <= s%zBot) then
+       write(*,*) 'ERROR: top of monitoring well screen must be',&
+            & 'above bottom of screen',s%zTop,s%zBot
+       stop
+    end if
+    
+    if (.not. s%piezometer .and. s%zOrd < 1) then
+       write(*,*) 'ERROR: # of quadrature points at ',&
+            & 'monitoring location must be > 0', s%zOrd
+       stop
     end if
 
     if (s%timeseries) then
        ! if computing a time series, read time-related
        ! parameters from input file
 
-       allocate(w%r(1)) ! only one observation distance
-       w%r = rval
-
+       allocate(s%r(1),s%rD(1)) ! only one observation distance
+       if (rval > w%rw) then
+          s%r(1) = rval
+       else
+          write(*,*) 'ERROR: r must be > rw',rval
+          stop
+       end if
+       
+       if (s%piezometer) then
+          s%zOrd = 1
+       end if
+       allocate(s%z(s%zOrd), s%zD(s%zOrd))
+       
        open(unit=22, file=trim(timeFileName), status='old', &
             & action='read',iostat=ioerr)
        if(ioerr /= 0) then
@@ -226,41 +244,99 @@ contains
        end if
        
        ! compute times?, # times to read (not used if vector computed)
-       read(22,*) computeTimes, numtfile
+       read(22,*) computeTimes, numTFile
 
        ! log_10(t_min), log_10(t_max), # times
-       read(22,*) minlogt, maxlogt, numtcomp   
-
+       read(22,*) minLogT, maxLogT, numTComp   
+       
        if (computeTimes) then
-          s%nt = numtcomp
+          s%nt = numTComp
        else
-          s%nt = numtfile
+          s%nt = numTFile
        end if
 
        allocate(s%t(s%nt), s%tD(s%nt), s%sv(s%nt))
 
        if (s%computetimes) then
           ! computing times 
-          s%t = logspace(minlogt,maxlogt,numtcomp)
+          s%t = logspace(minLogT,maxLogT,numTComp)
        else
           ! times listed one per line
           do i=1,numtfile
              read(22,*,iostat=ioerr) s%t(i)
              if(ioerr /= 0) then
-                write(*,'(A,I0,A)') 'ERROR reading time ',i,&
-                     & ' from input file '//trim(timefilename)
+                write(*,*) 'ERROR reading time ',i,&
+                     & ' from input file '//trim(timeFileName)
                 stop
              end if
           end do
           close(22)
+          if(any(s%t < spacing(0.0))) then
+             write(*,*) 'ERROR t must be > 0:',s%t
+             stop                
+          end if
        end if
-       
     else
        ! if computing a contour map or profile
        ! read space related parameters from other file
 
-       allocate()
+       allocate(s%t(1), s%tD(1), s%sv(1))
+       if (tval > spacing(0.0)) then
+          s%t(1) = tval
+       else
+          write(*,*) 'ERROR: t must be >0',tval
+       end if
 
+       ! piezometer doesn't mean anything
+       ! when computing contours / profile 
+
+       open(unit=23, file=trim(spaceFileName), status='old', &
+            & action='read',iostat=ioerr)
+       if(ioerr /= 0) then
+          write(*,'(A)')) 'ERROR opening space input file '// &
+               & trim(spaceFileName)//' for reading'
+       end if
+
+       read(23,*) computeSpace, numRFile, numZFile
+       read(23,*) minR, maxR, numRComp
+       read(23,*) minZ, maxZ, numZComp
+
+       if (computeSpace) then
+          s%nr = numRComp
+          s%nz = numZComp
+       else
+          s%nr = numRFile
+          s%nz = numZFile
+       end if
+       
+       allocate(s%z(s%nz), s%zD(s%nz), &
+            &   s%r(s%nr), s%rD(s%nr))
+      
+       if (computeSpace) then
+          s%r = linspace(minR,maxR,numRComp)
+          s%z = linspace(minZ,maxZ,numZcomp)
+       else
+          ! radial distances listed on one line
+          read(23,*,iostat=ioerr) s%r(1:s%nr)
+          if(ioerr /= 0) then
+             write(*,*) 'ERROR reading radial distance ',&
+                  & 'from input file '//trim(spaceFileName)
+             stop
+          elseif(any(s%r < w%rw)) then
+             write(*,*) 'ERROR r must be >= rw',s%r
+             stop
+          end if
+          ! vertical depths listed on one line
+          read(23,*,iostat=ioerr) s%z(1:s%nz)
+          if(ioerr /= 0) then
+             write(*,*) 'ERROR reading vertical depths ',&
+                  & 'from input file '//trim(spaceFileName)
+             stop
+          elseif(any(s%z < 0.0) .or. any(s%z > f%b)) then
+             write(*,*) 'ERROR z must be in range 0<=>b',s%z
+             stop
+          end if
+       end if
     end if
     
     ! output filename

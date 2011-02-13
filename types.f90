@@ -146,9 +146,9 @@ module types
      real(DP), allocatable :: z(:), zD(:)
 
      ! top/bot of monitoring well screen 
-     real(DP) :: montop = -999., monbot = -999. 
+     real(DP) :: zTop = -999., zBot = -999. 
      ! order of quadrature at monitoring well screen
-     integer :: monOrd = -999 
+     integer :: zOrd = -999 
 
      integer, parameter :: NUMCHAR = 128
      character(NUMCHAR) :: outfilename, infilename
