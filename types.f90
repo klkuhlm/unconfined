@@ -33,7 +33,7 @@ module types
      !                tpar(n+1) = final time of last step
      !                tpar(n+2:2*n+1) = strength at each of n steps 
      ! (is multiplied by constant strength too -- you probably want to set that to unity)
-     character(80), dimension(9) :: timeDescrip = &
+     character(80), parameter, dimension(9) :: timeDescrip = &
           & ['step on; tpar(1) = on time',&
           &  'finite pulse; tpar(1:2) = on/off time',&
           &  'infinitessimal pulse; tpar(1) = pulse location',&
@@ -89,12 +89,12 @@ module types
      real(DP) :: l = -999. ! aquifer top to screen/packer top dist.
      real(DP) :: d = -999. ! aquifer top to screen/packer bottom dist.
      real(DP) :: rw = -999., rc = -999. ! well / casing radii
-
+     real(DP) :: Q = -999. ! volumetric pumping rate
+ 
      ! dimensionless parameters
      real(DP) :: lD = -999.  ! dimensionless l
      real(DP) :: dD = -999.  ! dimensionless d
      real(DP) :: bD = -999.  ! dimensionless screen length
-     real(DP) :: rDw = -999. ! dimensionless rw
   end type well
 
   ! parameters related to formation/aquifer
@@ -120,24 +120,38 @@ module types
 
      ! which unconfined model to use?
      integer :: model = -999
-     ! 1 = Boulton 195?
-     ! 2 = Neuman 1974 
-     ! 3 = Moench 199?
-     ! 4 = Mishra/Neuman 2011
-     ! 5 = Malama 2011
+     ! 0 = Theis (confined fully penetrating)
+     ! 1 = Hantush (confined partially penetrating)
+     ! 2 = Boulton 195?
+     ! 3 = Neuman 1974 
+     ! 4 = Moench 199?
+     ! 5 = Mishra/Neuman 2011
+     ! 6 = Malama 2011
+     
+     character(13), parameter, dimension(0:6) :: modelDescrip = [ &
+          & 'Theis', 'Hantush', 'Boulton', 'Neuman 74',&
+          & 'Moench', 'Mishra/Neuman', 'Malama']
 
      logical :: quiet = .false.  ! output debugging to stdout?
      logical :: dimless = .false.  ! output dimensionless solution?
+     logical :: timeseries = .false. ! vector of times, one location?
+     logical :: piezometer = .false. ! point observation location?
 
-     ! either the number of times to be computed,
-     ! or the number of times read from file
-     integer :: nt = -999  
+     ! number of times / locations to be computed or read from file
+     integer :: nt = -999, nr = -999, nz = -999  
 
-     ! vector of times to compute solution at
+     ! vector of times / locations to compute solution at
      real(DP), allocatable :: t(:), tD(:)
+     real(DP), allocatable :: r(:), rD(:) 
+     real(DP), allocatable :: z(:), zD(:)
+
+     ! top/bot of monitoring well screen 
+     real(DP) :: montop = -999., monbot = -999. 
+     ! order of quadrature at monitoring well screen
+     integer :: monOrd = -999 
 
      integer, parameter :: NUMCHAR = 128
-     character(NUMCHAR) :: outfilename, infilename, timefilename
+     character(NUMCHAR) :: outfilename, infilename
 
      character(7) :: rfmt = 'ES14.07'
 

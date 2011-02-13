@@ -16,8 +16,23 @@ contains
     complex(EP), dimension(s%np) :: soln
 
 
-    select case()
-
+    select case(s%model)
+    case(0)
+       ! Theis solution
+    case(1)
+       ! Hantush solution (confined, partially penetrating)
+    case(2)
+       ! Boulton model
+    case(3)
+       ! Neuman 1974 model
+    case(4)
+       ! Moench 199? model
+    case(5)
+       ! Mishra/Neuman 2011 model
+    case(6)
+       ! Malama 2011
+    end select
+    
     ! solution always evaluated in test well
     fp = dum*dbesj0(real(dum*rDw,DP)) * Omega(1:np)
 

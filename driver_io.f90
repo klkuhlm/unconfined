@@ -32,12 +32,14 @@ contains
     ! used to compute times
     integer :: numtfile, numtcomp, minlogt, maxlogt
 
+    character(NUMCHAR) :: timeFileName, spaceFileName
+    real(DP) :: tval, rval
+
     ! used to compute J0 zeros
     real(DP) :: x, dx 
 
     intrinsic :: get_command_argument
 
-    ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     ! read input parameters from file some minimal error checking
     call get_command_argument(1,infile)
     if (len_trim(infile) == 0) then
@@ -52,94 +54,30 @@ contains
        stop
     end if
   
-    ! suppress output to screen, write dimensionless output?, which model to use?
-    read(19,*) s%quiet, s%dimless, s%model  
+    ! ## switches and settings #####
 
-    ! initial saturated aquifer thickness [L]
-    read(19,*) f%b
-  
+    ! suppress output to screen,  which model to use?, 
+    ! write dimensionless output?, 
+    ! time-series (compute one location through time)? 
+    !     [non-time-series option is contours at a single time],
+    ! piezometer (point monitoring well) or integrate finite observation screen length?,
+    read(19,*) s%quiet, s%model, s%dimless, s%timeseries, s%piezometer
+
+    ! ## pumping well parameters #####
+
+    ! volumetric pumping rate [L^3/T]
+    read(19,*) w%Q
+
     ! distance from aquifer top to bottom & top of packer (l > d) [L]
     read(19,*) w%l, w%d
 
-    ! well and casing radii [L]
-    read(19,*) w%rw, w%rc         
+    ! pumping well: well and casing radii [L]
+    read(19,*) w%rw, w%rc 
 
-    ! aquifer radial K [L^2/T] and anisotropy ratio (Kz/Kr)
-    read(19,*) f%Kr, f%kappa
-    
-    ! aquifer specific storage [1/L] and specific yield [-]
-    read(19,*) f%Ss, f%Sy
-
-    ! unsaturated zone thickness [L] and exponential sorbtive parameter [1/L]
-    read(19,*) f%usl, f%usalpha 
-    
     ! dimensionless skin
     read(19,*) f%gamma
 
-    if (.not. s%quiet) then
-       write(*,'(A,2(L1,1X))') 'quiet?, dimless output? ', &
-            &s%quiet, s%dimless
-       write(*,'(A,'//s%rfmt//')') 'b (initial aquier sat thickness):',f%b  
-       write(*,'(A,2('//s%rfmt//',1X))') 'l,d (screen bot&top from above):',&
-            & w%l, w%d  
-       write(*,'(A,2('//s%rfmt//',1X))') 'rw,rc (well and casing radii):',&
-            & w%rw, w%rc  
-       write(*,'(A,3('//s%rfmt//',1X))') 'Kr,kappa,gamma',&
-            & f%Kr, f%kappa, f%gamma
-       write(*,'(A,2('//s%rfmt//',1X))') 'Ss,Sy',f%Ss, f%Sy
-    end if
-
-    if(any([w%b,f%Kr,f%kappa,f%Ss,w%l,w%rw,w%rc] < spacing(0.0))) then
-       write(*,'(A)') 'input error: zero or negative distance or aquifer parameters' 
-       stop
-    end if
-
-    if (w%d >= w%l) then
-       write(*,'(2(A,'//s%rfmt//'))') 'input error: l must be > d; l=',w%l,' d=',w%d
-       stop
-    end if
-  
-    ! Laplace transform (deHoog et al) parameters
-    read(19,*) lap%M, lap%alpha, lap%tol
-
-    if (lap%M < 2) then
-       write(*,'(A,I0)')  'deHoog # FS terms must be >= 1 M=',lap%M
-       stop 
-    end if
-
-    if (lap%tol < epsilon(lap%tol)) then
-       lap%tol = epsilon(lap%tol)
-       write(*,'(A,'//s%rfmt//')') 'WARNING: increased INVLAP tolerance to ',lap%tol 
-    end if
-
-    ! tanh-sinh quadrature parameters
-    read(19,*) ts%k, ts%nst
-    
-    ! Gauss-Lobatto quadrature parameters
-    read(19,*) h%j0split(1:2), gl%naccel, gl%order  
-
-    if(ts%k - ts%nst < 2) then
-       write(*,'(2(A,I0),A)') 'Tanh-Sinh k is too low (',ts%k,') for given level&
-            & of Richardson extrapolation (',ts%nst,').  Increase k or decrease nst.'
-       stop
-    end if
-
-    if(any([h%j0split(:),gl%naccel, ts%k] < 1)) then
-       write(*,'(A,4(I0,1X))') 'max/min split, # accelerated terms, ' // &
-            & 'and tanh-sinh k must be >= 1:',h%j0split(:),gl%naccel, ts%k
-       stop
-    end if
-
-    terms = maxval(h%j0split(:)) + gl%naccel + 1
-    allocate(h%j0zero(terms))
-
-    ! log_10(t_min), log_10(t_max), # times
-    read(19,*) minlogt, maxlogt, numtcomp   
-
-    ! compute times?, # times in file, time file          
-    read(19,*) s%computetimes, numtfile, s%timefilename    
-
-    ! read in time behavior
+    ! pumping well time behavior
     read(19,'(I3)', advance='no') lap%timeType 
     if (lap%timeType > -1) then
        ! functional time behavior (two or fewer parameters)
@@ -165,28 +103,145 @@ contains
        end if
     end if
 
-    ! output filename
-    read(19,*) s%outfilename                        
-    close(19)
+    ! ## aquifer / formation parameters #####
 
-    if (s%computetimes) then
-       s%nt = numtcomp
-    else
-       s%nt = numtfile
+    ! initial saturated aquifer thickness [L]
+    read(19,*) f%b
+
+    ! aquifer radial K [L^2/T] and anisotropy ratio (Kz/Kr)
+    read(19,*) f%Kr, f%kappa
+    
+    ! aquifer specific storage [1/L] and specific yield [-]
+    read(19,*) f%Ss, f%Sy
+
+    ! unsaturated zone thickness [L] and exponential sorbtive parameter [1/L]
+    read(19,*) f%usl, f%usalpha 
+    
+    ! ## echo check parameters #####
+
+    if (.not. s%quiet) then
+       write(*,'(A,L1,1X,A,1X)') 'model, dimless output?:',&
+            & s%quiet, s%modelDescription(s%model) ,s%dimless
+       write(*,'(A,2(L1,1X))') 'hydrograph?, piezometer?:', &
+            & s%hydrograph, s%piezometer
+       write(*,'(A,'//s%rfmt//')') 'b (initial aquier sat thickness):',f%b  
+       write(*,'(A,2('//s%rfmt//',1X))') 'l,d (screen bot&top from above):', w%l, w%d  
+       write(*,'(A,2('//s%rfmt//',1X))') 'rw,rc (well and casing radii):', w%rw, w%rc  
+       write(*,'(A,3('//s%rfmt//',1X))') 'Kr,kappa,gamma:', f%Kr, f%kappa, f%gamma
+       write(*,'(A,2('//s%rfmt//',1X))') 'Ss,Sy:', f%Ss, f%Sy
     end if
 
-    allocate(s%t(s%nt), s%tD(s%nt), splitv(s%nt))
+    if(any([f%Sy, f%gamma] < 0.0)) then
+       write(*,*) 'ERROR: negative aquifer parameters:', &
+            &  f%Sy, f%gamma
+       stop
+    end if   
 
-    if (s%computetimes) then
-       ! computing times 
-       s%t = logspace(minlogt,maxlogt,numtcomp)
+    ! spacing(0.) is the spacing between computer representable numbers @ 0
+    if(any([w%b,f%Kr,f%kappa,f%Ss,w%l,w%rw,w%rc,us%L] < spacing(0.0))) then
+       write(*,*) 'ERROR: zero or negative parameters:', &
+            &  w%b, f%Kr, f%kappa, f%Ss, w%l, w%rw, w%rc
+       stop
+    end if
+
+    if (w%d >= w%l) then
+       write(*,'(2(A,'//s%rfmt//'))') 'ERROR: l must be > d; l=',w%l,' d=',w%d
+       stop
+    end if
+  
+    ! ## numerical implementation-related parameters #####
+
+    ! Laplace transform (deHoog et al) parameters
+    read(19,*) lap%M, lap%alpha, lap%tol
+
+    ! tanh-sinh quadrature parameters
+    ! integration order 2^(k-1) and Richardson extrapolation order
+    read(19,*) ts%k, ts%nst
+    
+    ! Gauss-Lobatto quadrature parameters
+    ! max/min J0 zero to split at, # zeros to accelerate, GL-order
+    read(19,*) h%j0s(1:2), gl%nacc, gl%ord  
+
+    ! ## checking of numerical parameters #####
+
+    if (lap%M < 2) then
+       write(*,'(A,I0)')  'ERROR: deHoog # FS terms must be >= 1 M=',lap%M
+       stop 
+    end if
+
+    if (lap%tol < epsilon(lap%tol)) then
+       lap%tol = epsilon(lap%tol)
+       write(*,'(A,'//s%rfmt//')') 'WARNING: increased INVLAP tolerance to ',&
+            & lap%tol 
+    end if
+
+    if(ts%k - ts%nst < 2) then
+       write(*,'(2(A,I0),A)') 'ERROR: Tanh-Sinh k is too low (',ts%k,&
+            & ') for given level of Richardson extrapolation (',ts%nst,&
+            &').  Increase k or decrease nst.'
+       stop
+    end if
+
+    if(any([h%j0split(:),gl%naccel, ts%k] < 1)) then
+       write(*,'(2A,4(I0,1X))') 'ERROR max/min split, # accelerated terms, ',&
+            & 'and tanh-sinh k must be >= 1:',h%j0split(:),gl%naccel, ts%k
+       stop
+    end if
+
+    ! ## locations and times where solution is desired #####
+
+    ! solution at one location through time
+    ! times can be specified in a file,
+    ! or log-sampled between endpoints
+
+    read(19,*) timeFileName, tval  ! either tval or data in file used
+    
+    ! solution at one or more locations through time
+    ! locations can be specified in a file,
+    ! or linear-sampled between endpoints
+
+    read(19,*) spaceFileName, rval ! either rval or data in file used
+
+    ! if computing contour or profile, these aren't used
+    if (s%piezometer) then
+       ! point observation depth
+       read(19,*) w%pztop
     else
-       ! read times from file
-       open(unit=22, file=s%timefilename, status='old', action='read',iostat=ioerr)
+       ! observation location with a finite screen
+       read(19,*) w%pztop, w%pzbot
+    end if
+
+    if (s%timeseries) then
+       ! if computing a time series, read time-related
+       ! parameters from input file
+
+       allocate(w%r(1)) ! only one observation distance
+       w%r = rval
+
+       open(unit=22, file=trim(timeFileName), status='old', &
+            & action='read',iostat=ioerr)
        if(ioerr /= 0) then
-          write(*,'(A)') 'ERROR opening time data input file '//trim(timefilename) &
-               & //' for reading'
-          stop 
+          write(*,'(A)')) 'ERROR opening time input file '// &
+               & trim(timeFileName)//' for reading'
+       end if
+       
+       ! compute times?, # times to read (not used if vector computed)
+       read(22,*) computeTimes, numtfile
+
+       ! log_10(t_min), log_10(t_max), # times
+       read(22,*) minlogt, maxlogt, numtcomp   
+
+       if (computeTimes) then
+          s%nt = numtcomp
+       else
+          s%nt = numtfile
+       end if
+
+       allocate(s%t(s%nt), s%tD(s%nt), s%sv(s%nt))
+
+       if (s%computetimes) then
+          ! computing times 
+          s%t = logspace(minlogt,maxlogt,numtcomp)
        else
           ! times listed one per line
           do i=1,numtfile
@@ -197,9 +252,20 @@ contains
                 stop
              end if
           end do
+          close(22)
        end if
-       close(22)
+       
+    else
+       ! if computing a contour map or profile
+       ! read space related parameters from other file
+
+       allocate()
+
     end if
+    
+    ! output filename
+    read(19,*) s%outfilename                        
+    close(19)
 
     ! characteristic length
     s%Lc = f%b
@@ -244,6 +310,9 @@ contains
                & numtfile, trim(timefilename)
        end if
     end if
+
+    terms = maxval(h%j0s(:)) + gl%nacc + 1
+    allocate(h%j0z(terms))
 
     ! compute zeros of J0 bessel function
     ! (quicker / more accurate than reading from file)
