@@ -81,7 +81,7 @@ contains
        allocate(lap%timePar(2))
        read(19,*) lap%timePar(:)
        if (.not. s%quiet) then
-          write(*,'(A)') lap%timeDescrip(lap%timeType)
+          write(*,'(A)') trim(lap%timeDescrip(lap%timeType))
           write(*,'(A,2(1X,'//s%rfmt//'))') 'time behavior, par1, par2 ::', &
                & lap%timeType, lap%timePar(:)
        end if
@@ -93,7 +93,7 @@ contains
           fmt = '(A,    ('//s%rfmt//',1X),A,    ('//s%rfmt//',1X))'
           write(fmt(8:11),'(I4.4)')  size(lap%timePar(:-lap%timeType+1),1)
           write(fmt(26:29),'(I4.4)') size(lap%timePar(-lap%timeType+2:),1)
-          write(*,'(A)') lap%timeDescrip(9)
+          write(*,'(A)') trim(lap%timeDescrip(9))
           write(*,fmt) 'time behavior:  ti, tf | Q multiplier each step :: ', &
                & lap%timeType,lap%timePar(:-lap%timeType+1),'| ',&
                & lap%timePar(-lap%timeType+2:)
@@ -118,7 +118,7 @@ contains
 
     if (.not. s%quiet) then
        write(*,'(A,L1,1X,A,1X)') 'model, dimless output?:',&
-            & s%quiet, s%modelDescription(s%model) ,s%dimless
+            & s%quiet, trim(s%modelDescrip(s%model)) ,s%dimless
        write(*,'(A,2(L1,1X))') 'hydrograph?, piezometer?:', &
             & s%hydrograph, s%piezometer
        write(*,'(A,'//s%rfmt//')') 'b (initial aquier sat thickness):',f%b  
@@ -483,7 +483,7 @@ contains
     fmt = '(A,I0,A,    ('//s%RFMT//',1X))       '
     write(fmt(9:12),'(I4.4)') size(s%timePar)
     write(20,fmt) '# pumping well time behavior :: ',s%timeType, &
-         & s%timeDescrip(s%timeType), s%timePar
+         & trim(s%timeDescrip(s%timeType)), s%timePar
     write(20,'(A,I0,2('//s%RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
     write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
@@ -500,13 +500,13 @@ contains
     write(20,'(A,2('//s%RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
     if (s%dimless) then
        write (20,'(A,/,A,/,A)') '#','#         t_D                       '//&
-            & s%modelDescrip(s%model), &
+            & trim(s%modelDescrip(s%model)), &
             & '#------------------------------------------------------------'
        ! TODO add header for derivative wrt logt
     else
        write(20,'(A,1'//s%RFMT//')') '# characteristic head ::',s%Hc
        write (20,'(A,/,A,/,A)') '#','#         t                         '//&
-            & s%modelDescrip(s%model), &
+            & trim(s%modelDescrip(s%model)), &
             & '#------------------------------------------------------------'
        ! TODO add header for derivative wrt logt
     end if
@@ -550,7 +550,7 @@ contains
     fmt = '(A,I0,A,    ('//s%RFMT//',1X))       '
     write(fmt(9:12),'(I4.4)') size(s%timePar)
     write(20,fmt) '# pumping well time behavior :: ',s%timeType, &
-         & s%timeDescrip(s%timeType), s%timePar
+         & trim(s%timeDescrip(s%timeType)), s%timePar
     write(20,'(A,I0,2('//s%RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
     write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
@@ -565,12 +565,12 @@ contains
     write(20,'(A,'//s%RFMT//')') '# time :: ',s%t(1)
     if (s%dimless) then
        write (20,'(A,/,A,/,A)') '#','#         z_D           r_D           '&
-            & //'             '// s%modelDescrip(s%model), &
+            & //'             '// trim(s%modelDescrip(s%model)), &
             & '#------------------------------------------------------------'
        ! TODO add header for derivative wrt logt
     else
        write (20,'(A,/,A,/,A)') '#','#         z              r            '&
-            & //'             '// s%modelDescrip(s%model), &
+            & //'             '// trim(s%modelDescrip(s%model)), &
             & '#------------------------------------------------------------'
        ! TODO add header for derivative wrt logt
     end if

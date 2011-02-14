@@ -34,16 +34,16 @@ module types
      !                tpar(n+1) = final time of last step
      !                tpar(n+2:2*n+1) = strength at each of n steps 
      ! (is multiplied by constant strength too -- you probably want to set that to unity)
-     character(80), parameter, dimension(9) :: timeDescrip = &
-          & ['step on; tpar(1) = on time',&
-          &  'finite pulse; tpar(1:2) = on/off time',&
-          &  'infinitessimal pulse; tpar(1) = pulse location',&
+     character(81), dimension(9) :: timeDescrip = &
+          & ['step on; tpar(1) = on time                                                       ',&
+          &  'finite pulse; tpar(1:2) = on/off time                                            ',&
+          &  'infinitessimal pulse; tpar(1) = pulse location                                   ',&
           &  'stairs; tpar(1) = time step (Q increase by integer multiples); tpar(2) = off time',&
-          &  'rectified square wave; tpar(1) = 1/2 period of wave; tpar(2) = start time',&
-          &  'cos(omega*t); tpar(1) = omega; tpar(2) = start time',&
-          &  'rectified triangular wave; tpar(1) = 1/4 period of wave; tpar(2) = start time',&
-          &  'rectified square wave; tpar(1) = 1/2 period of wave; tpar(2) = start time',&
-          &  'piecewise constant rate (n steps); tpar(1:n)=ti; tpar(n+1)=tfinal; tpar(n+2:)=Q']
+          &  'rectified square wave; tpar(1) = 1/2 period of wave; tpar(2) = start time        ',&
+          &  'cos(omega*t); tpar(1) = omega; tpar(2) = start time                              ',&
+          &  'rectified triangular wave; tpar(1) = 1/4 period of wave; tpar(2) = start time    ',&
+          &  'rectified square wave; tpar(1) = 1/2 period of wave; tpar(2) = start time        ',&
+          &  'piecewise constant rate (n steps); tpar(1:n)=ti; tpar(n+1)=tfinal; tpar(n+2:)=Q  ']
      
      ! type of time behavior  (see above)
      integer :: timeType = -999
@@ -65,7 +65,7 @@ module types
 
   ! parameters specific to GL quadrature
   type :: GaussLobatto
-     integer :: nacc = -999, err -999
+     integer :: nacc = -999, err = -999
 
      ! abcissa and weights
      real(EP), allocatable :: x(:), w(:)
@@ -129,9 +129,11 @@ module types
      ! 5 = Mishra/Neuman 2011
      ! 6 = Malama 2011
      
-     character(13), parameter, dimension(0:6) :: modelDescrip = [ &
-          & 'Theis', 'Hantush', 'Boulton', 'Neuman 74',&
-          & 'Moench', 'Mishra/Neuman', 'Malama']
+     character(13), dimension(0:6) :: modelDescrip = [ &
+          & 'Theis        ', 'Hantush      ', &
+          & 'Boulton      ', 'Neuman 74    ', &
+          & 'Moench       ', 'Mishra/Neuman', &
+          & 'Malama       ']
 
      logical :: quiet = .false.  ! output debugging to stdout?
      logical :: dimless = .false.  ! output dimensionless solution?
@@ -154,11 +156,11 @@ module types
      ! order of quadrature at monitoring well screen
      integer :: zOrd = -999 
 
-     integer, parameter :: NUMCHAR = 128
-     character(7), parameter :: RFMT = 'ES14.07'  ! format for space/time
-     character(9), parameter :: HFMT = 'ES24.15E3'  ! format for results
+     character(7) :: RFMT = 'ES14.07'  ! format for space/time
+     character(9) :: HFMT = 'ES24.15E3'  ! format for results
 
-     character(NUMCHAR) :: outfilename, infilename
+     integer :: NUMCHAR = 128
+     character(128) :: outfilename, infilename  ! NUMCHAR
   end type solution
 
 end module types
