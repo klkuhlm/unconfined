@@ -4,17 +4,27 @@ module laplace_hankel_solution
 
 contains
 
-  function lapl_hank_soln(dum,tD,s,w,f) result(fp)
-    use types, only : solution, well, formation
+  function lapl_hank_soln(a,tD,rD,np,nz,w,f,lap) result(fp)
+    use constants, only : DP, EP
+    use types, only : well, formation, invLaplace
+    use time_mod, only : lapTime
     
     implicit none
     
-    complex(EP), dimension(s%np) :: soln
-
+    real(DP), intent(in) :: a
+    real(DP), intent(in) :: tD,rD
+    integer, intent(in) :: np,nz
+    type(invLaplace), intent(in) :: lap
+    type(well), intent(in) :: w
+    type(formation), intent(in) :: f
+    complex(EP), dimension(np,nz) :: fp
 
     select case(s%model)
     case(0)
        ! Theis solution
+       
+       
+
     case(1)
        ! Hantush solution (confined, partially penetrating)
     case(2)
@@ -29,16 +39,13 @@ contains
        ! Malama 2011
     end select
     
+    
+
     ! solution always evaluated in test well
-    fp = dum*bessel_j0(real(dum*rDw,DP)) * Omega(1:np)
+    fp = a*bessel_j0(a*rD)*fp*spread(lapTime(lap),2,nz)
 
   end function lapl_hank_soln
-  
-
-  function theis() result(fp)
-
-  end function theis
-  
+    
 end module laplace_hankel_solution
 
 

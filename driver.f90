@@ -7,10 +7,10 @@ program Driver
   use constants, only : DP, PI, EP
  
   ! function to be evaluated in Laplace/Hankel space
-  use laplace_hankel_solution, only : lap_hank_soln <= soln
+  use laplace_hankel_solution, only : lap_hank_soln => soln
 
   ! inverse Laplace transform routine (currently only de Hoog, et al)
-  use inverse_Laplace_Transform, only : dehoog_invlap <= invlap, dehoog_pvalues <= pvalues
+  use inverse_Laplace_Transform, only : dehoog_invlap => invlap, dehoog_pvalues => pvalues
 
   implicit none
 
@@ -29,8 +29,9 @@ program Driver
   complex(EP), allocatable :: tmp(:,:,:)
   complex(EP), allocatable :: finint(:,:), infint(:,:), totlap(:,:)
   real(EP), allocatable(:) :: totint(:)
-  real(EP) :: totobs
+  real(EP) :: totobs, lob, hib, width
   real(DP) :: tee, arg
+  real(EP), allocatable :: GLy(:), GLz(:,:,:)
   complex(DP) :: dy
   integer :: i, j, k, m, ii, nn, jj
 
@@ -80,7 +81,7 @@ program Driver
         ! compute solution at densest set of abcissa
         !$OMP PARALLEL DO PRIVATE(nn) SHARED(fa,t,s)
         do nn = 1,t%NN(t%nst)
-           fa(nn,1:l%np,1:s%nz) = soln(t%a(nn), s%tD(i), s%np, s%nz)
+           fa(nn,1:l%np,1:s%nz) = soln(t%a(nn),s%tD(i),s%rD(ii),s%np,s%nz,w,f,l)
         end do
         !$OMP END PARALLEL DO
 
@@ -123,12 +124,40 @@ program Driver
         ! area from series of areas of alternating sign
         ! TODO: use higher-order GL quadrature for lower-order zeros?
 
-        if(.not. allocated(g%x)) then
-           allocate(g%x(g%ord-2),g%w(g%ord-2))
+        if(.not. allocated(gl%x)) then
+           allocate(gl%x(gl%ord-2), gl%w(gl%ord-2), GLy(gl%ord-2), &
+                & GLarea(gl%ord-2,l%np,s%nz))
            call gauss_lobatto_setup(gl)  ! get weights and abcissa
         end if
 
-        infint(1:l%np,1:s%nz) = inf_integral(soln, arg, h, gl, s%rD(ii), s%nz, l%np, s%tD(i))
+        ! loop over regions between successive
+        ! zeros of J0, integrating each independently
+        do j = sv(i)+1, h%sv(i)+gl%nacc
+           lob = real(h%j0z(j-1)/rD,EP) ! lower bound
+           hib = real(h%j0z(j)/rD,EP)   ! upper bound
+           width = hib - lob
+           
+           ! transform GL abcissa (x) to global coordinates (y)
+           GLy(:) = (width*g%x(:) + (hib+lob))/2.0
+           
+           !$OMP PARALLEL DO PRIVATE(k) SHARED(g,z,tD,rD,np,nz,w,f)
+           do k = 1,g%ord-2
+              GLz(k,1:l%np,1:s%nz) = soln( y(k),s%tD(i),s%rD(ii),l%np,s%nz,w,f,l )
+           end do
+           !$OMP END PARALLEL DO
+          
+           GLarea(j-h%sv(i),1:np,1:nz) = width/2.0*sum(GLz(1:gl%ord-2,:,:)* &
+                & spread(spread(g%w(1:gl%ord-2),2,l%np),3,s%nz),dim=1)
+        end do
+ 
+        !$OMP PARALLEL DO PRIVATE(i,j) SHARED(area,integral)
+        do j = 1,l%np
+           do k = 1,s%nz
+              ! accelerate each series independently
+              infint(j,k) = wynn_epsilon(GLarea(1:gl%nacc,j,k))
+           end do
+        end do
+        !$OMP END PARALLEL DO
 
         totlap(1:l%np,1:s%nz) = finint(1:l%np,1:s%nz) + infint(1:l%np,1:s%nz) 
 
@@ -181,64 +210,6 @@ program Driver
   end do
 
 contains
-
-  !! ###################################################
-  function inf_integral(integrand,split,h,g,rD,nz,np,tD) result(integral)
-    use constants, only : DP,EP
-    use types, only : GaussLobatto, invHankel
-    implicit none
-
-    interface 
-       function integrand(a,t,s,w,f) result(Hout)
-         use constants, only : DP,EP
-         use types, only : solution
-         real(EP), intent(in) :: a
-         real(DP), intent(in) :: t
-         integer, intent(in) :: np
-         complex(EP), dimension(np) :: Hout
-       end function integrand
-    end interface
-
-    type(GaussLobatto), intent(inout) :: gl
-    type(invHankel), intent(in) :: hank
-    integer, intent(in) :: split, np, nz
-    real(DP), intent(in) :: tD, rD
-
-    ! series of areas between consecutive J0 zeros
-    complex(EP), dimension(num,np,s%nz) :: area
-    ! size of each integration interval
-    real(EP) :: lob, hib, width  
-    complex(EP), dimension(np,s%nz) :: integral  ! results
-    integer :: i, j, k, np
-
-    do j = split+1, split+g%nacc
-       lob = real(h%j0z(j-1)/rD,EP) ! lower bound
-       hib = real(h%j0z(j)/rD,EP)   ! upper bound
-       width = hib - lob
-       
-       ! transform GL abcissa to global coordinates
-       g%y(:) = (width*g%x(:) + (hib+lob))/2.0
-          
-       !$OMP PARALLEL DO PRIVATE(k) SHARED(g,np)
-       do k = 1,ord-2
-          g%z(k,1:np,1:nz) = integrand( g%y(k), tD, np nz)
-       end do
-       !$OMP END PARALLEL DO
-          
-       area(j-split,1:np,1:nz) = width/2.0*sum(g%z(1:ord-2,:,:)* &
-            & spread(spread(g%w(1:ord-2),2,np),3,nz),dim=1)
-    end do
- 
-    !$OMP PARALLEL DO PRIVATE(i,j) SHARED(area,integral)
-    do i = 1,np
-       do j = 1,nz
-          ! accelerate each series independently
-          integral(i,j) = wynn_epsilon(area(1:num,i,j))
-       end do
-    end do
-    !$OMP END PARALLEL DO
-
-  end function inf_integral
 
   !! ###################################################
   pure subroutine tanh_sinh_setup(t,k,s)
