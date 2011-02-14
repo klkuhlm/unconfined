@@ -2,120 +2,123 @@ program Driver
 
   ! type definitions 
   use types
+
+  use io, only : read_input, write_timeseries_header, write_contour_header
   
   ! constants and coefficients
   use constants, only : DP, PI, EP
  
   ! function to be evaluated in Laplace/Hankel space
-  use laplace_hankel_solution, only : lap_hank_soln => soln
+  use laplace_hankel_solution, only : soln => lap_hank_soln
 
   ! inverse Laplace transform routine (currently only de Hoog, et al)
-  use inverse_Laplace_Transform, only : dehoog_invlap => invlap, dehoog_pvalues => pvalues
+  use inverse_Laplace_Transform, only : invlap => dehoog_invlap , pvalues => dehoog_pvalues
 
   implicit none
 
-  type(invLaplace) :: lap
-  type(invHankel) :: hank
+  type(invLaplace) :: l
+  type(invHankel) :: h
   type(GaussLobatto) :: gl
   type(TanhSinh) :: ts
   type(well) :: w
   type(formation) :: f
-  type(solution) :: sol
+  type(solution) :: s
   real(DP), parameter :: TEE_MULT = 2.0_DP
   integer, parameter :: UNIT = 20  ! output unit
 
   ! vectors of results and intermediate steps
-  complex(EP), allocatable :: fa(:,:,:)
-  complex(EP), allocatable :: tmp(:,:,:)
+  complex(EP), allocatable :: fa(:,:,:), tmp(:,:,:), GLz(:,:,:), GLarea(:,:,:)
   complex(EP), allocatable :: finint(:,:), infint(:,:), totlap(:,:)
-  real(EP), allocatable(:) :: totint(:)
+  real(EP), allocatable :: totint(:), GLy(:)
   real(EP) :: totobs, lob, hib, width
-  real(DP) :: tee, arg
-  real(EP), allocatable :: GLy(:), GLz(:,:,:)
-  complex(DP) :: dy
-  integer :: i, j, k, m, ii, nn, jj
+  real(DP) :: arg
+  complex(EP) :: dy
+  integer :: i, j, k, m, n, nn
+  integer, allocatable :: ii(:)
 
   ! read in data from file, do minor error checking
   ! and allocate some solution vectors
-  call read_input(w,f,s,lap,hank,gl,t)
+  call read_input(w,f,s,l,h,gl,ts)
   
-  l%np = 2*l%M+1  ! number of Laplace transform Fourier series coefficients
-  t%N = 2**t%k - 1
+  ! number of Laplace transform Fourier series coefficients
+  l%np = 2*l%M + 1  
+  ! number of tanh-sinh terms
+  ts%N = 2**ts%k - 1
 
   allocate(finint(l%np,s%nz), infint(l%np,s%nz), totlap(l%np,s%nz), l%p(l%np), &
-       & h%splitv(s%nt), t%w(t%N), t%a(t%N), fa(t%N,l%np,s%nz), ii(t%N), &
-       & tmp(t%nst,l%np,s%nz), t%kk(t%nst), t%NN(t%nst), t%hh(t%nst))
+       & h%sv(s%nt), ts%w(ts%N), ts%a(ts%N), fa(ts%N,l%np,s%nz), ii(ts%N), &
+       & tmp(ts%nst,l%np,s%nz), ts%kk(ts%nst), ts%NN(ts%nst), ts%hh(ts%nst))
 
   if (s%timeSeries) then
-     call write_timeseries_header(w,f,s,lap,hank,gl,t,UNIT)
+     call write_timeseries_header(w,f,s,l,h,gl,ts,UNIT)
   else
-     call write_contour_header(w,f,s,lap,hank,gl,t,UNIT)
+     call write_contour_header(w,f,s,l,h,gl,ts,UNIT)
   end if
        
   ! loop over all desired calculation times
   do i = 1, s%nt
-     if (.not. quiet) then
+     if (.not. s%quiet) then
         write(*,'(I4,A,ES11.4)') i,' td ',s%tD(i)
      end if
      
      ! currently using 'optimal' p values for each time
      ! TODO: compute optimal p values for a vector of times
-     l%p(1:s%np) = pvalues(TEE_MULT*s%tD(i),lap)
+     l%p(1:l%np) = pvalues(TEE_MULT*s%tD(i),l)
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      ! finite portion of Hankel integral (Tanh-Sinh quadrature)
      ! integrate from origin (a=0) to the J0 zero identified in input
 
-     t%kk(:) = [(t%k-m, m=t%nst-1,0,-1)]
-     t%NN(:) = 2**t%kk - 1
-     t%hh(:) = 4.0_EP/(2**t%kk)
+     ts%kk(:) = [(ts%k-m, m=ts%nst-1,0,-1)]
+     ts%NN(:) = 2**ts%kk - 1
+     ts%hh(:) = 4.0_EP/(2**ts%kk)
 
      ! loop over all desired calculation radial distances
-     do ii = 1, s%nr
+     do k = 1, s%nr
 
         ! compute abcissa and for highest-order case (others are subsets)
         ! split between finite & infinite integrals
-        arg = h%j0z(h%sv(i))/s%rD(ii) 
-        call tanh_sinh_setup(t,t%k,arg)
+        arg = h%j0z(h%sv(i))/s%rD(k) 
+        call tanh_sinh_setup(ts,ts%k,arg)
 
         ! compute solution at densest set of abcissa
         !$OMP PARALLEL DO PRIVATE(nn) SHARED(fa,t,s)
-        do nn = 1,t%NN(t%nst)
-           fa(nn,1:l%np,1:s%nz) = soln(t%a(nn),s%tD(i),s%rD(ii),s%np,s%nz,w,f,l)
+        do nn = 1,ts%NN(ts%nst)
+           fa(nn,1:l%np,1:s%nz) = soln(ts%a(nn),s%rD(k),l%np,s%nz,w,f,s,l)
         end do
         !$OMP END PARALLEL DO
 
-        tmp(t%nst,1:l%np,1:s%nz) = arg/2.0 * &
+        tmp(ts%nst,1:l%np,1:s%nz) = arg/2.0 * &
              & sum(spread(spread(ts%w(:),2,l%np),3,s%nz)*fa(:,:,:),dim=1)
 
-        do j=t%nst-1,1,-1
+        do j=ts%nst-1,1,-1
            !  only need to re-compute weights for each subsequent coarser step
-           call tanh_sinh_setup(t,t%kk(j),arg)
+           call tanh_sinh_setup(ts,ts%kk(j),arg)
 
            ! compute index vector, to slice up solution 
            ! for nst'th turn count regular integers
            ! for (nst-1)'th turn count even integers
            ! for (nst-2)'th turn count every 4th integer, etc...
-           ii(1:t%NN(j)) = [( m* 2**(t%nst-j), m=1,t%NN(j) )]
+           ii(1:ts%NN(j)) = [( m* 2**(ts%nst-j), m=1,ts%NN(j) )]
 
            ! estimate integral with subset of function evaluations and appropriate weights
            tmp(j,1:l%np,1:s%nz) = arg/2.0 * &
-                & sum(spread(spread(tsw(1:t%NN(j)),2,s%np),3,s%nz) * &
-                & fa(ii(1:t%NN(j)),:,:),dim=1)
+                & sum(spread(spread(ts%w(1:ts%NN(j)),2,l%np),3,s%nz) * &
+                & fa(ii(1:ts%NN(j)),:,:),dim=1)
         end do
         
-        if (t%nst > 1) then
+        if (ts%nst > 1) then
            ! perform Richardson extrapolation to spacing -> zero
            !$OMP PARALLEL DO PRIVATE(jj,k,dy) SHARED(t,tmp,finint)
-           do jj = 1,l%np
-              do k = 1,s%nz
-                 call polint(t%hh(1:nst), tmp(1:nst,jj,k), 0.0_EP, finint(jj,k), dy)
+           do m = 1,l%np
+              do n = 1,s%nz
+                 call polint(ts%hh(1:ts%nst), tmp(1:ts%nst,m,n), 0.0_EP, finint(m,n), dy)
               end do
            end do
            !$OMP END PARALLEL DO
         else
            ! no extrapolation, just use the densest (only) estimate
-           finint(1:l%np,s:%nz) = tmp(1,1:s%np,1:s%nz)
+           finint(1:l%np,1:s%nz) = tmp(1,1:l%np,1:s%nz)
         end if
 
         !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -126,35 +129,35 @@ program Driver
 
         if(.not. allocated(gl%x)) then
            allocate(gl%x(gl%ord-2), gl%w(gl%ord-2), GLy(gl%ord-2), &
-                & GLarea(gl%ord-2,l%np,s%nz))
+                & GLarea(gl%nacc,l%np,s%nz), GLz(gl%ord-2,l%np,s%nz))
            call gauss_lobatto_setup(gl)  ! get weights and abcissa
         end if
 
         ! loop over regions between successive
         ! zeros of J0, integrating each independently
-        do j = sv(i)+1, h%sv(i)+gl%nacc
-           lob = real(h%j0z(j-1)/rD,EP) ! lower bound
-           hib = real(h%j0z(j)/rD,EP)   ! upper bound
+        do j = h%sv(i)+1, h%sv(i)+gl%nacc
+           lob = real(h%j0z(j-1)/s%rD(k),EP) ! lower bound
+           hib = real(h%j0z(j)/s%rD(k),EP)   ! upper bound
            width = hib - lob
            
            ! transform GL abcissa (x) to global coordinates (y)
-           GLy(:) = (width*g%x(:) + (hib+lob))/2.0
+           GLy(:) = (width*gl%x(:) + (hib+lob))/2.0
            
            !$OMP PARALLEL DO PRIVATE(k) SHARED(g,z,tD,rD,np,nz,w,f)
-           do k = 1,g%ord-2
-              GLz(k,1:l%np,1:s%nz) = soln( y(k),s%tD(i),s%rD(ii),l%np,s%nz,w,f,l )
+           do m = 1,gl%ord-2
+              GLz(m,1:l%np,1:s%nz) = soln( GLy(m),s%rD(k),l%np,s%nz,w,f,s,l )
            end do
            !$OMP END PARALLEL DO
           
-           GLarea(j-h%sv(i),1:np,1:nz) = width/2.0*sum(GLz(1:gl%ord-2,:,:)* &
-                & spread(spread(g%w(1:gl%ord-2),2,l%np),3,s%nz),dim=1)
+           GLarea(j-h%sv(i),1:l%np,1:s%nz) = width/2.0*sum(GLz(1:gl%ord-2,:,:)* &
+                & spread(spread(gl%w(1:gl%ord-2),2,l%np),3,s%nz),dim=1)
         end do
  
         !$OMP PARALLEL DO PRIVATE(i,j) SHARED(area,integral)
         do j = 1,l%np
-           do k = 1,s%nz
+           do m = 1,s%nz
               ! accelerate each series independently
-              infint(j,k) = wynn_epsilon(GLarea(1:gl%nacc,j,k))
+              infint(j,m) = wynn_epsilon(GLarea(1:gl%nacc,j,m))
            end do
         end do
         !$OMP END PARALLEL DO
@@ -162,8 +165,8 @@ program Driver
         totlap(1:l%np,1:s%nz) = finint(1:l%np,1:s%nz) + infint(1:l%np,1:s%nz) 
 
         !$OMP PARALLEL DO PRIVATE(k) SHARED(totint,l,s,totlap)
-        do k = 1,s%nz
-           totint(k) = invlap(s%tD(i),s%tD(i)*TEE_MULT,totlap(1:np,k),l) 
+        do m = 1,s%nz
+           totint(m) = invlap(s%tD(i),s%tD(i)*TEE_MULT,totlap(1:l%np,m),l) 
         end do
         !$OMP END PARALLEL DO
 
@@ -185,24 +188,24 @@ program Driver
            if (s%dimless) then
               ! dimensionless time series output
               write (UNIT,'('//s%RFMT//',1X,2('//s%HFMT//',1X))') &
-                   & td(i), totObs ! TODO add derivative wrt logt
+                   & s%td(i), totObs ! TODO add derivative wrt logt
            else
               ! dimensional time series output
               write (UNIT,'('//s%RFMT//',1X,2('//s%HFMT//',1X))') &
-                   & t(i), totObs*s%Hc ! TODO add derivative wrt logt
+                   & s%t(i), totObs*s%Hc ! TODO add derivative wrt logt
            end if
         else
            if (s%dimless) then
               ! dimensionless contour map output
-              do k = 1,s%nz
+              do m = 1,s%nz
                  write (UNIT,'(2('//s%RFMT//',1X),2('//s%HFMT//',1X))') &
-                      & s%zD(k), s%rD(ii), totint(k) ! TODO add derivative wrt logt
+                      & s%zD(m), s%rD(k), totint(m) ! TODO add derivative wrt logt
               end do
            else
               ! dimensional contour map output
-              do k = 1,s%nz
+              do m = 1,s%nz
                  write (UNIT,'(2('//s%RFMT//',1X),2('//s%HFMT//',1X))') &
-                      & s%z(k), s%r(ii), totint(k)*s%Hc ! TODO add derivative wrt logt
+                      & s%z(m), s%r(k), totint(m)*s%Hc ! TODO add derivative wrt logt
               end do
            end if
         end if
@@ -254,8 +257,8 @@ contains
     use types, only : GaussLobatto
     implicit none
     type(GaussLobatto), intent(inout) :: gl
-    real(EP), dimension(gl%order,gl%order) :: P
-    real(EP), dimension(gl%order) :: x, xold, w
+    real(EP), dimension(gl%ord,gl%ord) :: P
+    real(EP), dimension(gl%ord) :: x, xold, w
     integer :: i, N, N1, k
 
     ! leave out the endpoints (abcissa = +1 & -1), since 
@@ -264,7 +267,7 @@ contains
     ! code modified from Matlab routine by Greg von Winckel, at
     ! http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=4775
 
-    N = gl%order-1
+    N = gl%ord-1
     N1 = N+1
     ! first guess
     forall (i=0:N) x(i+1) = cos(PIEP*i/N)
@@ -291,8 +294,8 @@ contains
     w = 2.0/(N*N1*P(:,N1)**2)
 
     ! leave off endpoints (BF defined as zero there)
-    gl%x = x(2:gl%order-1)
-    gl%w = w(2:gl%order-1)
+    gl%x = x(2:gl%ord-1)
+    gl%w = w(2:gl%ord-1)
 
   end subroutine gauss_lobatto_setup
 
@@ -300,7 +303,7 @@ contains
   !! wynn-epsilon acceleration of partial sums, given a series
   !! all intermediate sums / differences are done in extended precision
   function wynn_epsilon(series) result(accsum)
-    use constants, only : EONE, EP, DP
+    use constants, only : EP, DP
 
     implicit none
     integer, parameter :: MINTERMS = 4
@@ -340,7 +343,7 @@ contains
        do m = 1,np-(j+1)
           denom = eps(m+1,j) - eps(m,j)
           if(abs(denom) > spacing(0.0)) then ! check for div by zero
-             eps(m,j+1) = eps(m+1,j-1) + EONE/denom
+             eps(m,j+1) = eps(m+1,j-1) + 1.0/denom
           else
              accsum = real(eps(m+1,j),DP)
              write(*,'(A,I2,1X,I2,A)',advance='no') 'epsilon cancel ',m,j,' '

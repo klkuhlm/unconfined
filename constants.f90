@@ -11,8 +11,9 @@ module constants
 
   !! 3.141592653589793238462643383279503_EP
   real(DP), parameter :: PI =    4.0_DP*atan(1.0_DP) 
-  real(EP), parameter :: PIEP =  4.0_EP*atan(1.0_EP)
- 
+  real(EP), parameter :: PIEP =  4.0_EP*atan(1.0_EP) 
+  real(DP), parameter :: PIOV2EP = 2.0_EP*atan(1.0_EP)
+
   !! length of filenames
   integer, parameter :: NUMCHAR = 128
 

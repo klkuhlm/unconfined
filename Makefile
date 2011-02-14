@@ -1,7 +1,7 @@
 
-EXTERNAL = cbessel.o  
-KKFILES = laplace_hankel_solutions.o  
-OBJS = $(EXTERNAL) constants.o invlap.o utility.o $(KKFILES)
+#EXTERNAL = cbessel.o  
+HILEV = time.o laplace_hankel_solutions.o driver_io.o
+OBJS = $(EXTERNAL) constants.o types.o invlap.o utility.o $(HILEV)
 
 MAIN = driver.o
 
@@ -10,8 +10,8 @@ DEBUGOBJS = $(patsubst %.o,%.debug.o,$(OBJS) $(MAIN))
 
 F90SRC=$(patsubst %.o,%.f90,$(OBJS) $(MAIN))
 
-OUT = slug
-DEBUGOUT = debug_slug
+OUT = unconfined
+DEBUGOUT = debug_$(OUT)
 
 LD = $(F90)
 
@@ -32,20 +32,31 @@ debug_driver: $(DEBUGOBJS)
 %.debug.o: %.f90
 	$(F90) -c -cpp $(INTEL) $(DEBUG) -o $@ $<
 
-cbessel.opt.o complex_bessel.mod : cbessel.f90
+#cbessel.opt.o complex_bessel.mod : cbessel.f90
 constants.opt.o constants.mod : constants.f90
-invlap.opt.o inverse_laplace_transform.mod : constants.mod invlap.f90 
-utility.opt.o shared_data.mod utilities.mod: constants.mod inverse_laplace_transform.mod utility.f90
-laplace_hankel_solutions.opt.o lap_hank_soln.mod: complex_bessel.mod inverse_laplace_transform.mod constants.mod shared_data.mod utilities.mod laplace_hankel_solutions.f90
-driver.opt.o: lap_hank_soln.mod constants.mod shared_data.mod utilities.mod driver.f90
+invlap.opt.o inverse_laplace_transform.mod: invlap.f90 constants.mod types.mod 
+utility.opt.o utilities.mod: utility.f90 constants.mod 
+laplace_hankel_solutions.opt.o laplace_hankel_solution.mod: \
+ laplace_hankel_solutions.f90 constants.mod types.mod time_mod.mod
+driver.opt.o: laplace_hankel_solution.mod constants.mod utilities.mod io.mod driver.f90
+time.opt.o time_mod.mod: time.f90 constants.mod types.mod
+types.opt.o types.mod: types.f90 constants.mod
+driver_io.opt.o io.mod: driver_io.f90 constants.mod types.mod utilities.mod 
+driver.opt.o: driver.f90 types.mod constants.mod laplace_hankel_solution.mod \
+ inverse_laplace_transform.mod 
 
-cbessel.debug.o complex_bessel.mod : cbessel.f90
+#cbessel.debug.o complex_bessel.mod : cbessel.f90
 constants.debug.o constants.mod : constants.f90
-invlap.debug.o inverse_laplace_transform.mod : constants.mod invlap.f90 
-utility.debug.o shared_data.mod utilities.mod: constants.mod inverse_laplace_transform.mod utility.f90
-laplace_hankel_solutions.debug.o lap_hank_soln.mod: complex_bessel.mod inverse_laplace_transform.mod constants.mod shared_data.mod utilities.mod laplace_hankel_solutions.f90
-driver.debug.o: lap_hank_soln.mod utilities.mod constants.mod shared_data.mod driver.f90
-
+invlap.debug.o inverse_laplace_transform.mod: invlap.f90 constants.mod types.mod 
+utility.debug.o utilities.mod: utility.f90 constants.mod 
+laplace_hankel_solutions.debug.o laplace_hankel_solution.mod: \
+ laplace_hankel_solutions.f90 constants.mod types.mod time_mod.mod
+driver.debug.o: laplace_hankel_solution.mod constants.mod utilities.mod io.mod driver.f90
+time.debug.o time_mod.mod: time.f90 constants.mod types.mod
+types.debug.o types.mod: types.f90 constants.mod
+driver_io.debug.o io.mod: driver_io.f90 constants.mod types.mod utilities.mod 
+driver.debug.o: driver.f90 types.mod constants.mod laplace_hankel_solution.mod \
+ inverse_laplace_transform.mod 
 
 ###### clean up #################################
 clean:
