@@ -6,10 +6,6 @@ contains
 
   function laplace_hankel_solution(dum,tD,s,w,f) result(fp)
     use types, only : solution, well, formation
-
-#ifdef INTEL
-    use ifport, only : dbesj0 
-#endif
     
     implicit none
     
@@ -34,7 +30,7 @@ contains
     end select
     
     ! solution always evaluated in test well
-    fp = dum*dbesj0(real(dum*rDw,DP)) * Omega(1:np)
+    fp = dum*bessel_j0(real(dum*rDw,DP)) * Omega(1:np)
 
   end function laplace_hankel_solution
   

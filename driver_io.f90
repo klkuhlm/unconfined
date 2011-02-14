@@ -10,11 +10,6 @@ contains
     use types
     use utilities, only : logspace, linspace
     
-    ! only needed for intel compiler
-#ifdef INTEL
-    use ifport, only : dbesj0, dbesj1     
-#endif
-
     type(invLaplace), intent(inout) :: lap
     type(invHankel), intent(inout) :: h
     type(GaussLobatto), intent(inout) :: gl
@@ -431,8 +426,8 @@ contains
     do i=1,terms
        x = h%j0zero(i)
        NR: do
-          ! Newton-Raphson
-          dx = dbesj0(x)/dbesj1(x)
+          ! Newton-Raphson (f2008 bessel function name convention)
+          dx = bessel_j0(0)/bessel_j1(x)
           x = x + dx
           if(abs(dx) < spacing(x)) then
              exit NR
@@ -462,45 +457,125 @@ contains
     type(formation), intent(in) :: f
     type(solution), intent(in) :: s
     integer, intent(in) :: unit
-    
     integer :: ioerr
+    character(32) :: fmt
 
     ! open output file or die
-    open (unit=unit, file=s%outfilename, status='replace', action='write', iostat=ioerr)
+    open (unit=unit, file=s%outFileName, status='replace', action='write', iostat=ioerr)
     if (ioerr /= 0) then
-       write(*,'(A)') 'cannot open output file '//trim(s%outfilename)//' for writing' 
+       write(*,'(A)') 'cannot open output file '//trim(s%outFileName)//' for writing' 
        stop
     end if
   
     ! echo input parameters at head of output file
-    write(20,'(A,L1)') '# quiet?, dimensionless? ::', &
-         & s%quiet, s%dimless
-    write(20,'(A,'//s%rfmt//')') '# b (initial aquier sat thickness) ::', &
+    write(20,'(A,3(L1,1X))') '# dimensionless?, timeseries?, piezometer? :: ', &
+         & s%dimless, s%timeseries, s%piezometer
+    write(20,'(A,'//s%RFMT//')') '# Q (volumetric pumping rate) :: ', &
+         & w%Q
+    write(20,'(A,'//s%RFMT//')') '# b (initial sat thickness) :: ', &
          & f%b
-    write(20,'(A,2('//s%rfmt//',1X))') '# l,d (screen bot & top) ::',&
+    write(20,'(A,2('//s%RFMT//',1X))') '# l,d (screen bot & top) :: ',&
          & w%l, w%d  
-    write(20,'(A,2('//s%rfmt//',1X))') '# rw,rc (well/casing radii) ::',&
+    write(20,'(A,2('//s%RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
          & w%rw, w%rc  
-    write(20,'(A,2('//s%rfmt//',1X))') '# Kr,kappa ::', f%Kr, f%kappa
-    write(20,'(A,2('//s%rfmt//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
-    write(20,'(A,'//s%rfmt//')') '# gamma :: ',f%gamma
-    write(20,'(A,I0,2('//s%rfmt//',1X))') '# deHoog M, alpha, tol ::',&
+    write(20,'(A,2('//s%RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
+    write(20,'(A,2('//s%RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
+    write(20,'(A,'//s%RFMT//')') '# gamma :: ',f%gamma
+    fmt = '(A,I0,A,    ('//s%RFMT//',1X))       '
+    write(fmt(9:12),'(I4.4)') size(s%timePar)
+    write(20,fmt) '# pumping well time behavior :: ',s%timeType, &
+         & s%timeDescrip(s%timeType), s%timePar
+    write(20,'(A,I0,2('//s%RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
-    write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps ::',&
+    write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
          & ts%k, ts%nst
-    write(20,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order ::',&
+    write(20,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0split(:), gl%naccel, gl%order
-    write(20,'(A,L1)') '# times ::',s%numt
+    if(s%piezometer) then
+       write(20,'(A,2('//s%RFMT//',1X))') '# point obs well r,z :: ',s%r(1),s%z(1)
+    else
+       write(20,'(A,3('//s%RFMT//',1X),I0)') '# screened obs well r,zTop,zBot,zOrd :: ',&
+            & s%r(1), s%zTop, s%zBot, s%zOrd
+    end if
+    write(20,'(A,I0)') '# times :: ',s%numt
+    write(20,'(A,2('//s%RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
     if (s%dimless) then
        write (20,'(A,/,A,/,A)') '#','#         t_D                       '//&
-            & 'H^{-1}[ L^{-1}[ f_D ]] ',&
+            & s%modelDescrip(s%model), &
             & '#------------------------------------------------------------'
+       ! TODO add header for derivative wrt logt
     else
+       write(20,'(A,1'//s%RFMT//')') '# characteristic head ::',s%Hc
        write (20,'(A,/,A,/,A)') '#','#         t                         '//&
-            & 'H^{-1}[ L^{-1}[ f ]]   ',&
+            & s%modelDescrip(s%model), &
             & '#------------------------------------------------------------'
+       ! TODO add header for derivative wrt logt
     end if
 
   end subroutine write_timeseries_header
+
+  subroutine write_contour_header(w,f,s,lap,h,gl,ts,unit)
+    use types
+    
+    type(invLaplace), intent(in) :: lap
+    type(invHankel), intent(in) :: h
+    type(GaussLobatto), intent(in) :: gl
+    type(TanhSinh), intent(in) :: ts
+    type(well), intent(in) :: w
+    type(formation), intent(in) :: f
+    type(solution), intent(in) :: s
+    integer, intent(in) :: unit
+    integer :: ioerr
+    character(32) :: fmt
+
+    ! open output file or die
+    open (unit=unit, file=s%outFileName, status='replace', action='write', iostat=ioerr)
+    if (ioerr /= 0) then
+       write(*,'(A)') 'cannot open output file '//trim(s%outFileName)//' for writing' 
+       stop
+    end if
+  
+    ! echo input parameters at head of output file
+    write(20,'(A,2(L1,1X))') '# dimensionless?, timeseries? :: ', &
+         & s%dimless, s%timeseries
+    write(20,'(A,'//s%RFMT//')') '# Q (volumetric pumping rate) :: ', &
+         & w%Q
+    write(20,'(A,'//s%RFMT//')') '# b (initial sat thickness) :: ', &
+         & f%b
+    write(20,'(A,2('//s%RFMT//',1X))') '# l,d (screen bot & top) :: ',&
+         & w%l, w%d  
+    write(20,'(A,2('//s%RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
+         & w%rw, w%rc  
+    write(20,'(A,2('//s%RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
+    write(20,'(A,2('//s%RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
+    write(20,'(A,'//s%RFMT//')') '# gamma :: ',f%gamma
+    write(20,*) '# pumping well time behavior :: ',s%timeType, &
+         & s%timeDescrip(s%timeType), s%timePar
+    write(20,'(A,I0,2('//s%RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
+         & lap%M, lap%alpha, lap%tol
+    write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
+         & ts%k, ts%nst
+    write(20,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
+         & h%j0split(:), gl%naccel, gl%order
+    fmt = '(A,I0,1X,    ('//s%RFMT//',1X))     '
+    write(fmt(10:13),'(I4.4)') s%numr
+    write(20,fmt) '# num r locations, rlocs :: ',s%numr, s%r(:)
+    write(fmt(10:13),'(I4.4)') s%numz
+    write(20,fmt) '# num z locations, zlocs :: ',s%numz, s%z(:)
+    write(20,'(A,'//s%RFMT//')') '# time :: ',s%t(1)
+    if (s%dimless) then
+       write (20,'(A,/,A,/,A)') '#','#         z_D           r_D           '&
+            & //'             '// s%modelDescrip(s%model), &
+            & '#------------------------------------------------------------'
+       ! TODO add header for derivative wrt logt
+    else
+       write (20,'(A,/,A,/,A)') '#','#         z              r            '&
+            & //'             '// s%modelDescrip(s%model), &
+            & '#------------------------------------------------------------'
+       ! TODO add header for derivative wrt logt
+    end if
+
+  end subroutine write_contour_header
+
 end module io
 
