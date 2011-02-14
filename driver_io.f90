@@ -6,7 +6,7 @@ public :: read_input, write_timeseries_header, write_contour_header
 
 contains
   subroutine read_input(w,f,s,lap,h,gl,ts)
-    use constants, only : DP, PI
+    use constants, only : DP, PI, NUMCHAR
     use types
     use utilities, only : logspace, linspace
     
@@ -26,11 +26,13 @@ contains
 
     ! used to compute times/spaces
     integer :: numtfile, numtcomp, minlogt, maxlogt
-    integer :: numRComp, numZComp
+    integer :: numRComp, numZComp, numRFile, numZFile
     real(DP) :: minR, maxR, minZ, maxZ
 
-    character(NUMCHAR) :: timeFileName, spaceFileName
+    character(NUMCHAR) :: timeFileName, spaceFileName, inputFileName
+    logical :: computeSpace, computeTimes
     real(DP) :: tval, rval
+    integer :: i
 
     ! used to compute J0 zeros
     real(DP) :: x, dx 
@@ -38,15 +40,15 @@ contains
     intrinsic :: get_command_argument
 
     ! read input parameters from file some minimal error checking
-    call get_command_argument(1,infile)
-    if (len_trim(infile) == 0) then
+    call get_command_argument(1,inputFileName)
+    if (len_trim(inputFileName) == 0) then
        ! default input file name if no command-line argument
-       infile = 'input.dat'
+       inputFileName = 'input.dat'
     end if
 
-    open(unit=19, file=infile, status='old', action='read',iostat=ioerr)
+    open(unit=19, file=inputFileName, status='old', action='read',iostat=ioerr)
     if(ioerr /= 0) then
-       write(*,'(A)') 'ERROR opening main input file '//trim(infilename)//&
+       write(*,'(A)') 'ERROR opening main input file '//trim(inputFileName)//&
             & ' for reading'
        stop
     end if
@@ -120,7 +122,7 @@ contains
        write(*,'(A,L1,1X,A,1X)') 'model, dimless output?:',&
             & s%quiet, trim(s%modelDescrip(s%model)) ,s%dimless
        write(*,'(A,2(L1,1X))') 'hydrograph?, piezometer?:', &
-            & s%hydrograph, s%piezometer
+            & s%timeSeries, s%piezometer
        write(*,'(A,'//s%rfmt//')') 'b (initial aquier sat thickness):',f%b  
        write(*,'(A,2('//s%rfmt//',1X))') 'l,d (screen bot&top from above):', w%l, w%d  
        write(*,'(A,2('//s%rfmt//',1X))') 'rw,rc (well and casing radii):', w%rw, w%rc  
@@ -135,9 +137,9 @@ contains
     end if   
 
     ! spacing(0.) is the spacing between computer representable numbers @ 0
-    if(any([w%b,f%Kr,f%kappa,f%Ss,w%l,w%rw,w%rc,us%L] < spacing(0.0))) then
+    if(any([f%b,f%Kr,f%kappa,f%Ss,w%l,w%rw,w%rc] < spacing(0.0))) then
        write(*,*) 'ERROR: zero or negative parameters:', &
-            &  w%b, f%Kr, f%kappa, f%Ss, w%l, w%rw, w%rc
+            &  f%b, f%Kr, f%kappa, f%Ss, w%l, w%rw, w%rc
        stop
     end if
 
@@ -179,9 +181,9 @@ contains
        stop
     end if
 
-    if(any([h%j0split(:),gl%naccel, ts%k] < 1)) then
+    if(any([h%j0s(:),gl%nacc, ts%k] < 1)) then
        write(*,'(2A,4(I0,1X))') 'ERROR max/min split, # accelerated terms, ',&
-            & 'and tanh-sinh k must be >= 1:',h%j0split(:),gl%naccel, ts%k
+            & 'and tanh-sinh k must be >= 1:',h%j0s(:),gl%nacc, ts%k
        stop
     end if
 
@@ -234,7 +236,7 @@ contains
        allocate(s%z(s%zOrd), s%zD(s%zOrd))
        
        if (s%piezometer) then
-          s%z(1) = z%zTop
+          s%z(1) = s%zTop
        else
           if (s%zOrd > 1) then
              ! calc points spread out evenly along obs well screen
@@ -248,7 +250,7 @@ contains
        open(unit=22, file=trim(timeFileName), status='old', &
             & action='read',iostat=ioerr)
        if(ioerr /= 0) then
-          write(*,'(A)')) 'ERROR opening time input file '// &
+          write(*,'(A)') 'ERROR opening time input file '// &
                & trim(timeFileName)//' for reading'
        end if
        
@@ -264,9 +266,9 @@ contains
           s%nt = numTFile
        end if
 
-       allocate(s%t(s%nt), s%tD(s%nt), s%sv(s%nt))
+       allocate(s%t(s%nt), s%tD(s%nt), h%sv(s%nt))
 
-       if (s%computetimes) then
+       if (computeTimes) then
           ! computing times 
           s%t = logspace(minLogT,maxLogT,numTComp)
        else
@@ -289,7 +291,7 @@ contains
        ! if computing a contour map or profile
        ! read space related parameters from other file
 
-       allocate(s%t(1), s%tD(1), s%sv(1))
+       allocate(s%t(1), s%tD(1), h%sv(1))
        if (tval > spacing(0.0)) then
           s%t(1) = tval
        else
@@ -302,7 +304,7 @@ contains
        open(unit=23, file=trim(spaceFileName), status='old', &
             & action='read',iostat=ioerr)
        if(ioerr /= 0) then
-          write(*,'(A)')) 'ERROR opening space input file '// &
+          write(*,'(A)') 'ERROR opening space input file '// &
                & trim(spaceFileName)//' for reading'
        end if
 
@@ -349,7 +351,7 @@ contains
     end if
     
     ! determine which layer z point(s) are in
-    allocate(s%zLay(shape(s%z)))
+    allocate(s%zLay(size(s%z)))
     where(s%z(:) <= w%l)
        ! above well screen
        s%zLay = 1
@@ -383,10 +385,10 @@ contains
     w%lD = w%l/s%Lc
     w%dD = w%d/s%Lc
     s%zD(:) = s%z(:)/s%Lc
-    s%rD(:) = z%r(:)/s%Lc
+    s%rD(:) = s%r(:)/s%Lc
 
     ! dimensionless times
-    s%tD(:) = s%t(:)/Tc
+    s%tD(:) = s%t(:)/s%Tc
 
     ! ## echo computed quantities #####
 
@@ -398,7 +400,7 @@ contains
        write(*,'(A,'//s%rfmt//')') 'Lc:  ',s%Lc
        write(*,'(A,'//s%rfmt//')') 'b_D: ',w%bD
        write(*,'(A,'//s%rfmt//')') 'l_D: ',w%lD
-       fmt = '(A,I0,1X,    (ES09.03,1X)               '
+       fmt = '(A,I0,1X,    (ES09.03,1X)              '
        write(fmt(10:13),'(I4.4)') s%nz
        write(*,fmt) 'z  : ',s%nz,s%z
        write(*,fmt) 'z_D: ',s%nz,s%zD
@@ -413,27 +415,27 @@ contains
        write(*,'(A,2(I0,1X))'), 'tanh-sinh: k, num extrapolation steps ', &
             & ts%k, ts%nst
        write(*,'(A,4(I0,1X))'), 'GL: J0 split, num zeros accel, GL-order ',&
-            & h%j0split(:), gl%naccel, gl%order
+            & h%j0s(:), gl%nacc, gl%ord
     end if
 
     terms = maxval(h%j0s(:)) + gl%nacc + 1
-    allocate(h%j0z(terms), h%sv(s%numt))
+    allocate(h%j0z(terms), h%sv(s%nt))
 
     ! ## compute zeros of J0 bessel function #####
 
     ! asymptotic estimate of zeros - initial guess
-    forall (i=0:terms-1) h%j0zero(i+1) = (i + 0.75)*PI
+    forall (i=0:terms-1) h%j0z(i+1) = (i + 0.75)*PI
     do i=1,terms
-       x = h%j0zero(i)
+       x = h%j0z(i)
        NR: do
           ! Newton-Raphson (f2008 bessel function name convention)
-          dx = bessel_j0(0)/bessel_j1(x)
+          dx = bessel_j0(x)/bessel_j1(x)
           x = x + dx
           if(abs(dx) < spacing(x)) then
              exit NR
           end if
        end do NR
-       h%j0zero(i) = x
+       h%j0z(i) = x
     end do
     
     ! split between finite/infinite part should be 
@@ -481,22 +483,22 @@ contains
     write(20,'(A,2('//s%RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
     write(20,'(A,'//s%RFMT//')') '# gamma :: ',f%gamma
     fmt = '(A,I0,A,    ('//s%RFMT//',1X))       '
-    write(fmt(9:12),'(I4.4)') size(s%timePar)
-    write(20,fmt) '# pumping well time behavior :: ',s%timeType, &
-         & trim(s%timeDescrip(s%timeType)), s%timePar
+    write(fmt(9:12),'(I4.4)') size(lap%timePar)
+    write(20,fmt) '# pumping well time behavior :: ',lap%timeType, &
+         & trim(lap%timeDescrip(lap%timeType)), lap%timePar
     write(20,'(A,I0,2('//s%RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
     write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
          & ts%k, ts%nst
     write(20,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
-         & h%j0split(:), gl%naccel, gl%order
+         & h%j0s(:), gl%nacc, gl%ord
     if(s%piezometer) then
        write(20,'(A,2('//s%RFMT//',1X))') '# point obs well r,z :: ',s%r(1),s%z(1)
     else
        write(20,'(A,3('//s%RFMT//',1X),I0)') '# screened obs well r,zTop,zBot,zOrd :: ',&
             & s%r(1), s%zTop, s%zBot, s%zOrd
     end if
-    write(20,'(A,I0)') '# times :: ',s%numt
+    write(20,'(A,I0)') '# times :: ',s%nt
     write(20,'(A,2('//s%RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
     if (s%dimless) then
        write (20,'(A,/,A,/,A)') '#','#         t_D                       '//&
@@ -548,20 +550,20 @@ contains
     write(20,'(A,2('//s%RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
     write(20,'(A,'//s%RFMT//')') '# gamma :: ',f%gamma
     fmt = '(A,I0,A,    ('//s%RFMT//',1X))       '
-    write(fmt(9:12),'(I4.4)') size(s%timePar)
-    write(20,fmt) '# pumping well time behavior :: ',s%timeType, &
-         & trim(s%timeDescrip(s%timeType)), s%timePar
+    write(fmt(9:12),'(I4.4)') size(lap%timePar)
+    write(20,fmt) '# pumping well time behavior :: ',lap%timeType, &
+         & trim(lap%timeDescrip(lap%timeType)), lap%timePar
     write(20,'(A,I0,2('//s%RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
     write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
          & ts%k, ts%nst
     write(20,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
-         & h%j0split(:), gl%naccel, gl%order
+         & h%j0s(:), gl%nacc, gl%ord
     fmt = '(A,I0,1X,    ('//s%RFMT//',1X))     '
-    write(fmt(10:13),'(I4.4)') s%numr
-    write(20,fmt) '# num r locations, rlocs :: ',s%numr, s%r(:)
-    write(fmt(10:13),'(I4.4)') s%numz
-    write(20,fmt) '# num z locations, zlocs :: ',s%numz, s%z(:)
+    write(fmt(10:13),'(I4.4)') s%nr
+    write(20,fmt) '# num r locations, rlocs :: ',s%nr, s%r(:)
+    write(fmt(10:13),'(I4.4)') s%nz
+    write(20,fmt) '# num z locations, zlocs :: ',s%nz, s%z(:)
     write(20,'(A,'//s%RFMT//')') '# time :: ',s%t(1)
     if (s%dimless) then
        write (20,'(A,/,A,/,A)') '#','#         z_D           r_D           '&

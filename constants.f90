@@ -13,4 +13,7 @@ module constants
   real(DP), parameter :: PI =    4.0_DP*atan(1.0_DP) 
   real(EP), parameter :: PIEP =  4.0_EP*atan(1.0_EP)
  
+  !! length of filenames
+  integer, parameter :: NUMCHAR = 128
+
 end module constants

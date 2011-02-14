@@ -1,6 +1,6 @@
 
 module types
-  use constants, only : DP, EP
+  use constants, only : DP, EP, NUMCHAR
   implicit none
 
   private
@@ -130,10 +130,8 @@ module types
      ! 6 = Malama 2011
      
      character(13), dimension(0:6) :: modelDescrip = [ &
-          & 'Theis        ', 'Hantush      ', &
-          & 'Boulton      ', 'Neuman 74    ', &
-          & 'Moench       ', 'Mishra/Neuman', &
-          & 'Malama       ']
+          & 'Theis        ', 'Hantush      ', 'Boulton      ', 'Neuman 74    ', &
+          & 'Moench       ', 'Mishra/Neuman', 'Malama       ']
 
      logical :: quiet = .false.  ! output debugging to stdout?
      logical :: dimless = .false.  ! output dimensionless solution?
@@ -149,7 +147,7 @@ module types
      real(DP), allocatable :: z(:), zD(:)
 
      ! which layer (above, in, or below screen) each z point falls in
-     integer, allocatable :: zlay(:)
+     integer, allocatable :: zLay(:)
 
      ! top/bot of monitoring well screen 
      real(DP) :: zTop = -999., zBot = -999. 
@@ -159,8 +157,7 @@ module types
      character(7) :: RFMT = 'ES14.07'  ! format for space/time
      character(9) :: HFMT = 'ES24.15E3'  ! format for results
 
-     integer :: NUMCHAR = 128
-     character(128) :: outfilename, infilename  ! NUMCHAR
+     character(NUMCHAR) :: outFileName
   end type solution
 
 end module types
