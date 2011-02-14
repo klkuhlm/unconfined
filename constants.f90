@@ -13,10 +13,4 @@ module constants
   real(DP), parameter :: PI =    4.0_DP*atan(1.0_DP) 
   real(EP), parameter :: PIEP =  4.0_EP*atan(1.0_EP)
  
-  real(DP), parameter :: PIOV2 = 2.0_DP*atan(1.0_DP)
-  real(DP), parameter :: PIOV2EP = 2.0_EP*atan(1.0_EP)
-
-  !! 0.693147180559945309417232121458177_EP
-  real(EP), parameter :: LN2EP = log(2.0_EP) 
-
 end module constants

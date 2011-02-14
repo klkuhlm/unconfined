@@ -3,7 +3,8 @@ module types
   use constants, only : DP, EP
   implicit none
 
-  public
+  private
+  public :: invLaplace, invHankel, GaussLobatto, TanhSinh, well, formation, solution
 
   ! Inverse Laplace Transform parameters
   type :: invLaplace
@@ -111,7 +112,7 @@ module types
   end type formation
 
   ! parameters related to numerical solution
-  type(time) :: solution
+  type :: solution
   
      ! characteristic quantities for non-dimensionalizing
      real(DP) :: Lc = -999.  ! length
@@ -154,11 +155,10 @@ module types
      integer :: zOrd = -999 
 
      integer, parameter :: NUMCHAR = 128
-     character(NUMCHAR) :: outfilename, infilename
-
      character(7), parameter :: RFMT = 'ES14.07'  ! format for space/time
      character(9), parameter :: HFMT = 'ES24.15E3'  ! format for results
 
+     character(NUMCHAR) :: outfilename, infilename
   end type solution
 
 end module types

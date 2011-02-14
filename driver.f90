@@ -7,13 +7,10 @@ program Driver
   use constants, only : DP, PI, EP
  
   ! function to be evaluated in Laplace/Hankel space
-  use lap_hank_soln, only : unconfined_wellbore_slug
+  use laplace_hankel_solution, only : lap_hank_soln <= soln
 
   ! inverse Laplace transform routine (currently only de Hoog, et al)
-  use inverse_Laplace_Transform, only : dehoog_invlap, dehoog_pvalues 
-
-  ! some non-built-in functions
-  use utilities, only : logspace
+  use inverse_Laplace_Transform, only : dehoog_invlap <= invlap, dehoog_pvalues <= pvalues
 
   implicit none
 
@@ -24,9 +21,8 @@ program Driver
   type(well) :: w
   type(formation) :: f
   type(solution) :: sol
-  integer :: i, ii, k, unit
   real(DP), parameter :: TEE_MULT = 2.0_DP
-  integer, parameter :: UNIT = 20
+  integer, parameter :: UNIT = 20  ! output unit
 
   ! vectors of results and intermediate steps
   complex(EP), allocatable :: fa(:,:,:)
@@ -36,10 +32,7 @@ program Driver
   real(EP) :: totobs
   real(DP) :: tee, arg
   complex(DP) :: dy
-
-
-  !! k parameter in tanh-sinh quadrature (order is 2^k - 1)
-  integer ::  m, nn, jj, j
+  integer :: i, j, k, m, ii, nn, jj
 
   ! read in data from file, do minor error checking
   ! and allocate some solution vectors
@@ -66,7 +59,7 @@ program Driver
      
      ! currently using 'optimal' p values for each time
      ! TODO: compute optimal p values for a vector of times
-     l%p(1:s%np) = dehoog_pvalues(TEE_MULT*s%tD(i),lap)
+     l%p(1:s%np) = pvalues(TEE_MULT*s%tD(i),lap)
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      ! finite portion of Hankel integral (Tanh-Sinh quadrature)
@@ -87,7 +80,7 @@ program Driver
         ! compute solution at densest set of abcissa
         !$OMP PARALLEL DO PRIVATE(nn) SHARED(fa,t,s)
         do nn = 1,t%NN(t%nst)
-           fa(nn,1:l%np,1:s%nz) = laplace_hankel_soln(t%a(nn), s%tD(i), s%np, s%nz)
+           fa(nn,1:l%np,1:s%nz) = soln(t%a(nn), s%tD(i), s%np, s%nz)
         end do
         !$OMP END PARALLEL DO
 
@@ -95,7 +88,7 @@ program Driver
              & sum(spread(spread(ts%w(:),2,l%np),3,s%nz)*fa(:,:,:),dim=1)
 
         do j=t%nst-1,1,-1
-           !  only need to re-compute weights for each subsequent step
+           !  only need to re-compute weights for each subsequent coarser step
            call tanh_sinh_setup(t,t%kk(j),arg)
 
            ! compute index vector, to slice up solution 
@@ -135,14 +128,13 @@ program Driver
            call gauss_lobatto_setup(gl)  ! get weights and abcissa
         end if
 
-        infint(1:l%np,1:s%nz) = inf_integral(laplace_hankel_soln, &
-             & arg, h, gl, s%rD(ii), s%nz, l%np, s%tD(i))
+        infint(1:l%np,1:s%nz) = inf_integral(soln, arg, h, gl, s%rD(ii), s%nz, l%np, s%tD(i))
 
         totlap(1:l%np,1:s%nz) = finint(1:l%np,1:s%nz) + infint(1:l%np,1:s%nz) 
 
         !$OMP PARALLEL DO PRIVATE(k) SHARED(totint,l,s,totlap)
         do k = 1,s%nz
-           totint(k) = dehoog_invlap(s%tD(i),s%tD(i)*TEE_MULT,totlap(1:np,k),l) 
+           totint(k) = invlap(s%tD(i),s%tD(i)*TEE_MULT,totlap(1:np,k),l) 
         end do
         !$OMP END PARALLEL DO
 
@@ -277,14 +269,13 @@ contains
     t%w(:) = u(1,:)/cosh(u(2,:))**2
 
     deallocate(u)
-
     t%w(:) = 2.0_EP*t%w(:)/sum(t%w(:))
 
+    ! TODO: only use half interval with bunched abcissa @ origin?
     ! map the -1<=x<=1 interval onto 0<=a<=s
     t%a = (t%a + 1.0_EP)*s/2.0_EP
 
   end subroutine tanh_sinh_setup
-
 
   !! ###################################################
   subroutine gauss_lobatto_setup(gl)
@@ -333,7 +324,6 @@ contains
     gl%w = w(2:gl%order-1)
 
   end subroutine gauss_lobatto_setup
-
 
   !! ###################################################
   !! wynn-epsilon acceleration of partial sums, given a series
@@ -424,6 +414,7 @@ contains
     ns = sum(minloc(abs(x-xa))) ! sum turns 1-element vector to a scalar
     y=ya(ns)
     ns=ns-1
+    ! TODO vectorize this loop
     do m=1,n-1
        den(1:n-m)=ho(1:n-m)-ho(1+m:n)
        if (any(abs(den(1:n-m)) < spacing(0.0))) then

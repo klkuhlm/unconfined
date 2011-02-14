@@ -2,7 +2,7 @@ module io
 implicit none
 
 private
-public :: read_input, write_header
+public :: read_input, write_timeseries_header, write_contour_header
 
 contains
   subroutine read_input(w,f,s,lap,h,gl,ts)
@@ -460,7 +460,6 @@ contains
     integer :: ioerr
     character(32) :: fmt
 
-    ! open output file or die
     open (unit=unit, file=s%outFileName, status='replace', action='write', iostat=ioerr)
     if (ioerr /= 0) then
        write(*,'(A)') 'cannot open output file '//trim(s%outFileName)//' for writing' 
@@ -528,7 +527,6 @@ contains
     integer :: ioerr
     character(32) :: fmt
 
-    ! open output file or die
     open (unit=unit, file=s%outFileName, status='replace', action='write', iostat=ioerr)
     if (ioerr /= 0) then
        write(*,'(A)') 'cannot open output file '//trim(s%outFileName)//' for writing' 
@@ -549,7 +547,9 @@ contains
     write(20,'(A,2('//s%RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
     write(20,'(A,2('//s%RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
     write(20,'(A,'//s%RFMT//')') '# gamma :: ',f%gamma
-    write(20,*) '# pumping well time behavior :: ',s%timeType, &
+    fmt = '(A,I0,A,    ('//s%RFMT//',1X))       '
+    write(fmt(9:12),'(I4.4)') size(s%timePar)
+    write(20,fmt) '# pumping well time behavior :: ',s%timeType, &
          & s%timeDescrip(s%timeType), s%timePar
     write(20,'(A,I0,2('//s%RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
@@ -576,6 +576,5 @@ contains
     end if
 
   end subroutine write_contour_header
-
 end module io
 
