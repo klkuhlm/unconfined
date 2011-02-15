@@ -82,24 +82,10 @@ contains
        ! functional time behavior (two or fewer parameters)
        allocate(lap%timePar(2))
        read(19,*) lap%timePar(:)
-       if (.not. s%quiet) then
-          write(*,'(A)') trim(lap%timeDescrip(lap%timeType))
-          write(*,'(A,2(1X,'//s%rfmt//'))') 'time behavior, par1, par2 ::', &
-               & lap%timeType, lap%timePar(:)
-       end if
     else
        ! arbitrarily long piecewise-constant time behavior 
        allocate(lap%timePar(-2*lap%timeType+1))
        read(19,*) lap%timePar(:)
-       if (.not. s%quiet) then
-          fmt = '(A,    ('//s%rfmt//',1X),A,    ('//s%rfmt//',1X))'
-          write(fmt(8:11),'(I4.4)')  size(lap%timePar(:-lap%timeType+1),1)
-          write(fmt(26:29),'(I4.4)') size(lap%timePar(-lap%timeType+2:),1)
-          write(*,'(A)') trim(lap%timeDescrip(9))
-          write(*,fmt) 'time behavior:  ti, tf | Q multiplier each step :: ', &
-               & lap%timeType,lap%timePar(:-lap%timeType+1),'| ',&
-               & lap%timePar(-lap%timeType+2:)
-       end if
     end if
 
     ! ## aquifer / formation parameters #####
@@ -119,32 +105,46 @@ contains
     ! ## echo check parameters #####
 
     if (.not. s%quiet) then
-       write(*,'(A,L1,1X,A,1X)') 'model, dimless output?:',&
+       write(*,'(A,L1,1X,A,1X)') 'model, dimless output?:: ',&
             & s%quiet, trim(s%modelDescrip(s%model)) ,s%dimless
-       write(*,'(A,2(L1,1X))') 'hydrograph?, piezometer?:', &
+       write(*,'(A,2(L1,1X))') 'hydrograph?, piezometer?:: ', &
             & s%timeSeries, s%piezometer
-       write(*,'(A,'//s%rfmt//')') 'b (initial aquier sat thickness):',f%b  
-       write(*,'(A,2('//s%rfmt//',1X))') 'l,d (screen bot&top from above):', w%l, w%d  
-       write(*,'(A,2('//s%rfmt//',1X))') 'rw,rc (well and casing radii):', w%rw, w%rc  
-       write(*,'(A,3('//s%rfmt//',1X))') 'Kr,kappa,gamma:', f%Kr, f%kappa, f%gamma
-       write(*,'(A,2('//s%rfmt//',1X))') 'Ss,Sy:', f%Ss, f%Sy
+       write(*,'(A,'//s%rfmt//')') 'Q:: ',w%Q
+       if (lap%timeType > -1) then
+          write(*,'(A)') 'pumping well time behavior :: '//trim(lap%timeDescrip(lap%timeType))
+          write(*,'(A,I0,2(1X,'//s%rfmt//'))') 'time behavior, par1, par2 ::', &
+               & lap%timeType, lap%timePar(:)
+       else
+          fmt = '(A,    ('//s%rfmt//',1X),A,    ('//s%rfmt//',1X))'
+          write(fmt(8:11),'(I4.4)')  size(lap%timePar(:-lap%timeType+1),1)
+          write(fmt(26:29),'(I4.4)') size(lap%timePar(-lap%timeType+2:),1)
+          write(*,'(A)') 'pumping well time behavior :: '//trim(lap%timeDescrip(9))
+          write(*,fmt) 'time behavior:  ti, tf | Q multiplier each step :: ', &
+               & lap%timeType,lap%timePar(:-lap%timeType+1),'| ',&
+               & lap%timePar(-lap%timeType+2:)
+       end if
+       write(*,'(A,'//s%rfmt//')') 'b (initial aquier sat thickness):: ',f%b  
+       write(*,'(A,2('//s%rfmt//',1X))') 'l,d (screen bot&top from above):: ', w%l, w%d  
+       write(*,'(A,2('//s%rfmt//',1X))') 'rw,rc (well and casing radii):: ', w%rw, w%rc  
+       write(*,'(A,3('//s%rfmt//',1X))') 'Kr,kappa,gamma:: ', f%Kr, f%kappa, f%gamma
+       write(*,'(A,2('//s%rfmt//',1X))') 'Ss,Sy:: ', f%Ss, f%Sy
     end if
 
-    if(any([f%Sy, f%gamma] < 0.0)) then
+    if(any([f%Sy, f%gamma, w%l] < 0.0)) then
        write(*,*) 'ERROR: negative aquifer parameters:', &
             &  f%Sy, f%gamma
        stop
     end if   
 
     ! spacing(0.) is the spacing between computer representable numbers @ 0
-    if(any([f%b,f%Kr,f%kappa,f%Ss,w%l,w%rw,w%rc] < spacing(0.0))) then
+    if(any([f%b,f%Kr,f%kappa,f%Ss,w%rw,w%rc] < spacing(0.0))) then
        write(*,*) 'ERROR: zero or negative parameters:', &
             &  f%b, f%Kr, f%kappa, f%Ss, w%l, w%rw, w%rc
        stop
     end if
 
-    if (w%d >= w%l) then
-       write(*,'(2(A,'//s%rfmt//'))') 'ERROR: l must be > d; l=',w%l,' d=',w%d
+    if (w%d <= w%l) then
+       write(*,'(2(A,'//s%rfmt//'))') 'ERROR: d must be > l; l=',w%l,' d=',w%d
        stop
     end if
   
@@ -206,7 +206,7 @@ contains
     ! only top used if piezometer
     read(19,*) s%zTop, s%zBot, s%zOrd 
 
-    if (s%zTop <= s%zBot) then
+    if (s%zTop >= s%zBot) then
        write(*,*) 'ERROR: top of monitoring well screen must be',&
             & 'above bottom of screen',s%zTop,s%zBot
        stop
@@ -225,6 +225,7 @@ contains
        allocate(s%r(1),s%rD(1)) ! only one observation distance
        if (rval > w%rw) then
           s%r(1) = rval
+          s%nr = 1
        else
           write(*,*) 'ERROR: r must be > rw',rval
           stop
@@ -237,13 +238,16 @@ contains
        
        if (s%piezometer) then
           s%z(1) = s%zTop
+          s%nz = 1
        else
           if (s%zOrd > 1) then
              ! calc points spread out evenly along obs well screen
              s%z(1:s%zOrd) = linspace(s%zBot, s%zTop, s%zOrd)
+             s%nz = s%zOrd
           else
              ! one point goes to middle of interval
              s%z(1) = (s%zBot + s%zTop)/2.0 
+             s%nz = 1
           end if
        end if
 
@@ -294,6 +298,7 @@ contains
        allocate(s%t(1), s%tD(1), h%sv(1))
        if (tval > spacing(0.0)) then
           s%t(1) = tval
+          s%nt = 1
        else
           write(*,*) 'ERROR: t must be >0',tval
        end if
@@ -400,14 +405,14 @@ contains
        write(*,'(A,'//s%rfmt//')') 'Lc:  ',s%Lc
        write(*,'(A,'//s%rfmt//')') 'b_D: ',w%bD
        write(*,'(A,'//s%rfmt//')') 'l_D: ',w%lD
-       fmt = '(A,I0,1X,    (ES09.03,1X)              '
-       write(fmt(10:13),'(I4.4)') s%nz
+       fmt = '(A,I0,1X,     (ES09.03,1X))           '
+       write(fmt(10:14),'(I5.5)') s%nz
        write(*,fmt) 'z  : ',s%nz,s%z
        write(*,fmt) 'z_D: ',s%nz,s%zD
-       write(fmt(10:13),'(I4.4)') s%nr
+       write(fmt(10:14),'(I5.5)') s%nr
        write(*,fmt) 'r  : ',s%nr,s%r 
        write(*,fmt) 'r_D: ',s%nr,s%rD
-       write(fmt(10:13),'(I4.4)') s%nt
+       write(fmt(10:14),'(I5.5)') s%nt
        write(*,fmt) 't  : ',s%nt,s%t
        write(*,fmt) 't_D: ',s%nt,s%tD
        write(*,'(A,I0,2('//s%rfmt//',1X))') 'deHoog: M,alpha,tol: ', &
@@ -419,7 +424,7 @@ contains
     end if
 
     terms = maxval(h%j0s(:)) + gl%nacc + 1
-    allocate(h%j0z(terms), h%sv(s%nt))
+    allocate(h%j0z(terms))
 
     ! ## compute zeros of J0 bessel function #####
 

@@ -46,7 +46,7 @@ program Driver
   ts%N = 2**ts%k - 1
 
   allocate(finint(l%np,s%nz), infint(l%np,s%nz), totlap(l%np,s%nz), l%p(l%np), &
-       & h%sv(s%nt), ts%w(ts%N), ts%a(ts%N), fa(ts%N,l%np,s%nz), ii(ts%N), &
+       & ts%w(ts%N), ts%a(ts%N), fa(ts%N,l%np,s%nz), ii(ts%N), totint(s%nz), &
        & tmp(ts%nst,l%np,s%nz), ts%kk(ts%nst), ts%NN(ts%nst), ts%hh(ts%nst))
 
   if (s%timeSeries) then
@@ -239,11 +239,16 @@ contains
        u(2,i+r+1) = PIOV2EP*sinh(h*i)
     end forall
     
-    t%a(:) = tanh(u(2,1:N))
-    t%w(:) = u(1,:)/cosh(u(2,:))**2
+    if(size(t%a) /= N) then
+       deallocate(t%a,t%w)
+       allocate(t%a(N),t%w(N))
+    end if
+    
+    t%a(1:N) = tanh(u(2,1:N))
+    t%w(1:N) = u(1,:)/cosh(u(2,:))**2
 
     deallocate(u)
-    t%w(:) = 2.0_EP*t%w(:)/sum(t%w(:))
+    t%w(1:N) = 2.0_EP*t%w(:)/sum(t%w(:))
 
     ! TODO: only use half interval with bunched abcissa @ origin?
     ! map the -1<=x<=1 interval onto 0<=a<=s

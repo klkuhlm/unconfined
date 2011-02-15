@@ -3,8 +3,8 @@
 ##################################################
 # flags / settings for latest gfortran compiler
 
-DEBUG = -O0 -g -Wall -Wextra -fbacktrace
-DFLAGS += -frange-check -fcheck=all ##-finit-real=snan -finit-integer=-99999
+DEBUG = -O0 -g -Wall -Wextra -fbacktrace -fwhole-file
+DEBUG += -frange-check -fcheck=all -finit-integer=-999 -finit-real=snan -ffpe-trap=invalid
 PERF = -O2 -march=native -fwhole-file -fopenmp 
 F90 = gfortran-4.6
 CPP = -cpp
