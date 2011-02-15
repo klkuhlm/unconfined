@@ -80,7 +80,7 @@ program Driver
         call tanh_sinh_setup(ts,ts%k,arg)
 
         ! compute solution at densest set of abcissa
-        !$OMP PARALLEL DO PRIVATE(nn) SHARED(fa,t,s)
+        !$OMP PARALLEL DO PRIVATE(nn) SHARED(fa,ts,w,f,s,l)
         do nn = 1,ts%NN(ts%nst)
            fa(nn,1:l%np,1:s%nz) = soln(ts%a(nn),s%rD(k),l%np,s%nz,w,f,s,l)
         end do
@@ -107,7 +107,7 @@ program Driver
         
         if (ts%nst > 1) then
            ! perform Richardson extrapolation to spacing -> zero
-           !$OMP PARALLEL DO PRIVATE(jj,k,dy) SHARED(t,tmp,finint)
+           !$OMP PARALLEL DO PRIVATE(m,n) SHARED(ts,tmp,finint)
            do m = 1,l%np
               do n = 1,s%nz
                  call polint(ts%hh(1:ts%nst), tmp(1:ts%nst,m,n), 0.0_EP, finint(m,n), dy)
@@ -141,7 +141,7 @@ program Driver
            ! transform GL abcissa (x) to global coordinates (y)
            GLy(:) = (width*gl%x(:) + (hib+lob))/2.0
            
-           !$OMP PARALLEL DO PRIVATE(k) SHARED(g,z,tD,rD,np,nz,w,f)
+           !$OMP PARALLEL DO PRIVATE(k) SHARED(GLy,w,f,s,l)
            do m = 1,gl%ord-2
               GLz(m,1:l%np,1:s%nz) = soln( GLy(m),s%rD(k),l%np,s%nz,w,f,s,l )
            end do
@@ -151,7 +151,7 @@ program Driver
                 & spread(spread(gl%w(1:gl%ord-2),2,l%np),3,s%nz),dim=1)
         end do
  
-        !$OMP PARALLEL DO PRIVATE(i,j) SHARED(area,integral)
+        !$OMP PARALLEL DO PRIVATE(i,j) SHARED(GLarea,infint)
         do j = 1,l%np
            do m = 1,s%nz
               ! accelerate each series independently
@@ -275,13 +275,13 @@ contains
     ! first guess
     forall (i=0:N) x(i+1) = cos(PIEP*i/N)
     ! initialize Vandermonde matrix
-    P = 0.0
-    xold = 2.0
+    P = 0.0_EP
+    xold = 2.0_EP
 
     iter: do 
        if (maxval(abs(x-xold)) > spacing(1.0_EP)) then
           xold = x
-          P(:,1) = 1.0
+          P(:,1) = 1.0_EP
           P(:,2) = x
           
           do k = 2,N
@@ -294,7 +294,7 @@ contains
        end if
     end do iter
     
-    w = 2.0/(N*N1*P(:,N1)**2)
+    w = 2.0_EP/(N*N1*P(:,N1)**2)
 
     ! leave off endpoints (BF defined as zero there)
     gl%x = x(2:gl%ord-1)
@@ -319,10 +319,10 @@ contains
     np = size(series)
 
     ! first column is intiallized to zero
-    eps(:,-1) = 0.0
+    eps(:,-1) = 0.0_EP
 
     ! build up partial sums, but check for problems
-    check: do i=1,np
+    check: do i = 1,np
        if((abs(series(i)) > huge(1.0_EP)).or.(series(i) /= series(i))) then
           ! +/- Infinity or NaN ? truncate series to avoid corrupting accelerated sum
           np = i-1
@@ -342,7 +342,7 @@ contains
     end do check
     
     ! build up epsilon table (each column has one less entry)
-    do j=0,np-2 
+    do j = 0,np-2 
        do m = 1,np-(j+1)
           denom = eps(m+1,j) - eps(m,j)
           if(abs(denom) > spacing(0.0)) then ! check for div by zero
