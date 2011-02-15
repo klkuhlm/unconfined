@@ -35,9 +35,9 @@ module types
      !                tpar(n+2:2*n+1) = strength at each of n steps 
      ! (is multiplied by constant strength too -- you probably want to set that to unity)
      character(81), dimension(9) :: timeDescrip = &
-          & ['step on; tpar(1) = on time                                                       ',&
+          & ['step on; tpar(1) = on time; tpar(2) not used                                     ',&
           &  'finite pulse; tpar(1:2) = on/off time                                            ',&
-          &  'infinitessimal pulse; tpar(1) = pulse location                                   ',&
+          &  'infinitessimal pulse; tpar(1) = pulse location; tpar(2) not used                 ',&
           &  'stairs; tpar(1) = time step (Q increase by integer multiples); tpar(2) = off time',&
           &  'rectified square wave; tpar(1) = 1/2 period of wave; tpar(2) = start time        ',&
           &  'cos(omega*t); tpar(1) = omega; tpar(2) = start time                              ',&
@@ -56,7 +56,7 @@ module types
   ! inverse Hankel transform parameters
   type :: invHankel
      ! zeros of J0 Bessel function
-     real(DP), allocatable :: j0z(:) ! locations of zeros of J0 bessel fnc
+     real(EP), allocatable :: j0z(:) ! locations of zeros of J0 bessel fnc
      integer, allocatable :: sv(:) ! split index  vector
 
      ! min/max j0 split between infinite/fininte integrals
@@ -153,9 +153,6 @@ module types
      real(DP) :: zTop = -999., zBot = -999. 
      ! order of quadrature at monitoring well screen
      integer :: zOrd = -999 
-
-     character(7) :: RFMT = 'ES14.07'  ! format for space/time
-     character(9) :: HFMT = 'ES24.15E3'  ! format for results
 
      character(NUMCHAR) :: outFileName
   end type solution

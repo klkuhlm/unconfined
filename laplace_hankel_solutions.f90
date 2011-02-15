@@ -22,6 +22,8 @@ contains
     type(formation), intent(in) :: f
     complex(EP), dimension(np,nz) :: fp
 
+    intrinsic :: bessel_j0
+
     select case(s%model)
     case(0)
        ! Theis solution (no variation in z)

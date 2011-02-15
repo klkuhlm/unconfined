@@ -6,7 +6,7 @@ program Driver
   use io, only : read_input, write_timeseries_header, write_contour_header
   
   ! constants and coefficients
-  use constants, only : DP, PI, EP
+  use constants, only : DP, PI, EP, RFMT, HFMT
  
   ! function to be evaluated in Laplace/Hankel space
   use laplace_hankel_solution, only : soln => lap_hank_soln
@@ -30,8 +30,7 @@ program Driver
   complex(EP), allocatable :: fa(:,:,:), tmp(:,:,:), GLz(:,:,:), GLarea(:,:,:)
   complex(EP), allocatable :: finint(:,:), infint(:,:), totlap(:,:)
   real(EP), allocatable :: totint(:), GLy(:)
-  real(EP) :: totobs, lob, hib, width
-  real(DP) :: arg
+  real(EP) :: totobs, lob, hib, width, arg
   complex(EP) :: dy
   integer :: i, j, k, m, n, nn
   integer, allocatable :: ii(:)
@@ -58,11 +57,10 @@ program Driver
   ! loop over all desired calculation times
   do i = 1, s%nt
      if (.not. s%quiet) then
-        write(*,'(I4,A,ES11.4)') i,' td ',s%tD(i)
+        write(*,'(I5,A,'//RFMT//')') i,' td ',s%tD(i)
      end if
      
-     ! currently using 'optimal' p values for each time
-     ! TODO: compute optimal p values for a vector of times
+     ! using 'optimal' vector of p values for each time
      l%p(1:l%np) = pvalues(TEE_MULT*s%tD(i),l)
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -187,24 +185,24 @@ program Driver
         if (s%timeSeries) then
            if (s%dimless) then
               ! dimensionless time series output
-              write (UNIT,'('//s%RFMT//',1X,2('//s%HFMT//',1X))') &
+              write (UNIT,'('//RFMT//',1X,2('//HFMT//',1X))') &
                    & s%td(i), totObs ! TODO add derivative wrt logt
            else
               ! dimensional time series output
-              write (UNIT,'('//s%RFMT//',1X,2('//s%HFMT//',1X))') &
+              write (UNIT,'('//RFMT//',1X,2('//HFMT//',1X))') &
                    & s%t(i), totObs*s%Hc ! TODO add derivative wrt logt
            end if
         else
            if (s%dimless) then
               ! dimensionless contour map output
               do m = 1,s%nz
-                 write (UNIT,'(2('//s%RFMT//',1X),2('//s%HFMT//',1X))') &
+                 write (UNIT,'(2('//RFMT//',1X),2('//HFMT//',1X))') &
                       & s%zD(m), s%rD(k), totint(m) ! TODO add derivative wrt logt
               end do
            else
               ! dimensional contour map output
               do m = 1,s%nz
-                 write (UNIT,'(2('//s%RFMT//',1X),2('//s%HFMT//',1X))') &
+                 write (UNIT,'(2('//RFMT//',1X),2('//HFMT//',1X))') &
                       & s%z(m), s%r(k), totint(m)*s%Hc ! TODO add derivative wrt logt
               end do
            end if
@@ -215,13 +213,13 @@ program Driver
 contains
 
   !! ###################################################
-  pure subroutine tanh_sinh_setup(t,k,s)
-    use constants, only : PIOV2EP
+  subroutine tanh_sinh_setup(t,k,s)
+    use constants, only : PIOV2EP, DP, EP
     use types, only : TanhSinh
     implicit none
     
     type(TanhSinh), intent(inout) :: t
-    real(DP), intent(in) :: s
+    real(EP), intent(in) :: s
     integer, intent(in) :: k
 
     integer :: N,r,i

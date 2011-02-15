@@ -6,8 +6,8 @@ public :: read_input, write_timeseries_header, write_contour_header
 
 contains
   subroutine read_input(w,f,s,lap,h,gl,ts)
-    use constants, only : DP, PI, NUMCHAR
-    use types
+    use constants, only : EP, DP, PI, PIEP, NUMCHAR, RFMT, HFMT
+    use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
     use utilities, only : logspace, linspace
     
     type(invLaplace), intent(inout) :: lap
@@ -35,9 +35,9 @@ contains
     integer :: i
 
     ! used to compute J0 zeros
-    real(DP) :: x, dx 
+    real(EP) :: x, dx 
 
-    intrinsic :: get_command_argument
+    intrinsic :: get_command_argument, bessel_j0, bessel_j1
 
     ! read input parameters from file some minimal error checking
     call get_command_argument(1,inputFileName)
@@ -109,13 +109,13 @@ contains
             & s%quiet, trim(s%modelDescrip(s%model)) ,s%dimless
        write(*,'(A,2(L1,1X))') 'hydrograph?, piezometer?:: ', &
             & s%timeSeries, s%piezometer
-       write(*,'(A,'//s%rfmt//')') 'Q:: ',w%Q
+       write(*,'(A,'//RFMT//')') 'Q:: ',w%Q
        if (lap%timeType > -1) then
           write(*,'(A)') 'pumping well time behavior :: '//trim(lap%timeDescrip(lap%timeType))
-          write(*,'(A,I0,2(1X,'//s%rfmt//'))') 'time behavior, par1, par2 ::', &
+          write(*,'(A,I0,2(1X,'//RFMT//'))') 'time behavior, par1, par2 ::', &
                & lap%timeType, lap%timePar(:)
        else
-          fmt = '(A,    ('//s%rfmt//',1X),A,    ('//s%rfmt//',1X))'
+          fmt = '(A,    ('//RFMT//',1X),A,    ('//RFMT//',1X))'
           write(fmt(8:11),'(I4.4)')  size(lap%timePar(:-lap%timeType+1),1)
           write(fmt(26:29),'(I4.4)') size(lap%timePar(-lap%timeType+2:),1)
           write(*,'(A)') 'pumping well time behavior :: '//trim(lap%timeDescrip(9))
@@ -123,11 +123,11 @@ contains
                & lap%timeType,lap%timePar(:-lap%timeType+1),'| ',&
                & lap%timePar(-lap%timeType+2:)
        end if
-       write(*,'(A,'//s%rfmt//')') 'b (initial aquier sat thickness):: ',f%b  
-       write(*,'(A,2('//s%rfmt//',1X))') 'l,d (screen bot&top from above):: ', w%l, w%d  
-       write(*,'(A,2('//s%rfmt//',1X))') 'rw,rc (well and casing radii):: ', w%rw, w%rc  
-       write(*,'(A,3('//s%rfmt//',1X))') 'Kr,kappa,gamma:: ', f%Kr, f%kappa, f%gamma
-       write(*,'(A,2('//s%rfmt//',1X))') 'Ss,Sy:: ', f%Ss, f%Sy
+       write(*,'(A,'//RFMT//')') 'b (initial aquier sat thickness):: ',f%b  
+       write(*,'(A,2('//RFMT//',1X))') 'l/b,d/b (screen bot&top from above):: ', w%l, w%d  
+       write(*,'(A,2('//RFMT//',1X))') 'rw,rc (well and casing radii):: ', w%rw, w%rc  
+       write(*,'(A,3('//RFMT//',1X))') 'Kr,kappa,gamma:: ', f%Kr, f%kappa, f%gamma
+       write(*,'(A,2('//RFMT//',1X))') 'Ss,Sy:: ', f%Ss, f%Sy
     end if
 
     if(any([f%Sy, f%gamma, w%l] < 0.0)) then
@@ -144,7 +144,7 @@ contains
     end if
 
     if (w%d <= w%l) then
-       write(*,'(2(A,'//s%rfmt//'))') 'ERROR: d must be > l; l=',w%l,' d=',w%d
+       write(*,'(2(A,'//RFMT//'))') 'ERROR: d must be > l; l=',w%l,' d=',w%d
        stop
     end if
   
@@ -170,7 +170,7 @@ contains
 
     if (lap%tol < epsilon(lap%tol)) then
        lap%tol = epsilon(lap%tol)
-       write(*,'(A,'//s%rfmt//')') 'WARNING: increased INVLAP tolerance to ',&
+       write(*,'(A,'//RFMT//')') 'WARNING: increased INVLAP tolerance to ',&
             & lap%tol 
     end if
 
@@ -206,9 +206,9 @@ contains
     ! only top used if piezometer
     read(19,*) s%zTop, s%zBot, s%zOrd 
 
-    if (s%zTop >= s%zBot) then
+    if (s%zTop >= s%zBot .or. s%zTop < 0.0 .or. s%zBot > 1.0) then
        write(*,*) 'ERROR: top of monitoring well screen must be',&
-            & 'above bottom of screen',s%zTop,s%zBot
+            & 'above bottom and both between 0 and 1',s%zTop,s%zBot
        stop
     end if
     
@@ -225,7 +225,6 @@ contains
        allocate(s%r(1),s%rD(1)) ! only one observation distance
        if (rval > w%rw) then
           s%r(1) = rval
-          s%nr = 1
        else
           write(*,*) 'ERROR: r must be > rw',rval
           stop
@@ -234,20 +233,17 @@ contains
        if (s%piezometer) then
           s%zOrd = 1
        end if
-       allocate(s%z(s%zOrd), s%zD(s%zOrd))
-       
+
+       allocate(s%z(s%zOrd), s%zD(s%zOrd))       
        if (s%piezometer) then
-          s%z(1) = s%zTop
-          s%nz = 1
+          s%z(1) = s%zTop*f%b
        else
           if (s%zOrd > 1) then
              ! calc points spread out evenly along obs well screen
-             s%z(1:s%zOrd) = linspace(s%zBot, s%zTop, s%zOrd)
-             s%nz = s%zOrd
+             s%z(1:s%zOrd) = linspace(s%zBot, s%zTop, s%zOrd)*f%b
           else
              ! one point goes to middle of interval
-             s%z(1) = (s%zBot + s%zTop)/2.0 
-             s%nz = 1
+             s%z(1) = (s%zBot + s%zTop)*f%b/2.0 
           end if
        end if
 
@@ -298,7 +294,6 @@ contains
        allocate(s%t(1), s%tD(1), h%sv(1))
        if (tval > spacing(0.0)) then
           s%t(1) = tval
-          s%nt = 1
        else
           write(*,*) 'ERROR: t must be >0',tval
        end if
@@ -355,6 +350,10 @@ contains
        end if
     end if
     
+    s%nt = size(s%t,1)
+    s%nz = size(s%z,1)
+    s%nr = size(s%r,1)
+
     ! determine which layer z point(s) are in
     allocate(s%zLay(size(s%z)))
     where(s%z(:) <= w%l)
@@ -385,10 +384,16 @@ contains
     f%sigma = f%Sy/(f%Ss*f%b)
     f%alphaD = f%kappa/f%sigma
 
+    ! pumping and monitoring well screens are entered relative to
+    ! thickness of aquifer (which may not be the characteristic length - see above)
+
     ! dimensionless lengths
-    w%bD = (w%l - w%d)/s%Lc
+    w%l = w%l*f%b
+    w%d = w%d*f%b
     w%lD = w%l/s%Lc
     w%dD = w%d/s%Lc
+    w%bD = abs(w%lD - w%dD)
+
     s%zD(:) = s%z(:)/s%Lc
     s%rD(:) = s%r(:)/s%Lc
 
@@ -398,13 +403,13 @@ contains
     ! ## echo computed quantities #####
 
     if (.not. s%quiet) then
-       write(*,'(A,'//s%rfmt//')') 'kappa:   ',f%kappa
-       write(*,'(A,'//s%rfmt//')') 'sigma:   ',f%sigma
-       write(*,'(A,'//s%rfmt//')') 'alpha_D: ',f%alphaD
-       write(*,'(A,'//s%rfmt//')') 'Tc:  ',s%Tc
-       write(*,'(A,'//s%rfmt//')') 'Lc:  ',s%Lc
-       write(*,'(A,'//s%rfmt//')') 'b_D: ',w%bD
-       write(*,'(A,'//s%rfmt//')') 'l_D: ',w%lD
+       write(*,'(A,'//RFMT//')') 'kappa:   ',f%kappa
+       write(*,'(A,'//RFMT//')') 'sigma:   ',f%sigma
+       write(*,'(A,'//RFMT//')') 'alpha_D: ',f%alphaD
+       write(*,'(A,'//RFMT//')') 'Tc:  ',s%Tc
+       write(*,'(A,'//RFMT//')') 'Lc:  ',s%Lc
+       write(*,'(A,'//RFMT//')') 'b_D: ',w%bD
+       write(*,'(A,'//RFMT//')') 'l_D: ',w%lD
        fmt = '(A,I0,1X,     (ES09.03,1X))           '
        write(fmt(10:14),'(I5.5)') s%nz
        write(*,fmt) 'z  : ',s%nz,s%z
@@ -415,7 +420,9 @@ contains
        write(fmt(10:14),'(I5.5)') s%nt
        write(*,fmt) 't  : ',s%nt,s%t
        write(*,fmt) 't_D: ',s%nt,s%tD
-       write(*,'(A,I0,2('//s%rfmt//',1X))') 'deHoog: M,alpha,tol: ', &
+       write(*,'(A,2('//RFMT//',1X),I0)') 'zTop/b, zBot/b ,zOrd: ',&
+            & s%zTop, s%zBot, s%zOrd
+       write(*,'(A,I0,2('//RFMT//',1X))') 'deHoog: M,alpha,tol: ', &
             & lap%M, lap%alpha, lap%tol
        write(*,'(A,2(I0,1X))'), 'tanh-sinh: k, num extrapolation steps ', &
             & ts%k, ts%nst
@@ -429,7 +436,7 @@ contains
     ! ## compute zeros of J0 bessel function #####
 
     ! asymptotic estimate of zeros - initial guess
-    forall (i=0:terms-1) h%j0z(i+1) = (i + 0.75)*PI
+    forall (i=0:terms-1) h%j0z(i+1) = (i + 0.75)*PIEP
     do i=1,terms
        x = h%j0z(i)
        NR: do
@@ -454,7 +461,8 @@ contains
   end subroutine read_input
 
   subroutine write_timeseries_header(w,f,s,lap,h,gl,ts,unit)
-    use types
+    use constants, only : RFMT
+    use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
     
     type(invLaplace), intent(in) :: lap
     type(invHankel), intent(in) :: h
@@ -476,52 +484,53 @@ contains
     ! echo input parameters at head of output file
     write(20,'(A,3(L1,1X))') '# dimensionless?, timeseries?, piezometer? :: ', &
          & s%dimless, s%timeseries, s%piezometer
-    write(20,'(A,'//s%RFMT//')') '# Q (volumetric pumping rate) :: ', &
+    write(20,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
          & w%Q
-    write(20,'(A,'//s%RFMT//')') '# b (initial sat thickness) :: ', &
+    write(20,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
          & f%b
-    write(20,'(A,2('//s%RFMT//',1X))') '# l,d (screen bot & top) :: ',&
+    write(20,'(A,2('//RFMT//',1X))') '# l/b,d/b (screen bot & top) :: ',&
          & w%l, w%d  
-    write(20,'(A,2('//s%RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
+    write(20,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
          & w%rw, w%rc  
-    write(20,'(A,2('//s%RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
-    write(20,'(A,2('//s%RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
-    write(20,'(A,'//s%RFMT//')') '# gamma :: ',f%gamma
-    fmt = '(A,I0,A,    ('//s%RFMT//',1X))       '
+    write(20,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
+    write(20,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
+    write(20,'(A,'//RFMT//')') '# gamma :: ',f%gamma
+    fmt = '(A,I0,A,    ('//RFMT//',1X))       '
     write(fmt(9:12),'(I4.4)') size(lap%timePar)
     write(20,fmt) '# pumping well time behavior :: ',lap%timeType, &
          & trim(lap%timeDescrip(lap%timeType)), lap%timePar
-    write(20,'(A,I0,2('//s%RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
+    write(20,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
     write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
          & ts%k, ts%nst
     write(20,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
     if(s%piezometer) then
-       write(20,'(A,2('//s%RFMT//',1X))') '# point obs well r,z :: ',s%r(1),s%z(1)
+       write(20,'(A,2('//RFMT//',1X))') '# point obs well r,z :: ',s%r(1),s%z(1)
     else
-       write(20,'(A,3('//s%RFMT//',1X),I0)') '# screened obs well r,zTop,zBot,zOrd :: ',&
+       write(20,'(A,3('//RFMT//',1X),I0)') '# screened obs well r,zTop,zBot,zOrd :: ',&
             & s%r(1), s%zTop, s%zBot, s%zOrd
     end if
     write(20,'(A,I0)') '# times :: ',s%nt
-    write(20,'(A,2('//s%RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
+    write(20,'(A,2('//RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
     if (s%dimless) then
-       write (20,'(A,/,A,/,A)') '#','#         t_D                       '//&
+       write (20,'(A,/,A,/,A)') '#','#       t_D              '//&
             & trim(s%modelDescrip(s%model)), &
-            & '#------------------------------------------------------------'
+            & '#----------------------------------------'
        ! TODO add header for derivative wrt logt
     else
-       write(20,'(A,1'//s%RFMT//')') '# characteristic head ::',s%Hc
-       write (20,'(A,/,A,/,A)') '#','#         t                         '//&
+       write(20,'(A,1'//RFMT//')') '# characteristic head ::',s%Hc
+       write (20,'(A,/,A,/,A)') '#','#       t                '//&
             & trim(s%modelDescrip(s%model)), &
-            & '#------------------------------------------------------------'
+            & '#----------------------------------------'
        ! TODO add header for derivative wrt logt
     end if
 
   end subroutine write_timeseries_header
 
   subroutine write_contour_header(w,f,s,lap,h,gl,ts,unit)
-    use types
+    use constants, only : RFMT
+    use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
     
     type(invLaplace), intent(in) :: lap
     type(invHankel), intent(in) :: h
@@ -543,33 +552,33 @@ contains
     ! echo input parameters at head of output file
     write(20,'(A,2(L1,1X))') '# dimensionless?, timeseries? :: ', &
          & s%dimless, s%timeseries
-    write(20,'(A,'//s%RFMT//')') '# Q (volumetric pumping rate) :: ', &
+    write(20,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
          & w%Q
-    write(20,'(A,'//s%RFMT//')') '# b (initial sat thickness) :: ', &
+    write(20,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
          & f%b
-    write(20,'(A,2('//s%RFMT//',1X))') '# l,d (screen bot & top) :: ',&
+    write(20,'(A,2('//RFMT//',1X))') '# l,d (screen bot & top) :: ',&
          & w%l, w%d  
-    write(20,'(A,2('//s%RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
+    write(20,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
          & w%rw, w%rc  
-    write(20,'(A,2('//s%RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
-    write(20,'(A,2('//s%RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
-    write(20,'(A,'//s%RFMT//')') '# gamma :: ',f%gamma
-    fmt = '(A,I0,A,    ('//s%RFMT//',1X))       '
+    write(20,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
+    write(20,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
+    write(20,'(A,'//RFMT//')') '# gamma :: ',f%gamma
+    fmt = '(A,I0,A,    ('//RFMT//',1X))       '
     write(fmt(9:12),'(I4.4)') size(lap%timePar)
     write(20,fmt) '# pumping well time behavior :: ',lap%timeType, &
          & trim(lap%timeDescrip(lap%timeType)), lap%timePar
-    write(20,'(A,I0,2('//s%RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
+    write(20,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
     write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
          & ts%k, ts%nst
     write(20,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
-    fmt = '(A,I0,1X,    ('//s%RFMT//',1X))     '
+    fmt = '(A,I0,1X,    ('//RFMT//',1X))     '
     write(fmt(10:13),'(I4.4)') s%nr
     write(20,fmt) '# num r locations, rlocs :: ',s%nr, s%r(:)
     write(fmt(10:13),'(I4.4)') s%nz
     write(20,fmt) '# num z locations, zlocs :: ',s%nz, s%z(:)
-    write(20,'(A,'//s%RFMT//')') '# time :: ',s%t(1)
+    write(20,'(A,'//RFMT//')') '# time :: ',s%t(1)
     if (s%dimless) then
        write (20,'(A,/,A,/,A)') '#','#         z_D           r_D           '&
             & //'             '// trim(s%modelDescrip(s%model)), &
