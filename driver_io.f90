@@ -105,9 +105,9 @@ contains
     ! ## echo check parameters #####
 
     if (.not. s%quiet) then
-       write(*,'(A,L1,1X,A,1X)') 'model, dimless output?:: ',&
-            & s%quiet, trim(s%modelDescrip(s%model)) ,s%dimless
-       write(*,'(A,2(L1,1X))') 'hydrograph?, piezometer?:: ', &
+       write(*,'(A,A,1X,1L)') 'model, dimless output?:: ',&
+            & trim(s%modelDescrip(s%model)) ,s%dimless
+       write(*,'(A,2(L1,1X))') 'time-series plot?, piezometer?:: ', &
             & s%timeSeries, s%piezometer
        write(*,'(A,'//RFMT//')') 'Q:: ',w%Q
        if (lap%timeType > -1) then
@@ -124,7 +124,7 @@ contains
                & lap%timePar(-lap%timeType+2:)
        end if
        write(*,'(A,'//RFMT//')') 'b (initial aquier sat thickness):: ',f%b  
-       write(*,'(A,2('//RFMT//',1X))') 'l/b,d/b (screen bot&top from above):: ', w%l, w%d  
+       write(*,'(A,2('//RFMT//',1X))') 'l/b,d/b (relative screen bot&top from above):: ', w%l, w%d  
        write(*,'(A,2('//RFMT//',1X))') 'rw,rc (well and casing radii):: ', w%rw, w%rc  
        write(*,'(A,3('//RFMT//',1X))') 'Kr,kappa,gamma:: ', f%Kr, f%kappa, f%gamma
        write(*,'(A,2('//RFMT//',1X))') 'Ss,Sy:: ', f%Ss, f%Sy
@@ -420,8 +420,8 @@ contains
        write(fmt(10:14),'(I5.5)') s%nt
        write(*,fmt) 't  : ',s%nt,s%t
        write(*,fmt) 't_D: ',s%nt,s%tD
-       write(*,'(A,2('//RFMT//',1X),I0)') 'zTop/b, zBot/b ,zOrd: ',&
-            & s%zTop, s%zBot, s%zOrd
+       write(*,'(A,2('//RFMT//',1X),I0)') 'relative monitoring screen '//&
+            & 'zTop/b, zBot/b ,zOrd: ', s%zTop, s%zBot, s%zOrd
        write(*,'(A,I0,2('//RFMT//',1X))') 'deHoog: M,alpha,tol: ', &
             & lap%M, lap%alpha, lap%tol
        write(*,'(A,2(I0,1X))'), 'tanh-sinh: k, num extrapolation steps ', &
