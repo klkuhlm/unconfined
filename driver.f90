@@ -3,7 +3,7 @@ program Driver
   ! type definitions 
   use types
 
-  use io, only : read_input, write_timeseries_header, write_contour_header
+  use driver_io, only : read_input, write_timeseries_header, write_contour_header
   
   ! constants and coefficients
   use constants, only : DP, PI, EP, RFMT, HFMT
@@ -12,7 +12,7 @@ program Driver
   use laplace_hankel_solutions, only : soln => lap_hank_soln
 
   ! inverse Laplace transform routine (currently only de Hoog, et al)
-  use inverse_Laplace_Transform, only : invlap => dehoog_invlap , pvalues => dehoog_pvalues
+  use invLap, only : dehoog => dehoog_invlap , pvalues => dehoog_pvalues
 
   implicit none
 
@@ -164,7 +164,7 @@ program Driver
 
         !$OMP PARALLEL DO PRIVATE(k) SHARED(totint,l,s,totlap)
         do m = 1,s%nz
-           totint(m) = invlap(s%tD(i),s%tD(i)*TEE_MULT,totlap(1:l%np,m),l) 
+           totint(m) = dehoog(s%tD(i),s%tD(i)*TEE_MULT,totlap(1:l%np,m),l) 
         end do
         !$OMP END PARALLEL DO
 

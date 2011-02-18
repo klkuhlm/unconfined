@@ -1,4 +1,4 @@
-module time_mod
+module time
   implicit none
 
   private 
@@ -75,4 +75,4 @@ contains
 
   end function lapTime
 
-end module time_mod
+end module time

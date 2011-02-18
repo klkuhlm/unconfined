@@ -1,4 +1,3 @@
-
 module types
   use constants, only : DP, EP, NUMCHAR
   implicit none

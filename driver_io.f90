@@ -1,4 +1,4 @@
-module io
+module driver_io
 implicit none
 
 private
@@ -8,7 +8,7 @@ contains
   subroutine read_input(w,f,s,lap,h,gl,ts)
     use constants, only : EP, DP, PI, PIEP, NUMCHAR, RFMT, HFMT
     use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
-    use utilities, only : logspace, linspace
+    use utility, only : logspace, linspace
     
     type(invLaplace), intent(inout) :: lap
     type(invHankel), intent(inout) :: h
@@ -592,5 +592,5 @@ contains
     end if
 
   end subroutine write_contour_header
-end module io
+end module driver_io
 

@@ -1,4 +1,4 @@
-module utilities
+module utility
   implicit none
   private
   public :: ccosh, csinh, logspace, linspace
@@ -45,6 +45,6 @@ contains
     v = 10.0_DP**linspace(real(lo,DP),real(hi,DP),num)
   end function logspace
 
-end module utilities
+end module utility
 
 

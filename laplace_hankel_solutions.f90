@@ -9,7 +9,7 @@ contains
   function lap_hank_soln(a,rD,np,nz,w,f,s,lap) result(fp)
     use constants, only : DP, EP
     use types, only : well, formation, invLaplace, solution
-    use time_mod, only : lapTime
+    use time, only : lapTime
     
     implicit none
     

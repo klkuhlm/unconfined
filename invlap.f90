@@ -3,7 +3,7 @@
 ! see "An improved method for numerical inversion of Laplace
 !     transforms", SIAM J. Sci. Stat. Comp., 3, 357-366, 1982.
 
-module inverse_Laplace_Transform
+module invlap
   use constants, only : DP
   implicit none
   
@@ -130,4 +130,4 @@ contains
        p(i+1) = cmplx(real(lap%alpha,EP) - log(real(lap%tol,EP))/(2.0_EP*tee), PIEP*i/tee, EP)
     end forall
   end function deHoog_pvalues
-end module inverse_Laplace_Transform
+end module invlap
