@@ -1,4 +1,4 @@
-module laplace_hankel_solution
+module laplace_hankel_solutions
   implicit none
 
   private
@@ -48,7 +48,7 @@ contains
 
   end function lap_hank_soln
     
-end module laplace_hankel_solution
+end module laplace_hankel_solutions
 
 
 

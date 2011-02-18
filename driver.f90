@@ -9,7 +9,7 @@ program Driver
   use constants, only : DP, PI, EP, RFMT, HFMT
  
   ! function to be evaluated in Laplace/Hankel space
-  use laplace_hankel_solution, only : soln => lap_hank_soln
+  use laplace_hankel_solutions, only : soln => lap_hank_soln
 
   ! inverse Laplace transform routine (currently only de Hoog, et al)
   use inverse_Laplace_Transform, only : invlap => dehoog_invlap , pvalues => dehoog_pvalues
