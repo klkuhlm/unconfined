@@ -124,10 +124,16 @@ contains
     type(invLaplace), intent(in) :: lap
     real(DP), intent(in) :: tee
     complex(EP), dimension(2*lap%M+1) :: p
+    real(EP) :: sigma
     integer :: i
+    
+    ! real portion is constant
+    ! TODO: more generally, should the 2.0 in the denominator
+    ! TODO: be the constant set in driver.f90?
+    sigma = real(lap%alpha,EP) - log(real(lap%tol,EP))/(2.0_EP*tee) 
 
     forall (i=0:2*lap%M)
-       p(i+1) = cmplx(real(lap%alpha,EP) - log(real(lap%tol,EP))/(2.0_EP*tee), PIEP*i/tee, EP)
+       p(i+1) = cmplx(sigma, PIEP*i/tee, EP)
     end forall
   end function deHoog_pvalues
 end module invlap
