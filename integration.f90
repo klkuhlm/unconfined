@@ -31,16 +31,18 @@ contains
        u(2,i+r+1) = PIOV2EP*sinh(h*i)
     end forall
     !$OMP END PARALLEL WORKSHARE
-    
-    t%a(j,1:N) = tanh(u(2,:))
-    t%w(j,1:N) = u(1,:)/cosh(u(2,:))**2
+
+    t%Q(j)%w(1:N) = u(1,:)/cosh(u(2,:))**2
+    t%Q(j)%w(1:N) = 2.0_EP*t%Q(j)%w(:)/sum(t%Q(j)%w(:))
+
+    ! only compute abcissa, if vector is allocated
+    if (allocated(t%Q(j)%a)) then
+       ! TODO: only use half interval with bunched abcissa @ origin?
+       ! map the -1<=x<=1 interval onto 0<=a<=s
+       t%Q(j)%a(1:N) = (tanh(u(2,:)) + 1.0_EP)*s/2.0_EP
+    end if
 
     deallocate(u)
-    t%w(j,1:N) = 2.0_EP*t%w(j,1:N)/sum(t%w(j,1:N))
-
-    ! TODO: only use half interval with bunched abcissa @ origin?
-    ! map the -1<=x<=1 interval onto 0<=a<=s
-    t%a(j,1:N) = (t%a(j,1:N) + 1.0_EP)*s/2.0_EP
 
   end subroutine tanh_sinh_setup
 

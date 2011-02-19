@@ -56,7 +56,7 @@ program Driver
   ts%N = 2**ts%k - 1
 
   allocate(finint(l%np,s%nz), infint(l%np,s%nz), totlap(l%np,s%nz), totint(s%nz), &
-       & l%p(l%np), ts%kv(ts%R), ts%Nv(ts%R), ts%Q(ts%R-1), ts%hv(ts%R))
+       & l%p(l%np), ts%kv(ts%R), ts%Nv(ts%R), ts%Q(ts%R), ts%hv(ts%R))
 
   forall (m = 1:ts%R) 
      ! count up to k, a vector of length R
@@ -91,27 +91,27 @@ program Driver
         ! split between finite & infinite integrals
         arg = h%j0z(h%sv(i))/s%rD(k)
         if (first) then
-            allocate(ts%w(ts%R,ts%N), ts%a(ts%R,ts%N), &
-                 & fa(ts%N,l%np,s%nz), tmp(ts%R,l%np,s%nz))
+           allocate(ts%Q(ts%R)%w(ts%N), ts%Q(ts%R)%a(ts%N), &
+                & fa(ts%N,l%np,s%nz), tmp(ts%R,l%np,s%nz))
            call tanh_sinh_setup(ts,ts%k,arg,ts%R)
         end if
 
         ! compute solution at densest set of abcissa
         !$OMP PARALLEL DO SHARED(fa,ts,w,f,s,l,k)
         do nn = 1,ts%Nv(ts%R)
-           fa(nn,1:l%np,1:s%nz) = soln(ts%a(ts%R,nn),s%rD(k),l%np,s%nz,w,f,s,l)
+           fa(nn,1:l%np,1:s%nz) = soln(ts%Q(ts%R)%a(nn),s%rD(k),l%np,s%nz,w,f,s,l)
         end do
         !$OMP END PARALLEL DO
 
         tmp(ts%R,1:l%np,1:s%nz) = arg/2.0 * &
-             & sum(spread(spread(ts%w(ts%R,:),2,l%np),3,s%nz)*fa(:,:,:),dim=1)
+             & sum(spread(spread(ts%Q(ts%R)%w,2,l%np),3,s%nz)*fa(:,:,:),dim=1)
 
         do j=1,ts%R-1
 
-           ! only need to re-compute weights for each subsequent coarser step
-           ! they are only computed the first time step and saved 
+           ! only need to re-compute weights and indices for each subsequent
+           ! coarser step they are only computed the first time step and saved 
            if (first) then
-              allocate(ts%Q(j)%iv(ts%Nv(j)))
+              allocate(ts%Q(j)%iv(ts%Nv(j)), ts%Q(j)%w(ts%Nv(j)))
               call tanh_sinh_setup(ts,ts%kv(j),arg,j)
 
               ! compute index vector, to slice up solution 
@@ -123,7 +123,7 @@ program Driver
 
            ! estimate integral with subset of function evaluations and appropriate weights
            tmp(j,1:l%np,1:s%nz) = arg/2.0 * &
-                & sum(spread(spread(ts%w(j,1:ts%Nv(j)),2,l%np),3,s%nz) * &
+                & sum(spread(spread(ts%Q(j)%w,2,l%np),3,s%nz) * &
                 & fa(ts%Q(j)%iv,:,:),dim=1)
         end do
         

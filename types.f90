@@ -77,6 +77,8 @@ module types
   type :: vecs
      ! for creating a vector of different-length vectors
      integer, allocatable :: iv(:)
+     ! for weights and abcissa at each level
+     real(EP), allocatable :: w(:), a(:)
   end type vecs
 
   ! parameters specific to tanh-sinh quadrature  
@@ -84,7 +86,6 @@ module types
      integer :: k = -999  ! N = 2**k-1 is integration order
      integer :: N = -999
      integer :: R = -999  ! # orders to extrapolate (Rord <= k-2)
-     real(EP), allocatable :: w(:,:), a(:,:) ! weights and abcissa at each level
      
      ! these vectors give spacing, order, number and indexing
      ! at each step in the Richardson extrapolation process
