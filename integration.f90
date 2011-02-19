@@ -24,12 +24,14 @@ contains
     r = (N-1)/2
     h = 4.0_EP/2**k
     allocate(u(2,N))
-       
+     
+    !$OMP PARALLEL WORKSHARE
     forall (i=-r:r)
        u(1,i+r+1) = PIOV2EP*cosh(h*i)
        u(2,i+r+1) = PIOV2EP*sinh(h*i)
     end forall
-    
+    !$OMP END PARALLEL WORKSHARE
+
     if(size(t%a) /= N) then
        deallocate(t%a,t%w)
        allocate(t%a(N),t%w(N))
@@ -65,8 +67,14 @@ contains
 
     N = gl%ord-1
     N1 = N+1
+
     ! first guess
-    forall (i=0:N) x(i+1) = cos(PIEP*i/N)
+    !$OMP PARALLEL WORKSHARE
+    forall (i=0:N) 
+       x(i+1) = cos(PIEP*i/N)
+    end forall
+    !$OMP END PARALLEL WORKSHARE
+
     ! initialize Vandermonde matrix
     P = 0.0_EP
     xold = 2.0_EP

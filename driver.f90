@@ -17,6 +17,9 @@ program Driver
   ! integration setup and extrapolation routines
   use integration, only : tanh_sinh_setup, gauss_lobatto_setup, wynn_epsilon, polint
 
+  ! openMP library interface 
+  !$ use omp_lib, only : OMP_get_max_threads, OMP_get_num_procs
+
   implicit none
 
   type(invLaplace) :: l
@@ -37,6 +40,9 @@ program Driver
   complex(EP) :: dy
   integer :: i, j, k, m, n, nn
   integer, allocatable :: iv(:)
+
+  !$ write(*,'(2(A,I0))') '# avail. processors: ',OMP_get_num_procs(), &
+  !$     & '  maximum # threads: ',OMP_get_max_threads()
 
   ! read in data from file, do minor error checking
   ! and allocate some solution vectors
@@ -79,10 +85,6 @@ program Driver
      ts%Nv(:) = 2**ts%kv - 1
      ts%hv(:) = 4.0_EP/(2**ts%kv)
 
-     write(*,*) 'ts%kv',ts%kv
-     write(*,*) 'ts%Nv',ts%Nv
-     write(*,*) 'ts%hv',ts%hv
-
      ! loop over all desired calculation radial distances
      do k = 1, s%nr
 
@@ -92,7 +94,7 @@ program Driver
         call tanh_sinh_setup(ts,ts%k,arg)
 
         ! compute solution at densest set of abcissa
-        !$OMP PARALLEL DO PRIVATE(nn) SHARED(fa,ts,w,f,s,l)
+        !$OMP PARALLEL DO SHARED(fa,ts,w,f,s,l,k)
         do nn = 1,ts%Nv(ts%Rord)
            fa(nn,1:l%np,1:s%nz) = soln(ts%a(nn),s%rD(k),l%np,s%nz,w,f,s,l)
         end do
@@ -119,7 +121,7 @@ program Driver
         
         if (ts%Rord > 1) then
            ! perform Richardson extrapolation to spacing -> zero
-           !$OMP PARALLEL DO PRIVATE(m,n) SHARED(ts,tmp,finint)
+           !$OMP PARALLEL DO SHARED(ts,tmp,finint)
            do m = 1,l%np
               do n = 1,s%nz
                  call polint(ts%hv(1:ts%Rord), tmp(1:ts%Rord,m,n), 0.0_EP, finint(m,n), dy)
@@ -153,7 +155,7 @@ program Driver
            ! transform GL abcissa (x) to global coordinates (y)
            GLy(:) = (width*gl%x(:) + (hib+lob))/2.0
            
-           !$OMP PARALLEL DO PRIVATE(k) SHARED(GLy,w,f,s,l)
+           !$OMP PARALLEL DO SHARED(GLy,w,f,s,l,k)
            do m = 1,gl%ord-2
               GLz(m,1:l%np,1:s%nz) = soln( GLy(m),s%rD(k),l%np,s%nz,w,f,s,l )
            end do
@@ -163,7 +165,7 @@ program Driver
                 & spread(spread(gl%w(1:gl%ord-2),2,l%np),3,s%nz),dim=1)
         end do
  
-        !$OMP PARALLEL DO PRIVATE(i,j) SHARED(GLarea,infint)
+        !$OMP PARALLEL DO SHARED(GLarea,infint)
         do j = 1,l%np
            do m = 1,s%nz
               ! accelerate each series independently
@@ -174,7 +176,7 @@ program Driver
 
         totlap(1:l%np,1:s%nz) = finint(1:l%np,1:s%nz) + infint(1:l%np,1:s%nz) 
 
-        !$OMP PARALLEL DO PRIVATE(k) SHARED(totint,l,s,totlap)
+        !$OMP PARALLEL DO SHARED(totint,l,s,totlap,i)
         do m = 1,s%nz
            totint(m) = dehoog(s%tD(i),s%tD(i)*TEE_MULT,totlap(1:l%np,m),l) 
         end do

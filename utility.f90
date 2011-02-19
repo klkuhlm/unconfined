@@ -4,7 +4,7 @@ module utility
   public :: logspace, linspace
 
 contains
-  pure function linspace(lo,hi,num) result(v)
+  function linspace(lo,hi,num) result(v)
     use constants, only : DP
     real(DP), intent(in) :: lo,hi
     integer, intent(in) :: num
@@ -15,10 +15,16 @@ contains
     rnum = real(num - 1,DP)
     range = abs(hi - lo) 
     sgn = sign(1.0_DP,hi-lo) ! if lo > high, count backwards
-    forall (i=0:num-1) v(i+1) = lo + sgn*real(i,DP)*range/rnum
+    
+    !$OMP PARALLEL WORKSHARE
+    forall (i=0:num-1) 
+       v(i+1) = lo + sgn*real(i,DP)*range/rnum
+    end forall
+    !$OMP END PARALLEL WORKSHARE
+
   end function linspace
 
-  pure function logspace(lo,hi,num) result(v)
+  function logspace(lo,hi,num) result(v)
     use constants, only : DP
     integer, intent(in) :: lo,hi,num
     real(DP), dimension(num) :: v

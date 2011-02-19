@@ -131,8 +131,10 @@ contains
     ! TODO: be the constant set in driver.f90?
     sigma = real(lap%alpha,EP) - log(real(lap%tol,EP))/(2.0_EP*tee) 
 
+    !$OMP PARALLEL WORKSHARE
     forall (i=0:2*lap%M)
        p(i+1) = cmplx(sigma, PIEP*i/tee, EP)
     end forall
+    !$OMP END PARALLEL WORKSHARE
   end function deHoog_pvalues
 end module invlap

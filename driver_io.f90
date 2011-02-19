@@ -436,7 +436,11 @@ contains
     ! ## compute zeros of J0 bessel function #####
 
     ! asymptotic estimate of zeros - initial guess
-    forall (i=0:terms-1) h%j0z(i+1) = (i + 0.75)*PIEP
+    !$OMP PARALLEL WORKSHARE
+    forall (i=0:terms-1) 
+       h%j0z(i+1) = (i + 0.75)*PIEP
+    end forall
+    !$OMP END PARALLEL WORKSHARE
     do i=1,terms
        x = h%j0z(i)
        NR: do
