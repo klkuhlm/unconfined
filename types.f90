@@ -75,7 +75,9 @@ module types
 
   ! parameters specific to tanh-sinh quadrature  
   type :: TanhSinh
-     integer :: k = -999, N = -999, nst = -999
+     integer :: k = -999  ! N = 2**k-1 is integration order
+     integer :: N = -999
+     integer :: Rord = -999  ! # orders to extrapolate (Rord <= k-2)
      real(EP), allocatable :: w(:), a(:), hh(:)
      integer, allocatable :: kk(:), NN(:), ii(:)
      
