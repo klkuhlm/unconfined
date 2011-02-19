@@ -482,45 +482,46 @@ contains
     end if
   
     ! echo input parameters at head of output file
-    write(20,'(A,3(L1,1X))') '# dimensionless?, timeseries?, piezometer? :: ', &
+    write(unit,'(A)') '# -*-auto-revert-*-'
+    write(unit,'(A,3(L1,1X))') '# dimensionless?, timeseries?, piezometer? :: ', &
          & s%dimless, s%timeseries, s%piezometer
-    write(20,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
+    write(unit,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
          & w%Q
-    write(20,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
+    write(unit,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
          & f%b
-    write(20,'(A,2('//RFMT//',1X))') '# l/b,d/b (screen bot & top) :: ',&
+    write(unit,'(A,2('//RFMT//',1X))') '# l/b,d/b (screen bot & top) :: ',&
          & w%l, w%d  
-    write(20,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
+    write(unit,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
          & w%rw, w%rc  
-    write(20,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
-    write(20,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
-    write(20,'(A,'//RFMT//')') '# gamma :: ',f%gamma
+    write(unit,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
+    write(unit,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
+    write(unit,'(A,'//RFMT//')') '# gamma :: ',f%gamma
     fmt = '(A,I0,A,    ('//RFMT//',1X))       '
     write(fmt(9:12),'(I4.4)') size(lap%timePar)
-    write(20,fmt) '# pumping well time behavior :: ',lap%timeType, &
+    write(unit,fmt) '# pumping well time behavior :: ',lap%timeType, &
          & trim(lap%timeDescrip(lap%timeType)), lap%timePar
-    write(20,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
+    write(unit,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
-    write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
+    write(unit,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
          & ts%k, ts%nst
-    write(20,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
+    write(unit,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
     if(s%piezometer) then
-       write(20,'(A,2('//RFMT//',1X))') '# point obs well r,z :: ',s%r(1),s%z(1)
+       write(unit,'(A,2('//RFMT//',1X))') '# point obs well r,z :: ',s%r(1),s%z(1)
     else
-       write(20,'(A,3('//RFMT//',1X),I0)') '# screened obs well r,zTop,zBot,zOrd :: ',&
+       write(unit,'(A,3('//RFMT//',1X),I0)') '# screened obs well r,zTop,zBot,zOrd :: ',&
             & s%r(1), s%zTop, s%zBot, s%zOrd
     end if
-    write(20,'(A,I0)') '# times :: ',s%nt
-    write(20,'(A,2('//RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
+    write(unit,'(A,I0)') '# times :: ',s%nt
+    write(unit,'(A,2('//RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
     if (s%dimless) then
-       write (20,'(A,/,A,/,A)') '#','#       t_D              '//&
+       write (unit,'(A,/,A,/,A)') '#','#       t_D              '//&
             & trim(s%modelDescrip(s%model)), &
             & '#----------------------------------------'
        ! TODO add header for derivative wrt logt
     else
-       write(20,'(A,1'//RFMT//')') '# characteristic head ::',s%Hc
-       write (20,'(A,/,A,/,A)') '#','#       t                '//&
+       write(unit,'(A,1'//RFMT//')') '# characteristic head ::',s%Hc
+       write (unit,'(A,/,A,/,A)') '#','#       t                '//&
             & trim(s%modelDescrip(s%model)), &
             & '#----------------------------------------'
        ! TODO add header for derivative wrt logt
@@ -550,42 +551,43 @@ contains
     end if
   
     ! echo input parameters at head of output file
-    write(20,'(A,2(L1,1X))') '# dimensionless?, timeseries? :: ', &
+    write(unit,'(A)') '# -*-auto-revert-*-'
+    write(unit,'(A,2(L1,1X))') '# dimensionless?, timeseries? :: ', &
          & s%dimless, s%timeseries
-    write(20,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
+    write(unit,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
          & w%Q
-    write(20,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
+    write(unit,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
          & f%b
-    write(20,'(A,2('//RFMT//',1X))') '# l,d (screen bot & top) :: ',&
+    write(unit,'(A,2('//RFMT//',1X))') '# l,d (screen bot & top) :: ',&
          & w%l, w%d  
-    write(20,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
+    write(unit,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
          & w%rw, w%rc  
-    write(20,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
-    write(20,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
-    write(20,'(A,'//RFMT//')') '# gamma :: ',f%gamma
+    write(unit,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
+    write(unit,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
+    write(unit,'(A,'//RFMT//')') '# gamma :: ',f%gamma
     fmt = '(A,I0,A,    ('//RFMT//',1X))       '
     write(fmt(9:12),'(I4.4)') size(lap%timePar)
-    write(20,fmt) '# pumping well time behavior :: ',lap%timeType, &
+    write(unit,fmt) '# pumping well time behavior :: ',lap%timeType, &
          & trim(lap%timeDescrip(lap%timeType)), lap%timePar
-    write(20,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
+    write(unit,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
-    write(20,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
+    write(unit,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
          & ts%k, ts%nst
-    write(20,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
+    write(unit,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
     fmt = '(A,I0,1X,    ('//RFMT//',1X))     '
     write(fmt(10:13),'(I4.4)') s%nr
-    write(20,fmt) '# num r locations, rlocs :: ',s%nr, s%r(:)
+    write(unit,fmt) '# num r locations, rlocs :: ',s%nr, s%r(:)
     write(fmt(10:13),'(I4.4)') s%nz
-    write(20,fmt) '# num z locations, zlocs :: ',s%nz, s%z(:)
-    write(20,'(A,'//RFMT//')') '# time :: ',s%t(1)
+    write(unit,fmt) '# num z locations, zlocs :: ',s%nz, s%z(:)
+    write(unit,'(A,'//RFMT//')') '# time :: ',s%t(1)
     if (s%dimless) then
-       write (20,'(A,/,A,/,A)') '#','#         z_D           r_D           '&
+       write (unit,'(A,/,A,/,A)') '#','#         z_D           r_D           '&
             & //'             '// trim(s%modelDescrip(s%model)), &
             & '#------------------------------------------------------------'
        ! TODO add header for derivative wrt logt
     else
-       write (20,'(A,/,A,/,A)') '#','#         z              r            '&
+       write (unit,'(A,/,A,/,A)') '#','#         z              r            '&
             & //'             '// trim(s%modelDescrip(s%model)), &
             & '#------------------------------------------------------------'
        ! TODO add header for derivative wrt logt
