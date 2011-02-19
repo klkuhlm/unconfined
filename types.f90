@@ -64,10 +64,11 @@ module types
 
   ! parameters specific to GL quadrature
   type :: GaussLobatto
-     integer :: nacc = -999, err = -999
+     integer :: nacc = -999  ! # zeros to accelerate
+     integer :: err = -999   ! return value container
 
      ! abcissa and weights
-     real(EP), allocatable :: x(:), w(:)
+     real(EP), allocatable :: x(:), w(:) 
 
      ! order of integration
      integer :: ord = -999
@@ -78,8 +79,13 @@ module types
      integer :: k = -999  ! N = 2**k-1 is integration order
      integer :: N = -999
      integer :: Rord = -999  ! # orders to extrapolate (Rord <= k-2)
-     real(EP), allocatable :: w(:), a(:), hh(:)
-     integer, allocatable :: kk(:), NN(:), ii(:)
+     real(EP), allocatable :: w(:), a(:) ! weights and abcissa
+     
+     ! these vectors give spacing, order, number and indexing
+     ! at each step in the Richardson extrapolation process
+     real(EP), allocatable ::  hv(:) ! spacing vector
+     integer, allocatable :: kv(:)
+     integer, allocatable :: Nv(:), iv(:)
      
   end type TanhSinh
 

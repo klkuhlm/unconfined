@@ -1,29 +1,9 @@
 module utility
   implicit none
   private
-  public :: ccosh, csinh, logspace, linspace
+  public :: logspace, linspace
 
 contains
-  pure elemental function ccosh(z) result(f)
-    use constants, only : EP
-    complex(EP), intent(in) :: z
-    complex(EP) :: f
-    real(EP) :: x,y
-    x = real(z)
-    y = aimag(z)
-    f = cmplx(cosh(x)*cos(y), sinh(x)*sin(y),EP)
-  end function ccosh
-  
-  pure elemental function csinh(z) result(f)
-    use constants, only : EP
-    complex(EP), intent(in) :: z
-    complex(EP) :: f
-    real(EP) :: x,y
-    x = real(z)
-    y = aimag(z)
-    f = cmplx(sinh(x)*cos(y), cosh(x)*sin(y),EP)
-  end function csinh
-  
   pure function linspace(lo,hi,num) result(v)
     use constants, only : DP
     real(DP), intent(in) :: lo,hi

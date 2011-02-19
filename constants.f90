@@ -1,7 +1,7 @@
 module constants
 
   ! real with range 300 orders of mag, 15 sig figs (8 on both g95 & ifort)
-  integer, parameter :: DP = selected_real_kind (p=15,r=300)
+  integer, parameter :: DP = selected_real_kind(p=15,r=300)
 
   !! extended range internal variables (10 on g95, 10 on gfortran, 16 on ifort)
   integer, parameter :: EP = selected_real_kind(r=3000)

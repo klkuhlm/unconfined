@@ -4,7 +4,6 @@
 !     transforms", SIAM J. Sci. Stat. Comp., 3, 357-366, 1982.
 
 module invlap
-  use constants, only : DP
   implicit none
   
   private

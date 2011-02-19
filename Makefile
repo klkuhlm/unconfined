@@ -1,6 +1,6 @@
 
 #EXTERNAL = cbessel.o  
-HILEV = time.o laplace_hankel_solutions.o driver_io.o
+HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o
 OBJS = $(EXTERNAL) constants.o types.o invlap.o utility.o $(HILEV)
 
 MAIN = driver.o
@@ -32,8 +32,8 @@ debug_driver: $(DEBUGOBJS)
 %.debug.o: %.f90
 	$(F90) -c -cpp $(INTEL) $(DEBUG) -o $@ $<
 
-#cbessel.opt.o complex_bessel.mod : cbessel.f90
 constants.opt.o constants.mod : constants.f90
+integration.opt.o integration.mod : integration.f90 constants.mod types.mod
 invlap.opt.o inverse_laplace_transform.mod: invlap.f90 constants.mod types.mod 
 utility.opt.o utilities.mod: utility.f90 constants.mod 
 laplace_hankel_solutions.opt.o laplace_hankel_solution.mod: \
@@ -45,8 +45,8 @@ driver_io.opt.o io.mod: driver_io.f90 constants.mod types.mod utilities.mod
 driver.opt.o: driver.f90 types.mod constants.mod laplace_hankel_solution.mod \
  inverse_laplace_transform.mod 
 
-#cbessel.debug.o complex_bessel.mod : cbessel.f90
 constants.debug.o constants.mod : constants.f90
+integration.debug.o integration.mod : integration.f90 constants.mod types.mod
 invlap.debug.o inverse_laplace_transform.mod: invlap.f90 constants.mod types.mod 
 utility.debug.o utilities.mod: utility.f90 constants.mod 
 laplace_hankel_solutions.debug.o laplace_hankel_solution.mod: \
