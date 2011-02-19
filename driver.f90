@@ -40,9 +40,12 @@ program Driver
   complex(EP) :: dy
   integer :: i, j, k, m, n, nn
   integer, allocatable :: iv(:)
+  logical :: first
 
   !$ write(*,'(2(A,I0))') '# avail. processors: ',OMP_get_num_procs(), &
   !$     & '  maximum # threads: ',OMP_get_max_threads()
+
+  first = .true.
 
   ! read in data from file, do minor error checking
   ! and allocate some solution vectors
@@ -53,9 +56,12 @@ program Driver
   ! number of tanh-sinh terms
   ts%N = 2**ts%k - 1
 
-  allocate(finint(l%np,s%nz), infint(l%np,s%nz), totlap(l%np,s%nz), l%p(l%np), &
-       & ts%w(ts%N), ts%a(ts%N), fa(ts%N,l%np,s%nz), iv(ts%N), totint(s%nz), &
-       & tmp(ts%Rord,l%np,s%nz), ts%kv(ts%Rord), ts%Nv(ts%Rord), ts%hv(ts%Rord))
+  allocate(finint(l%np,s%nz), infint(l%np,s%nz), totlap(l%np,s%nz), &
+       & l%p(l%np), ts%w(ts%Rord,ts%N), ts%a(ts%Rord,ts%N), &
+       & fa(ts%N,l%np,s%nz), iv(ts%N), totint(s%nz), tmp(ts%Rord,l%np,s%nz), &
+       & ts%kv(ts%Rord), ts%Nv(ts%Rord), ts%hv(ts%Rord))
+
+  forall (m = 1:ts%N) iv(m) = m
 
   if (s%timeSeries) then
      call write_timeseries_header(w,f,s,l,h,gl,ts,UNIT)
@@ -90,23 +96,28 @@ program Driver
 
         ! compute abcissa and for highest-order case (others are subsets)
         ! split between finite & infinite integrals
-        arg = h%j0z(h%sv(i))/s%rD(k) 
-        call tanh_sinh_setup(ts,ts%k,arg)
+        arg = h%j0z(h%sv(i))/s%rD(k)
+        if (first) then
+           call tanh_sinh_setup(ts,ts%k,arg,ts%Rord)
+        end if
 
         ! compute solution at densest set of abcissa
         !$OMP PARALLEL DO SHARED(fa,ts,w,f,s,l,k)
         do nn = 1,ts%Nv(ts%Rord)
-           fa(nn,1:l%np,1:s%nz) = soln(ts%a(nn),s%rD(k),l%np,s%nz,w,f,s,l)
+           fa(nn,1:l%np,1:s%nz) = soln(ts%a(ts%Rord,nn),s%rD(k),l%np,s%nz,w,f,s,l)
         end do
         !$OMP END PARALLEL DO
 
         tmp(ts%Rord,1:l%np,1:s%nz) = arg/2.0 * &
-             & sum(spread(spread(ts%w(:),2,l%np),3,s%nz)*fa(:,:,:),dim=1)
+             & sum(spread(spread(ts%w(ts%Rord,:),2,l%np),3,s%nz)*fa(:,:,:),dim=1)
 
-        do j=ts%Rord-1,1,-1
+        do j=1,ts%Rord-1
+
            !  only need to re-compute weights for each subsequent coarser step
-           call tanh_sinh_setup(ts,ts%kv(j),arg)
-
+           if (first) then
+              call tanh_sinh_setup(ts,ts%kv(j),arg,ts%Rord)
+           end if
+           
            ! compute index vector, to slice up solution 
            ! for nst'th turn count regular integers
            ! for (nst-1)'th turn count even integers
@@ -115,7 +126,7 @@ program Driver
 
            ! estimate integral with subset of function evaluations and appropriate weights
            tmp(j,1:l%np,1:s%nz) = arg/2.0 * &
-                & sum(spread(spread(ts%w(1:ts%Nv(j)),2,l%np),3,s%nz) * &
+                & sum(spread(spread(ts%w(j,1:ts%Nv(j)),2,l%np),3,s%nz) * &
                 & fa(iv(1:ts%Nv(j)),:,:),dim=1)
         end do
         

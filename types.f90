@@ -79,7 +79,7 @@ module types
      integer :: k = -999  ! N = 2**k-1 is integration order
      integer :: N = -999
      integer :: Rord = -999  ! # orders to extrapolate (Rord <= k-2)
-     real(EP), allocatable :: w(:), a(:) ! weights and abcissa
+     real(EP), allocatable :: w(:,:), a(:,:) ! weights and abcissa at each level
      
      ! these vectors give spacing, order, number and indexing
      ! at each step in the Richardson extrapolation process

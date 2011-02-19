@@ -6,14 +6,14 @@ public :: tanh_sinh_setup, gauss_lobatto_setup, wynn_epsilon, polint
 
 contains
   !! ###################################################
-  subroutine tanh_sinh_setup(t,k,s)
+  subroutine tanh_sinh_setup(t,k,s,j)
     use constants, only : PIOV2EP, DP, EP
     use types, only : TanhSinh
     implicit none
     
     type(TanhSinh), intent(inout) :: t
     real(EP), intent(in) :: s
-    integer, intent(in) :: k
+    integer, intent(in) :: k, j
 
     integer :: N,r,i
     real(EP) :: h
@@ -31,21 +31,16 @@ contains
        u(2,i+r+1) = PIOV2EP*sinh(h*i)
     end forall
     !$OMP END PARALLEL WORKSHARE
-
-    if(size(t%a) /= N) then
-       deallocate(t%a,t%w)
-       allocate(t%a(N),t%w(N))
-    end if
     
-    t%a(1:N) = tanh(u(2,1:N))
-    t%w(1:N) = u(1,:)/cosh(u(2,:))**2
+    t%a(j,1:N) = tanh(u(2,:))
+    t%w(j,1:N) = u(1,:)/cosh(u(2,:))**2
 
     deallocate(u)
-    t%w(1:N) = 2.0_EP*t%w(:)/sum(t%w(:))
+    t%w(j,1:N) = 2.0_EP*t%w(j,1:N)/sum(t%w(j,1:N))
 
     ! TODO: only use half interval with bunched abcissa @ origin?
     ! map the -1<=x<=1 interval onto 0<=a<=s
-    t%a = (t%a + 1.0_EP)*s/2.0_EP
+    t%a(j,1:N) = (t%a(j,1:N) + 1.0_EP)*s/2.0_EP
 
   end subroutine tanh_sinh_setup
 
