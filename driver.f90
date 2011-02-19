@@ -46,7 +46,7 @@ program Driver
 
   allocate(finint(l%np,s%nz), infint(l%np,s%nz), totlap(l%np,s%nz), l%p(l%np), &
        & ts%w(ts%N), ts%a(ts%N), fa(ts%N,l%np,s%nz), ii(ts%N), totint(s%nz), &
-       & tmp(ts%nst,l%np,s%nz), ts%kk(ts%nst), ts%NN(ts%nst), ts%hh(ts%nst))
+       & tmp(ts%Rord,l%np,s%nz), ts%kk(ts%Rord), ts%NN(ts%Rord), ts%hh(ts%Rord))
 
   if (s%timeSeries) then
      call write_timeseries_header(w,f,s,l,h,gl,ts,UNIT)
@@ -62,14 +62,18 @@ program Driver
      
      ! using 'optimal' vector of p values for each time
      l%p(1:l%np) = pvalues(TEE_MULT*s%tD(i),l)
+!!$     write(*,'(A,7(A,ES9.3,A,ES9.3,A))') 'p(1:7) ',&
+!!$          &('(',real(l%p(k)),',',aimag(l%p(k)),')',k=1,7)
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      ! finite portion of Hankel integral (Tanh-Sinh quadrature)
      ! integrate from origin (a=0) to the J0 zero identified in input
 
-     ts%kk(:) = [(ts%k-m, m=ts%nst-1,0,-1)]
+     ts%kk(:) = [(ts%k-m, m=ts%Rord-1,0,-1)]
      ts%NN(:) = 2**ts%kk - 1
      ts%hh(:) = 4.0_EP/(2**ts%kk)
+
+     write(*,'()') ts%kk
 
      ! loop over all desired calculation radial distances
      do k = 1, s%nr
@@ -81,15 +85,15 @@ program Driver
 
         ! compute solution at densest set of abcissa
         !$OMP PARALLEL DO PRIVATE(nn) SHARED(fa,ts,w,f,s,l)
-        do nn = 1,ts%NN(ts%nst)
+        do nn = 1,ts%NN(ts%Rord)
            fa(nn,1:l%np,1:s%nz) = soln(ts%a(nn),s%rD(k),l%np,s%nz,w,f,s,l)
         end do
         !$OMP END PARALLEL DO
 
-        tmp(ts%nst,1:l%np,1:s%nz) = arg/2.0 * &
+        tmp(ts%Rord,1:l%np,1:s%nz) = arg/2.0 * &
              & sum(spread(spread(ts%w(:),2,l%np),3,s%nz)*fa(:,:,:),dim=1)
 
-        do j=ts%nst-1,1,-1
+        do j=ts%Rord-1,1,-1
            !  only need to re-compute weights for each subsequent coarser step
            call tanh_sinh_setup(ts,ts%kk(j),arg)
 
@@ -97,7 +101,7 @@ program Driver
            ! for nst'th turn count regular integers
            ! for (nst-1)'th turn count even integers
            ! for (nst-2)'th turn count every 4th integer, etc...
-           ii(1:ts%NN(j)) = [( m* 2**(ts%nst-j), m=1,ts%NN(j) )]
+           ii(1:ts%NN(j)) = [( m* 2**(ts%Rord-j), m=1,ts%NN(j) )]
 
            ! estimate integral with subset of function evaluations and appropriate weights
            tmp(j,1:l%np,1:s%nz) = arg/2.0 * &
@@ -105,12 +109,12 @@ program Driver
                 & fa(ii(1:ts%NN(j)),:,:),dim=1)
         end do
         
-        if (ts%nst > 1) then
+        if (ts%Rord > 1) then
            ! perform Richardson extrapolation to spacing -> zero
            !$OMP PARALLEL DO PRIVATE(m,n) SHARED(ts,tmp,finint)
            do m = 1,l%np
               do n = 1,s%nz
-                 call polint(ts%hh(1:ts%nst), tmp(1:ts%nst,m,n), 0.0_EP, finint(m,n), dy)
+                 call polint(ts%hh(1:ts%Rord), tmp(1:ts%Rord,m,n), 0.0_EP, finint(m,n), dy)
               end do
            end do
            !$OMP END PARALLEL DO
