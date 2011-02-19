@@ -155,7 +155,7 @@ contains
 
     ! tanh-sinh quadrature parameters
     ! integration order 2^(k-1) and Richardson extrapolation order
-    read(19,*) ts%k, ts%Rord
+    read(19,*) ts%k, ts%R
     
     ! Gauss-Lobatto quadrature parameters
     ! max/min J0 zero to split at, # zeros to accelerate, GL-order
@@ -174,9 +174,9 @@ contains
             & lap%tol 
     end if
 
-    if(ts%k - ts%Rord < 2) then
+    if(ts%k - ts%R < 2) then
        write(*,'(2(A,I0),A)') 'ERROR: Tanh-Sinh k is too low (',ts%k,&
-            & ') for given level of Richardson extrapolation (',ts%Rord,&
+            & ') for given level of Richardson extrapolation (',ts%R,&
             &').  Increase k or decrease nst.'
        stop
     end if
@@ -425,7 +425,7 @@ contains
        write(*,'(A,I0,2('//RFMT//',1X))') 'deHoog: M,alpha,tol: ', &
             & lap%M, lap%alpha, lap%tol
        write(*,'(A,2(I0,1X))'), 'tanh-sinh: k, num extrapolation steps ', &
-            & ts%k, ts%Rord
+            & ts%k, ts%R
        write(*,'(A,4(I0,1X))'), 'GL: J0 split, num zeros accel, GL-order ',&
             & h%j0s(:), gl%nacc, gl%ord
     end if
@@ -507,7 +507,7 @@ contains
     write(unit,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
     write(unit,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
-         & ts%k, ts%Rord
+         & ts%k, ts%R
     write(unit,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
     if(s%piezometer) then
@@ -576,7 +576,7 @@ contains
     write(unit,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
     write(unit,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
-         & ts%k, ts%Rord
+         & ts%k, ts%R
     write(unit,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
     fmt = '(A,I0,1X,    ('//RFMT//',1X))     '

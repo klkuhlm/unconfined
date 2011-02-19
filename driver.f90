@@ -39,7 +39,6 @@ program Driver
   real(EP) :: totobs, lob, hib, width, arg
   complex(EP) :: dy
   integer :: i, j, k, m, n, nn
-  integer, allocatable :: iv(:)
   logical :: first
 
   !$ write(*,'(2(A,I0))') '# avail. processors: ',OMP_get_num_procs(), &
@@ -56,12 +55,15 @@ program Driver
   ! number of tanh-sinh terms
   ts%N = 2**ts%k - 1
 
-  allocate(finint(l%np,s%nz), infint(l%np,s%nz), totlap(l%np,s%nz), &
-       & l%p(l%np), ts%w(ts%Rord,ts%N), ts%a(ts%Rord,ts%N), &
-       & fa(ts%N,l%np,s%nz), iv(ts%N), totint(s%nz), tmp(ts%Rord,l%np,s%nz), &
-       & ts%kv(ts%Rord), ts%Nv(ts%Rord), ts%hv(ts%Rord))
+  allocate(finint(l%np,s%nz), infint(l%np,s%nz), totlap(l%np,s%nz), totint(s%nz), &
+       & l%p(l%np), ts%kv(ts%R), ts%Nv(ts%R), ts%Q(ts%R-1), ts%hv(ts%R))
 
-  forall (m = 1:ts%N) iv(m) = m
+  forall (m = 1:ts%R) 
+     ! count up to k, a vector of length R
+     ts%kv(m) = ts%k - ts%R + m
+  end forall
+  ts%Nv(:) = 2**ts%kv - 1
+  ts%hv(:) = 4.0_EP/(2**ts%kv)
 
   if (s%timeSeries) then
      call write_timeseries_header(w,f,s,l,h,gl,ts,UNIT)
@@ -77,19 +79,10 @@ program Driver
      
      ! using 'optimal' vector of p values for each time
      l%p(1:l%np) = pvalues(TEE_MULT*s%tD(i),l)
-!!$     write(*,'(A,7(A,ES9.3,A,ES9.3,A))') 'p(1:7) ',&
-!!$          &('(',real(l%p(k)),',',aimag(l%p(k)),')',k=1,7)
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      ! finite portion of Hankel integral (Tanh-Sinh quadrature)
      ! integrate from origin (a=0) to the J0 zero identified in input
-
-     forall (m = 1:ts%Rord) 
-        ! count up to k, a vector of length Rord
-        ts%kv(m) = ts%k - ts%Rord + m
-     end forall
-     ts%Nv(:) = 2**ts%kv - 1
-     ts%hv(:) = 4.0_EP/(2**ts%kv)
 
      ! loop over all desired calculation radial distances
      do k = 1, s%nr
@@ -98,44 +91,48 @@ program Driver
         ! split between finite & infinite integrals
         arg = h%j0z(h%sv(i))/s%rD(k)
         if (first) then
-           call tanh_sinh_setup(ts,ts%k,arg,ts%Rord)
+            allocate(ts%w(ts%R,ts%N), ts%a(ts%R,ts%N), &
+                 & fa(ts%N,l%np,s%nz), tmp(ts%R,l%np,s%nz))
+           call tanh_sinh_setup(ts,ts%k,arg,ts%R)
         end if
 
         ! compute solution at densest set of abcissa
         !$OMP PARALLEL DO SHARED(fa,ts,w,f,s,l,k)
-        do nn = 1,ts%Nv(ts%Rord)
-           fa(nn,1:l%np,1:s%nz) = soln(ts%a(ts%Rord,nn),s%rD(k),l%np,s%nz,w,f,s,l)
+        do nn = 1,ts%Nv(ts%R)
+           fa(nn,1:l%np,1:s%nz) = soln(ts%a(ts%R,nn),s%rD(k),l%np,s%nz,w,f,s,l)
         end do
         !$OMP END PARALLEL DO
 
-        tmp(ts%Rord,1:l%np,1:s%nz) = arg/2.0 * &
-             & sum(spread(spread(ts%w(ts%Rord,:),2,l%np),3,s%nz)*fa(:,:,:),dim=1)
+        tmp(ts%R,1:l%np,1:s%nz) = arg/2.0 * &
+             & sum(spread(spread(ts%w(ts%R,:),2,l%np),3,s%nz)*fa(:,:,:),dim=1)
 
-        do j=1,ts%Rord-1
+        do j=1,ts%R-1
 
-           !  only need to re-compute weights for each subsequent coarser step
+           ! only need to re-compute weights for each subsequent coarser step
+           ! they are only computed the first time step and saved 
            if (first) then
-              call tanh_sinh_setup(ts,ts%kv(j),arg,ts%Rord)
+              allocate(ts%Q(j)%iv(ts%Nv(j)))
+              call tanh_sinh_setup(ts,ts%kv(j),arg,j)
+
+              ! compute index vector, to slice up solution 
+              ! for R'th turn count regular integers
+              ! for (R-1)'th turn count even integers
+              ! for (R-2)'th turn count every 4th integer, etc...
+              ts%Q(j)%iv = [( m* 2**(ts%R-j), m=1,ts%Nv(j) )]
            end if
-           
-           ! compute index vector, to slice up solution 
-           ! for nst'th turn count regular integers
-           ! for (nst-1)'th turn count even integers
-           ! for (nst-2)'th turn count every 4th integer, etc...
-           iv(1:ts%Nv(j)) = [( m* 2**(ts%Rord-j), m=1,ts%Nv(j) )]
 
            ! estimate integral with subset of function evaluations and appropriate weights
            tmp(j,1:l%np,1:s%nz) = arg/2.0 * &
                 & sum(spread(spread(ts%w(j,1:ts%Nv(j)),2,l%np),3,s%nz) * &
-                & fa(iv(1:ts%Nv(j)),:,:),dim=1)
+                & fa(ts%Q(j)%iv,:,:),dim=1)
         end do
         
-        if (ts%Rord > 1) then
+        if (ts%R > 1) then
            ! perform Richardson extrapolation to spacing -> zero
            !$OMP PARALLEL DO SHARED(ts,tmp,finint)
            do m = 1,l%np
               do n = 1,s%nz
-                 call polint(ts%hv(1:ts%Rord), tmp(1:ts%Rord,m,n), 0.0_EP, finint(m,n), dy)
+                 call polint(ts%hv(1:ts%R), tmp(1:ts%R,m,n), 0.0_EP, finint(m,n), dy)
               end do
            end do
            !$OMP END PARALLEL DO
@@ -150,7 +147,7 @@ program Driver
         ! area from series of areas of alternating sign
         ! TODO: use higher-order GL quadrature for lower-order zeros?
 
-        if(.not. allocated(gl%x)) then
+        if(first) then
            allocate(gl%x(gl%ord-2), gl%w(gl%ord-2), GLy(gl%ord-2), &
                 & GLarea(gl%nacc,l%np,s%nz), GLz(gl%ord-2,l%np,s%nz))
            call gauss_lobatto_setup(gl)  ! get weights and abcissa
@@ -232,6 +229,7 @@ program Driver
               end do
            end if
         end if
+        first = .false.
      end do
   end do
 

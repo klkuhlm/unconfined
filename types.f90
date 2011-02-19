@@ -74,19 +74,24 @@ module types
      integer :: ord = -999
   end type GaussLobatto
 
+  type :: vecs
+     ! for creating a vector of different-length vectors
+     integer, allocatable :: iv(:)
+  end type vecs
+
   ! parameters specific to tanh-sinh quadrature  
   type :: TanhSinh
      integer :: k = -999  ! N = 2**k-1 is integration order
      integer :: N = -999
-     integer :: Rord = -999  ! # orders to extrapolate (Rord <= k-2)
+     integer :: R = -999  ! # orders to extrapolate (Rord <= k-2)
      real(EP), allocatable :: w(:,:), a(:,:) ! weights and abcissa at each level
      
      ! these vectors give spacing, order, number and indexing
      ! at each step in the Richardson extrapolation process
      real(EP), allocatable ::  hv(:) ! spacing vector
      integer, allocatable :: kv(:)
-     integer, allocatable :: Nv(:), iv(:)
-     
+     integer, allocatable :: Nv(:)
+     type(vecs), allocatable :: Q(:)
   end type TanhSinh
 
   ! parameters related to well/completion
