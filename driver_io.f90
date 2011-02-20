@@ -100,7 +100,7 @@ contains
     read(19,*) f%Ss, f%Sy
 
     ! unsaturated zone thickness [L] and exponential sorbtive parameter [1/L]
-    read(19,*) f%usl, f%usalpha 
+    read(19,*) f%usl, f%usalpha, f%beta 
     
     ! ## echo check parameters #####
 
@@ -368,6 +368,7 @@ contains
     ! compute derived or dimensionless properties
     f%sigma = f%Sy/(f%Ss*f%b)
     f%alphaD = f%kappa/f%sigma
+    f%betaD = f%beta/s%Lc
 
     ! pumping and monitoring well screens are entered relative to
     ! thickness of aquifer (which may not be the characteristic length - see above)
@@ -379,6 +380,7 @@ contains
     w%dD = w%d/s%Lc
     w%bD = abs(w%lD - w%dD)
 
+
     s%zD(:) = s%z(:)/s%Lc
     s%rD(:) = s%r(:)/s%Lc
 
@@ -389,11 +391,11 @@ contains
     ! z is positive up, with 0 at bottom
     ! l and d are positive down, with 0 at top
     allocate(s%zLay(size(s%zD)))
-    where(s%zD(:) <= w%lD)
+    where(s%zD(:) <= 1.0-w%lD)
        ! below well screen
        s%zLay = 1
     elsewhere
-       where(s%zD(:) < w%dD)
+       where(s%zD(:) < 1.0-w%dD)
           ! beside/next-to well screen
           s%zLay = 2
        elsewhere
@@ -402,13 +404,13 @@ contains
        end where
     end where
 
-
     ! ## echo computed quantities #####
 
     if (.not. s%quiet) then
        write(*,'(A,'//RFMT//')') 'kappa:   ',f%kappa
        write(*,'(A,'//RFMT//')') 'sigma:   ',f%sigma
        write(*,'(A,'//RFMT//')') 'alpha_D: ',f%alphaD
+       write(*,'(A,2('//RFMT//',1X))') 'beta,beta_D: ',f%beta,f%betaD
        write(*,'(3(A,'//RFMT//'))') 'Tc:',s%Tc,' Lc:',s%Lc,' Hc:',s%Hc
        write(*,'(3(A,'//RFMT//'))') 'b_D:',w%bD,' l_D:',w%lD,' d_D:',w%dD
        fmt = '(A,I0,1X,     ('//SFMT//',1X))           '

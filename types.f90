@@ -118,10 +118,12 @@ module types
      real(DP) :: gamma = -999.  ! dimensionless skin (1=no skin)
      real(DP) :: usL = -999. ! thickness of unsaturated zone
      real(DP) :: usalpha = -999. ! unzaturated zone sorbtive number
+     real(DP) :: beta = -999. ! Malama linearization parameter
 
      ! computed aquifer parameters
      real(DP) :: sigma = -999.  ! Sy/(Ss*b)
      real(DP) :: alphaD = -999. ! kappa/sigma
+     real(DP) :: betaD = -999.
   end type formation
 
   ! parameters related to numerical solution

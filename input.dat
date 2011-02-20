@@ -7,7 +7,7 @@ F  3  F  T  F                :: quiet output?, model choice, dimensionless outpu
 2.0D0                        :: b (initial saturated thickness)
 1.0D-4  1.0D0                :: Kr,kappa (radial K and ratio Kz/Kr)
 1.0D-4  2.5D-1               :: Ss,Sy
-5.0D-1  -2.0D0               :: unsat parameters (length & sorptive number)
+5.0D-1  -2.0D0  2.0D0        :: unsat parameters (length & sorptive number), beta Malama linearization parameter
 40  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
 6  3                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
 1  1  12  10                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
