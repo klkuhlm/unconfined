@@ -1,7 +1,7 @@
 module utility
   implicit none
   private
-  public :: logspace, linspace
+  public :: logspace, linspace, is_finite
 
 contains
   function linspace(lo,hi,num) result(v)
@@ -30,6 +30,13 @@ contains
     real(DP), dimension(num) :: v
     v = 10.0_DP**linspace(real(lo,DP),real(hi,DP),num)
   end function logspace
+
+  elemental function is_finite(x) result(pred)
+    use constants, only : EP
+    complex(EP), intent(in) :: x
+    logical :: pred
+    pred = .not. (isnan(abs(x)) .or. abs(x) > huge(abs(x)))
+  end function is_finite
 
 end module utility
 

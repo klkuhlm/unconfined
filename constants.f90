@@ -14,6 +14,9 @@ module constants
   real(EP), parameter :: PIEP =  4.0_EP*atan(1.0_EP) 
   real(DP), parameter :: PIOV2EP = 2.0_EP*atan(1.0_EP)
 
+  !! maximum argument for which sinh(x)-cosh(x) > 0
+  real(EP), parameter :: MAXEXP = -log(epsilon(1.0_EP))/(2.0+epsilon(2.0))
+
   !! length of filenames
   integer, parameter :: NUMCHAR = 128
 

@@ -130,9 +130,9 @@ contains
        write(*,'(A,2('//RFMT//',1X))') 'Ss,Sy:: ', f%Ss, f%Sy
     end if
 
-    if(any([f%Sy, f%gamma, w%l] < 0.0)) then
-       write(*,*) 'ERROR: negative aquifer parameters:', &
-            &  f%Sy, f%gamma
+    if(any([f%Sy, f%gamma, w%d, w%l] < 0.0)) then
+       write(*,*) 'ERROR: negative aquifer / geometry parameters:', &
+            &  f%Sy, f%gamma, w%d, w%l
        stop
     end if   
 
@@ -143,8 +143,8 @@ contains
        stop
     end if
 
-    if (w%d <= w%l) then
-       write(*,'(2(A,'//RFMT//'))') 'ERROR: d must be > l; l=',w%l,' d=',w%d
+    if (w%d >= w%l) then
+       write(*,'(2(A,'//RFMT//'))') 'ERROR: l must be > d; l=',w%l,' d=',w%d
        stop
     end if
   
@@ -202,11 +202,11 @@ contains
     read(19,*) spaceFileName, rval ! either rval or data in file used
 
     ! if computing contour or profile, these aren't used
-    ! point observation depth
-    ! only top used if piezometer
+    ! point observation depth only top used if piezometer
+    ! z is positive up, with zero at bottom of aquifer
     read(19,*) s%zTop, s%zBot, s%zOrd 
 
-    if (s%zTop >= s%zBot .or. s%zTop < 0.0 .or. s%zBot > 1.0) then
+    if (s%zTop <= s%zBot .or. s%zTop < 0.0 .or. s%zBot > 1.0) then
        write(*,*) 'ERROR: top of monitoring well screen must be',&
             & 'above bottom and both between 0 and 1',s%zTop,s%zBot
        stop
@@ -353,21 +353,6 @@ contains
     s%nt = size(s%t,1)
     s%nz = size(s%z,1)
     s%nr = size(s%r,1)
-
-    ! determine which layer z point(s) are in
-    allocate(s%zLay(size(s%z)))
-    where(s%z(:) <= w%l)
-       ! above well screen
-       s%zLay = 1
-    elsewhere
-       where(s%z(:) < w%d)
-          ! beside well screen
-          s%zLay = 2
-       elsewhere
-          ! below well screen
-          s%zLay = 3
-       end where
-    end where
     
     ! output filename
     read(19,*) s%outfilename                        
@@ -400,6 +385,24 @@ contains
     ! dimensionless times
     s%tD(:) = s%t(:)/s%Tc
 
+    ! determine in which layer z point(s) are located
+    ! z is positive up, with 0 at bottom
+    ! l and d are positive down, with 0 at top
+    allocate(s%zLay(size(s%zD)))
+    where(s%zD(:) <= w%lD)
+       ! below well screen
+       s%zLay = 1
+    elsewhere
+       where(s%zD(:) < w%dD)
+          ! beside/next-to well screen
+          s%zLay = 2
+       elsewhere
+          ! above well screen
+          s%zLay = 3
+       end where
+    end where
+
+
     ! ## echo computed quantities #####
 
     if (.not. s%quiet) then
@@ -412,6 +415,10 @@ contains
        write(fmt(10:14),'(I5.5)') s%nz
        write(*,fmt) 'z  : ',s%nz,s%z
        write(*,fmt) 'z_D: ',s%nz,s%zD
+       fmt = '(A,     (I0,1X))                       '
+       write(fmt(4:8),'(I5.5)') s%nz
+       write(*,fmt) 'zLay: ',s%zLay
+       fmt = '(A,I0,1X,     ('//SFMT//',1X))           '
        write(fmt(10:14),'(I5.5)') s%nr
        write(*,fmt) 'r  : ',s%nr,s%r 
        write(*,fmt) 'r_D: ',s%nr,s%rD
