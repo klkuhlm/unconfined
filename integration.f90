@@ -25,12 +25,10 @@ contains
     h = 4.0_EP/2**k
     allocate(u(2,N))
      
-    !$OMP PARALLEL WORKSHARE
     forall (i=-r:r)
        u(1,i+r+1) = PIOV2EP*cosh(h*i)
        u(2,i+r+1) = PIOV2EP*sinh(h*i)
     end forall
-    !$OMP END PARALLEL WORKSHARE
 
     t%Q(j)%w(1:N) = u(1,:)/cosh(u(2,:))**2
     t%Q(j)%w(1:N) = 2.0_EP*t%Q(j)%w(:)/sum(t%Q(j)%w(:))
@@ -66,11 +64,9 @@ contains
     N1 = N+1
 
     ! first guess
-    !$OMP PARALLEL WORKSHARE
     forall (i=0:N) 
        x(i+1) = cos(PIEP*i/N)
     end forall
-    !$OMP END PARALLEL WORKSHARE
 
     ! initialize Vandermonde matrix
     P = 0.0_EP
@@ -104,49 +100,32 @@ contains
   !! wynn-epsilon acceleration of partial sums, given a series
   !! all intermediate sums / differences are done in extended precision
   function wynn_epsilon(series) result(accsum)
-    use constants, only : EP, DP
+    use constants, only : EP
+    use utility, only : is_finite
 
     implicit none
-    integer, parameter :: MINTERMS = 4
-    complex(EP), dimension(1:), intent(in) :: series
-    complex(DP) :: accsum
-    complex(EP) :: denom
-    integer :: np, i, j, m
+    complex(EP), dimension(:), intent(in) :: series
+    complex(EP) :: accsum, denom 
+    integer :: ns, i, j, m
     complex(EP), dimension(1:size(series),-1:size(series)-1) :: eps
 
-    np = size(series)
+    ns = size(series)
 
     ! first column is intiallized to zero
     eps(:,-1) = 0.0_EP
 
-    ! build up partial sums, but check for problems
-    check: do i = 1,np
-       if((abs(series(i)) > huge(1.0_EP)).or.(series(i) /= series(i))) then
-          ! +/- Infinity or NaN ? truncate series to avoid corrupting accelerated sum
-          np = i-1
-          if(np < MINTERMS) then
-             write(*,'(A)',advance='no') 'not enough Wynn-Epsilon series to accelerate '
-             accsum = -999999.9  ! make it clear answer is bogus
-             goto 777
-          else
-             write(*,'(A,I3,A)',advance='no') 'Wynn-Epsilon series&
-                  &, truncated to ',np,' terms. '
-             exit check
-          end if
-       else
-          ! term is good, continue
-          eps(i,0) = sum(series(1:i))
-       end if
-    end do check
-    
+    forall(i=1:ns)
+       eps(i,0) = sum(series(1:i),mask=is_finite(series(1:i)))
+    end forall
+
     ! build up epsilon table (each column has one less entry)
-    do j = 0,np-2 
-       do m = 1,np-(j+1)
+    do j = 0,ns-2 
+       do m = 1,ns-(j+1)
           denom = eps(m+1,j) - eps(m,j)
           if(abs(denom) > spacing(0.0)) then ! check for div by zero
              eps(m,j+1) = eps(m+1,j-1) + 1.0/denom
           else
-             accsum = real(eps(m+1,j),DP)
+             accsum = eps(m+1,j)
              write(*,'(A,I2,1X,I2,A)',advance='no') 'epsilon cancel ',m,j,' '
              goto 777
           end if
@@ -154,10 +133,10 @@ contains
     end do
 
     ! if made all the way through table use "corner value" of triangle as answer
-    if(mod(np,2) == 0) then
-       accsum = real(eps(2,np-2),DP)  ! even number of terms - corner is acclerated value
+    if(mod(ns,2) == 0) then
+       accsum = eps(2,ns-2)  ! even number of terms - corner is acclerated value
     else
-       accsum = real(eps(2,np-3),DP)  ! odd numbers, use one column in from corner
+       accsum = eps(2,ns-3)  ! odd numbers, use one column in from corner
     end if
 777 continue
 

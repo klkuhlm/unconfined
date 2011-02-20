@@ -44,13 +44,13 @@ contains
 
        ! for large arguments switch to approximation
        where(spread(abs(eta),2,nz) < MAXEXP)
-          fp(1:np,1:nz) = spread(2.0/(lap%p + a**2),2,nz)*&
-               & (1.0 - cosh(spread(eta,2,nz)*spread(s%zD,1,np))/ &
+          fp(1:np,1:nz) = spread(2.0_EP/(lap%p(:) + a**2),2,nz)*&
+               & (1.0_EP - cosh(spread(eta,2,nz)*spread(s%zD,1,np))/ &
                & spread(cosh(eta(:)) + xi(:)*sinh(eta(:)),2,nz))
        elsewhere
-          fp(1:np,1:nz) = spread(2.0/(lap%p + a**2),2,nz)*&
-               & (1.0 - cosh(spread(eta,2,nz)*spread(s%zD,1,np))*&
-               & spread(2.0*exp(-eta)/(1.0 + xi),2,nz))
+          fp(1:np,1:nz) = spread(2.0_EP/(lap%p(:) + a**2),2,nz)*&
+               & (1.0_EP - exp(spread(eta,2,nz)*spread(s%zD - 1.0_EP,1,np))/&
+               & spread((1.0_EP + xi(:)),2,nz))
        end where
 
        deallocate(eta,xi)

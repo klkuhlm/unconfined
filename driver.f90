@@ -104,8 +104,12 @@ program Driver
         end do
         !$OMP END PARALLEL DO
 
+!!$        print *, 'fa:',fa(1:2,1:2,1:2)
+
         tmp(ts%R,1:l%np,1:s%nz) = arg/2.0 * &
              & sum(spread(spread(ts%Q(ts%R)%w,2,l%np),3,s%nz)*fa(:,:,:),dim=1)
+
+!!$        print *, 'tmp:',fa(ts%R,1:2,1:2)
 
         do j=1,ts%R-1
 
@@ -143,6 +147,8 @@ program Driver
            finint(1:l%np,1:s%nz) = tmp(1,1:l%np,1:s%nz)
         end if
 
+!!$        print *, 'finint:',finint(1:3,1:2)
+
         !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         ! "infinite" portion of Hankel  integral for each time level
         ! integrate between zeros of Bessel function, extrapolate 
@@ -171,13 +177,18 @@ program Driver
            end do
            !$OMP END PARALLEL DO
           
+!!$           print *, j,'GLz:',GLz(1:2,1:2,1:2)
+
            GLarea(j-h%sv(i),1:l%np,1:s%nz) = width/2.0*sum(GLz(1:gl%ord-2,:,:)* &
                 & spread(spread(gl%w(1:gl%ord-2),2,l%np),3,s%nz),dim=1)
         end do
  
+!!$        print *, 'GLarea: shape',shape(GLarea),'vals',GLarea(1:2,1:2,1:2)
+
         !$OMP PARALLEL DO SHARED(GLarea,infint)
         do j = 1,l%np
            do m = 1,s%nz
+!!$              print *, 'np,nz, GLarea',j,m,GLarea(:,j,m)
               ! accelerate each series independently
               infint(j,m) = wynn_epsilon(GLarea(1:gl%nacc,j,m))
            end do
