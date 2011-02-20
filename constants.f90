@@ -18,7 +18,8 @@ module constants
   integer, parameter :: NUMCHAR = 128
 
   !! format strings used in output
-  character(7) :: RFMT = 'ES14.07'  ! format for general output
+  character(7) :: RFMT = 'ES14.07'    ! format for general output
   character(9) :: HFMT = 'ES24.15E3'  ! format for results
+  character(7) :: SFMT = 'ES09.03'    ! short format for long (+ only) vectors
 
 end module constants

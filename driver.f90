@@ -91,6 +91,7 @@ program Driver
         ! split between finite & infinite integrals
         arg = h%j0z(h%sv(i))/s%rD(k)
         if (first) then
+           ! only Q%w and Q%a are allocated for densest level
            allocate(ts%Q(ts%R)%w(ts%N), ts%Q(ts%R)%a(ts%N), &
                 & fa(ts%N,l%np,s%nz), tmp(ts%R,l%np,s%nz))
            call tanh_sinh_setup(ts,ts%k,arg,ts%R)
@@ -111,6 +112,7 @@ program Driver
            ! only need to re-compute weights and indices for each subsequent
            ! coarser step they are only computed the first time step and saved 
            if (first) then
+              ! only Q%iv and Q%w are allocated for less-dense levels
               allocate(ts%Q(j)%iv(ts%Nv(j)), ts%Q(j)%w(ts%Nv(j)))
               call tanh_sinh_setup(ts,ts%kv(j),arg,j)
 

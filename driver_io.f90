@@ -6,7 +6,7 @@ public :: read_input, write_timeseries_header, write_contour_header
 
 contains
   subroutine read_input(w,f,s,lap,h,gl,ts)
-    use constants, only : EP, DP, PI, PIEP, NUMCHAR, RFMT, HFMT
+    use constants, only : EP, DP, PI, PIEP, NUMCHAR, RFMT, HFMT, SFMT
     use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
     use utility, only : logspace, linspace
     
@@ -46,7 +46,7 @@ contains
        inputFileName = 'input.dat'
     end if
 
-    open(unit=19, file=inputFileName, status='old', action='read',iostat=ioerr)
+    open(unit=19, file=inputFileName, status='old', action='read', iostat=ioerr)
     if(ioerr /= 0) then
        write(*,'(A)') 'ERROR opening main input file '//trim(inputFileName)//&
             & ' for reading'
@@ -116,8 +116,8 @@ contains
                & lap%timeType, lap%timePar(:)
        else
           fmt = '(A,    ('//RFMT//',1X),A,    ('//RFMT//',1X))'
-          write(fmt(8:11),'(I4.4)')  size(lap%timePar(:-lap%timeType+1),1)
-          write(fmt(26:29),'(I4.4)') size(lap%timePar(-lap%timeType+2:),1)
+          write(fmt(8:11), '(I4.4)') size(lap%timePar(:-lap%timeType+1),1)
+          write(fmt(26:29),'(I4.4)') size(lap%timePar( -lap%timeType+2:),1)
           write(*,'(A)') 'pumping well time behavior :: '//trim(lap%timeDescrip(9))
           write(*,fmt) 'time behavior:  ti, tf | Q multiplier each step :: ', &
                & lap%timeType,lap%timePar(:-lap%timeType+1),'| ',&
@@ -378,7 +378,7 @@ contains
     ! characteristic length / time / head
     s%Lc = f%b
     s%Tc = f%b**2/(f%Kr/f%Ss)
-    s%Hc = 2*PI*f%Kr*f%b/w%Q  
+    s%Hc = w%Q/(4.0*PI*f%Kr*f%b)
     
     ! compute derived or dimensionless properties
     f%sigma = f%Sy/(f%Ss*f%b)
@@ -406,11 +406,9 @@ contains
        write(*,'(A,'//RFMT//')') 'kappa:   ',f%kappa
        write(*,'(A,'//RFMT//')') 'sigma:   ',f%sigma
        write(*,'(A,'//RFMT//')') 'alpha_D: ',f%alphaD
-       write(*,'(A,'//RFMT//')') 'Tc:  ',s%Tc
-       write(*,'(A,'//RFMT//')') 'Lc:  ',s%Lc
-       write(*,'(A,'//RFMT//')') 'b_D: ',w%bD
-       write(*,'(A,'//RFMT//')') 'l_D: ',w%lD
-       fmt = '(A,I0,1X,     (ES09.03,1X))           '
+       write(*,'(3(A,'//RFMT//'))') 'Tc:',s%Tc,' Lc:',s%Lc,' Hc:',s%Hc
+       write(*,'(3(A,'//RFMT//'))') 'b_D:',w%bD,' l_D:',w%lD,' d_D:',w%dD
+       fmt = '(A,I0,1X,     ('//SFMT//',1X))           '
        write(fmt(10:14),'(I5.5)') s%nz
        write(*,fmt) 'z  : ',s%nz,s%z
        write(*,fmt) 'z_D: ',s%nz,s%zD
