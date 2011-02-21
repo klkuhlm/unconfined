@@ -33,33 +33,30 @@ contains
     case(0)
        ! Theis solution (fully penetrating, confined)
        fp(1:np,1:nz) = theis(a,lap%p,nz)
-
-    case(1)
-       ! Hantush solution (confined, partially penetrating)
-    case(2)
-       ! Boulton model
     case(3)
-       ! Neuman 1972 model (fully penetrating, unconfined)
+       ! Malama 2011 fully penetrating model (Neuman 72 when beta=0)
        allocate(eta(np),xi(np))
 
        eta(1:np) = sqrt(lap%p(:) + a**2)/frm%kappa
        xi(1:np) = eta(:)*frm%alphaD/lap%p(:)
 
-       ! for large arguments switch to approximation
        where(spread(abs(eta),2,nz) < MAXEXP)
+          ! naive implementation of formula
           fp(1:np,1:nz) = theis(a,lap%p,nz)* &
                & (1.0_EP - cosh(eta .X. s%zD)/ &
                & spread(cosh(eta(:)) + xi(:)*sinh(eta(:)),2,nz))
        elsewhere
+          ! substitute cosh()&sinh() -> exp() and re-arrange 
+          ! only valid when exp(-eta) is numerically = 0.0
           fp(1:np,1:nz) = theis(a,lap%p,nz)* &
-               & (1.0_EP - exp(eta .X. (s%zD-1.0))/&
-               & spread((1.0_EP + xi(:)),2,nz))
+               & (1.0_EP - (exp(eta .X. (s%zD-1.0_DP)) + &
+               &           exp(-eta .X. (s%zD+1.0_DP)))/ &
+               & spread(1.0_EP + frm%betaD*eta*xi + xi,2,nz))
        end where
-
        deallocate(eta,xi)
+
     case(4)
-       ! Neuman 1974 model (partially penetrating, unconfined)
-       ! implemented using multiple layers
+       ! Malama 2011 partial penetrating model (Neuman 74 when beta=0)
        nz1 = nz+1
        allocate(eta(np),xi(np),g(2,np,nz1),f(3,np),zd1(nz1),udp(np,nz1))
        zd1 = [s%zD,1.0_DP]
@@ -67,15 +64,14 @@ contains
        eta(1:np) = sqrt(lap%p(:) + a**2)/frm%kappa
        xi(1:np) = eta(:)*frm%alphaD/lap%p(:)
 
-       g(1,1:np,1:nz1) = cosh(eta(:).x.(1.0-w%dD-zD1))
-
        f(1,1:np) = sinh(eta(:)*w%dD)
        f(2,1:np) = sinh(eta(:)*(1.0 - w%lD))
        f(3,1:np) = exp(-eta(:)*(1.0 - w%lD)) - &
             & (f(1,:) + exp(-eta(:))*f(2,:))/sinh(eta(:))
 
+       g(1,1:np,1:nz1) = cosh(eta(:).x.(1.0_DP-w%dD-zD1))
        g(2,1:np,1:nz1) = (spread(f(1,:),2,nz1)*cosh(eta .X. zD1) + &
-                        & spread(f(2,:),2,nz1)*cosh(eta .X. (1.0-zD1)))/&
+                        & spread(f(2,:),2,nz1)*cosh(eta .X. (1.0_DP-zD1)))/&
                         &  spread(sinh(eta),2,nz1)
 
        where(spread(s%zLay,1,np) == 1)
@@ -90,6 +86,8 @@ contains
              udp(1:np,1:nz) = g(1,:,:) - g(2,:,:)
           end where          
        end where
+       
+       deallocate(f,g,zd1)
 
        udp(1:np,1:nz1) = udp(:,:)*theis(a,lap%p,nz1)/w%bD
 
@@ -101,15 +99,13 @@ contains
                & exp(eta .X. (s%zD-1.0))/spread((1.0_EP + xi(:)),2,nz)
        end where
 
-       deallocate(eta,xi,g,f,zd1)
+       deallocate(eta,xi,udp)
 
     case(5)
        ! Mishra/Neuman 2011 model
-    case(6)
-       ! Malama 2011
-
-       
-
+    case default
+       write(*,*) 'incorrect model number',s%model
+       stop
     end select
 
     ! solution always evaluated in test well
