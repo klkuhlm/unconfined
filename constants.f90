@@ -15,7 +15,9 @@ module constants
   real(DP), parameter :: PIOV2EP = 2.0_EP*atan(1.0_EP)
 
   !! maximum argument for which sinh(x)-cosh(x) > 0
-  real(EP), parameter :: MAXEXP = -log(epsilon(1.0_EP))/(2.0+epsilon(2.0))
+  ! this is the point where the approximation for sinh()/cosh() -> 0.5*e
+  ! for DP  ~18.123, EP ~ 20.72, QP ~ 38.96
+  real(EP), parameter :: MAXEXP = -log(epsilon(1.0_EP))/2.0_EP
 
   !! length of filenames
   integer, parameter :: NUMCHAR = 128

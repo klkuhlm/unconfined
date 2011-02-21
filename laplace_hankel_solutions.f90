@@ -26,14 +26,25 @@ contains
     integer :: nz1
     real(DP), allocatable :: zd1(:)
     complex(EP), allocatable :: eta(:), xi(:), g(:,:,:), f(:,:), udp(:,:)
+    real(EP), allocatable :: abseta(:,:)
 
     intrinsic :: bessel_j0
 
     select case(s%model)
     case(0)
-       ! Theis solution (fully penetrating, confined)
+       ! Theis (fully penetrating, confined)
        fp(1:np,1:nz) = theis(a,lap%p,nz)
+    case(1)
+       ! Hantush (partially penetrating, confined)
+       stop 'ERROR hantush model not implemented yet'
+    case(2)
+       ! Boulton/Herrera (uconfined, non-physical boundary)
+       stop 'ERROR Boulton/Herrera model not implemented yet'
     case(3)
+       ! Moench (unconfined w/ wellbore storage)
+       stop 'ERROR Moench model not implmented yet'
+    case(4)
+
        ! Malama 2011 fully penetrating model (Neuman 72 when beta=0)
        allocate(eta(np),xi(np))
 
@@ -49,31 +60,57 @@ contains
           ! substitute cosh()&sinh() -> exp() and re-arrange 
           ! only valid when exp(-eta) is numerically = 0.0
           fp(1:np,1:nz) = theis(a,lap%p,nz)* &
-               & (1.0_EP - (exp(eta .X. (s%zD-1.0_DP)) + &
-               &           exp(-eta .X. (s%zD+1.0_DP)))/ &
+               & (1.0_EP - (exp(eta .X. (s%zD - 1.0_DP)) + &
+               &           exp(-eta .X. (s%zD + 1.0_DP)))/ &
                & spread(1.0_EP + frm%betaD*eta*xi + xi,2,nz))
        end where
        deallocate(eta,xi)
 
-    case(4)
+    case(5)
        ! Malama 2011 partial penetrating model (Neuman 74 when beta=0)
        nz1 = nz+1
-       allocate(eta(np),xi(np),g(2,np,nz1),f(3,np),zd1(nz1),udp(np,nz1))
-       zd1 = [s%zD,1.0_DP]
-
+       allocate(eta(np),abseta(np,nz1),xi(np),f(3,np),zd1(nz1),udp(np,nz1))
+       zd1 = [s%zD,1.0_DP] ! extra zD is for WT boundary (zD=1.0)
        eta(1:np) = sqrt(lap%p(:) + a**2)/frm%kappa
        xi(1:np) = eta(:)*frm%alphaD/lap%p(:)
 
        f(1,1:np) = sinh(eta(:)*w%dD)
        f(2,1:np) = sinh(eta(:)*(1.0 - w%lD))
-       f(3,1:np) = exp(-eta(:)*(1.0 - w%lD)) - &
-            & (f(1,:) + exp(-eta(:))*f(2,:))/sinh(eta(:))
 
-       g(1,1:np,1:nz1) = cosh(eta(:).x.(1.0_DP-w%dD-zD1))
-       g(2,1:np,1:nz1) = (spread(f(1,:),2,nz1)*cosh(eta .X. zD1) + &
-                        & spread(f(2,:),2,nz1)*cosh(eta .X. (1.0_DP-zD1)))/&
-                        &  spread(sinh(eta),2,nz1)
+       abseta = spread(abs(eta),2,nz1)
+       where(abseta(:,1) < MAXEXP)
+          ! naive implementation of formula
+          f(3,1:np) = exp(-eta(:)*(1.0 - w%lD)) - &
+               & (f(1,:) + exp(-eta(:))*f(2,:))/sinh(eta(:))
+       elsewhere
+          ! substitute cosh()&sinh() -> exp() and re-arrange 
+          ! only valid when exp(-eta) is numerically = 0.0
+          f(3,1:np) = exp(-eta*w%lD) - exp(eta*(w%dD-1.0_DP)) + &
+                    & exp(-eta*(w%dD+1.0_DP)) - exp(-eta*(w%lD+1.0_DP)) + &
+                    & exp(-eta*(w%lD+3.0_DP))
+       end where
+       
+       if(any(s%zLay > 1)) then
+          ! g not used in layer 1
+          allocate(g(2,np,nz1))
+          g(1,1:np,1:nz1) = cosh(eta(:) .X. (1.0_DP-w%dD-zD1))
 
+          where(abseta < MAXEXP)
+             g(2,1:np,1:nz1) = (spread(f(1,:),2,nz1)*cosh(eta .X. zD1) + &
+                              & spread(f(2,:),2,nz1)*cosh(eta .X. (1.0_DP-zD1)))/&
+                              & spread(sinh(eta),2,nz1)
+          elsewhere
+             g(2,1:np,1:nz1) = (exp(eta .X.(w%dD + zD1 - 1.0_DP)) + &
+                              & exp(eta .X.(w%dD - zD1 - 1.0_DP)) - &
+                              & exp(eta .X.(zD1 - w%dD - 1.0_DP)) - &
+                              & exp(-eta.X.(w%dD + zD1 + 1.0_DP)))/2.0_EP + &
+                              &(exp(eta .X.(1.0_DP - w%lD - zD1)) + &
+                              & exp(eta .X.(zD1 - w%lD - 1.0_DP)) - &
+                              & exp(eta .X.(w%lD - zD1 - 1.0_DP)) - &
+                              & exp(-eta.X.(3.0_DP - w%lD - zD1)))/2.0_EP
+          end where
+       end if
+       
        where(spread(s%zLay,1,np) == 1)
           ! below well screen (0 <= zD <= 1-lD)
           udp(1:np,1:nz1) =  spread(f(3,:),2,nz1)*cosh(eta .X. zd1) 
@@ -87,11 +124,15 @@ contains
           end where          
        end where
        
-       deallocate(f,g,zd1)
-
+       if(any(s%zLay > 1)) then
+          deallocate(f,g,zd1)
+       else
+          deallocate(f,zd1)   
+       end if
+       
        udp(1:np,1:nz1) = udp(:,:)*theis(a,lap%p,nz1)/w%bD
 
-       where(spread(abs(eta),2,nz) < MAXEXP)
+       where(abseta < MAXEXP)
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz1),2,nz)* &
                & cosh(eta .X. s%zD)/spread(cosh(eta(:)) + xi(:)*sinh(eta(:)),2,nz)
        elsewhere
@@ -101,11 +142,8 @@ contains
 
        deallocate(eta,xi,udp)
 
-    case(5)
+    case(6)
        ! Mishra/Neuman 2011 model
-    case default
-       write(*,*) 'incorrect model number',s%model
-       stop
     end select
 
     ! solution always evaluated in test well

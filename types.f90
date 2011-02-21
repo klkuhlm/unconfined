@@ -138,15 +138,16 @@ module types
      integer :: model = -999
      ! 0 = Theis (confined fully penetrating)
      ! 1 = Hantush (confined partially penetrating)
-     ! 2 = Boulton 195?
-     ! 3 = Neuman 1974 
-     ! 4 = Moench 199?
-     ! 5 = Mishra/Neuman 2011
-     ! 6 = Malama 2011
+     ! 2 = Boulton/Herrera 195?
+     ! 3 = Moench 199?
+     ! 4 = Malama 2011 fully penetrating 
+     ! 5 = Malama 2011 partially penetrating
+     ! 6 = Mishra/Neuman 2011
      
-     character(13), dimension(0:6) :: modelDescrip = [ &
-          & 'Theis        ', 'Hantush      ', 'Boulton      ', 'Neuman 74    ', &
-          & 'Moench       ', 'Mishra/Neuman', 'Malama       ']
+     character(15), dimension(0:6) :: modelDescrip = [ &
+          & 'Theis          ', 'Hantush        ', 'Boulton        ', &
+          & 'Moench         ', 'Malama full pen', 'Malama part pen', &
+          & 'Mishra/Neuman  ']
 
      logical :: quiet = .false.  ! output debugging to stdout?
      logical :: dimless = .false.  ! output dimensionless solution?

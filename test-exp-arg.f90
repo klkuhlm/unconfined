@@ -56,9 +56,51 @@ program testexp
   ! happen for a given real/complex datatype (single-,double-,
   ! quad-precision).
 
-  fmt = '(I3,1X,ES22.15,2(1X,I3),2(1X,ES22.15))   '
+  ! ~ 18.123
+  checkDP: do ii = 15000,20000
+     x = real(ii,DP)/1000.0_DP
+     if (abs(0.5_DP*exp(x) - sinh(x)) == 0.0_DP) then
+        print *, 'DP equal:',x
+        exit checkDP
+     end if
+  end do checkDP
+
+  ! ~ 20.721
+  checkEP: do ii = 20000,22000
+     i = real(ii,EP)/1000.0_EP
+     if (abs(0.5_EP*exp(i) - sinh(i)) == 0.0_EP) then
+        print *, 'EP equal:',i
+        exit checkEP
+     end if
+  end do checkEP
+
+  ! ~ 38.963
+  checkQP: do ii = 35000,40000
+     a = real(ii,QP)/1000.0_QP
+     if (abs(0.5_QP*exp(a) - sinh(a)) == 0.0_QP) then
+        print *, 'QP equal:',a
+        exit checkQP
+     end if
+  end do checkQP
+
+  
+  x = 38.0_DP
+  print *, '0.5*exp(x)',0.5_DP*exp(x)
+  print *, 'sinh(x)',sinh(x)
+  print *, 'cosh(x)',cosh(x)
+  i = 38.0_EP
+  print *, '0.5*exp(x)',0.5_EP*exp(i)
+  print *, 'sinh(x)',sinh(i)
+  print *, 'cosh(x)',cosh(i)
+  a = 38.0_QP
+  print *, '0.5*exp(x)',0.5_QP*exp(a)
+  print *, 'sinh(x)',sinh(a)
+  print *, 'cosh(x)',cosh(a)
+  print *, ' '
+
+  fmt = '(I3,1X,ES22.15,2(1X,I3),2(1X,ES22.15))'
   x = 1.0; i = 1.0; a = 1.0
-  print *, '-log(epsilon(1.0_DP))',-log(epsilon(x)) ! ~36.04
+  print *, '-log(epsilon(1.0_DP))',-log(2.0_DP*epsilon(x)) ! ~36.04
   print *, 'digits(1.0_DP)       ',digits(x) ! 2^53
   print *, 'precision(1.0_DP)    ',precision(x),(digits(x)-1)*log10(2.0_DP) ! 10^15
   print *, '{min,max}exponent(1.0_DP)',minexponent(x),maxexponent(x)
@@ -69,12 +111,12 @@ program testexp
   print *, 'huge(x)',huge(x),1.0_EP-2.0_DP**(-digits(x))
   do ii = 0,precision(x)+2
      y = 1.0_DP - (1.0_DP + 10.0_DP**(-ii))
-     write(*,fmt) ii,y,-exponent(y),-int(exponent(y)*LOG2EP),fraction(1.0_DP),fraction((1.0_DP + 10.0_DP**(-ii)))
+     write(*,fmt) ii,y,-exponent(y),-int(exponent(y)*LOG2DP),fraction(1.0_DP),fraction((1.0_DP + 10.0_DP**(-ii)))
   end do
   
-  fmt = '(I3,1X,ES25.18,2(1X,I3),2(1X,ES25.18))               '
+  fmt = '(I3,1X,ES25.18,2(1X,I3),2(1X,ES25.18))'
   print *, ' '
-  print *, '-log(epsilon(1.0_EP))',-log(epsilon(i)) ! ~43.67
+  print *, '-log(epsilon(1.0_EP))',-log(2.0_EP*epsilon(i)) ! ~43.67
   print *, 'digits(1.0_EP)       ',digits(i) ! 2^64
   print *, 'precision(1.0_EP)    ',precision(i),(digits(i)-1)*log10(2.0_EP) ! 10^18
   print *, '{min,max}exponent(1.0_EP)',minexponent(i),maxexponent(i)
@@ -88,9 +130,9 @@ program testexp
      write(*,fmt) ii,j,-exponent(j),-int(exponent(j)*LOG2EP),fraction(1.0_EP),fraction((1.0_EP + 10.0_EP**(-ii)))
   end do
 
-  fmt = '(I3,1X,ES40.33,2(1X,I3),2(1X,ES40.33))               '
+  fmt = '(I3,1X,ES40.33,2(1X,I3),2(1X,ES40.33))'
   print *, ' '
-  print *, '-log(epsilon(1.0_QP))',-log(epsilon(a)) ! ~77.63
+  print *, '-log(epsilon(1.0_QP))',-log(2.0_QP*epsilon(a)) ! ~77.63
   print *, 'digits(1.0_QP)       ',digits(a) ! 2^113
   print *, 'precision(1.0_QP)    ',precision(a),(digits(a)-1)*log10(2.0_QP) ! 10^33
   print *, '{min,max}exponent(1.0_QP)',minexponent(a),maxexponent(a)

@@ -62,6 +62,15 @@ contains
     ! piezometer (point monitoring well) or integrate finite observation screen length?,
     read(19,*) s%quiet, s%model, s%dimless, s%timeseries, s%piezometer
 
+    if(s%model < 0 .or. s%model > 6) then
+       write(*,'(A,I0,A)') 'ERROR invalid model choice ',s%model,' valid models are:'
+       do i=0,6
+          write(*,'(I0,1X,A)') i,s%modelDescrip(i)
+       end do
+       write(*,'(A)') 'Malama models with beta=0 correspond to Neuman 72/74'
+       stop
+    end if
+
     ! ## pumping well parameters #####
 
     ! volumetric pumping rate [L^3/T]
