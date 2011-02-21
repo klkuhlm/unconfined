@@ -1,8 +1,12 @@
 module utility
   implicit none
   private
-  public :: logspace, linspace, is_finite
+  public :: logspace, linspace, is_finite, operator(.x.)
 
+  interface operator(.x.)
+     module procedure outerprod_zd, outerprod_dz
+  end interface
+  
 contains
   function linspace(lo,hi,num) result(v)
     use constants, only : DP
@@ -38,6 +42,21 @@ contains
     pred = .not. (isnan(abs(x)) .or. abs(x) > huge(abs(x)))
   end function is_finite
 
+  pure function outerprod_zd(za,db) result(c)
+    use constants, only : EP,DP
+    complex(EP), intent(in), dimension(:) :: za
+    real(DP), intent(in), dimension(:) :: db
+    complex(EP), dimension(size(za),size(db)) :: c
+    c = spread(za,dim=2,ncopies=size(db))*spread(db,dim=1,ncopies=size(za))
+  end function outerprod_zd
+
+  pure function outerprod_dz(da,zb) result(c)
+    use constants, only : EP,DP
+    real(DP), intent(in), dimension(:) :: da
+    complex(EP), intent(in), dimension(:) :: zb
+    complex(EP), dimension(size(da),size(zb)) :: c
+    c = spread(da,dim=2,ncopies=size(zb))*spread(zb,dim=1,ncopies=size(da))
+  end function outerprod_dz
 end module utility
 
 
