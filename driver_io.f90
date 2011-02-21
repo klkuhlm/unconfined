@@ -503,6 +503,7 @@ contains
   
     ! echo input parameters at head of output file
     write(unit,'(A)') '# -*-auto-revert-*-'
+    write(unit,'(A,I0,1X,A)') '# model ',s%model,s%modelDescrip(s%model)
     write(unit,'(A,3(L1,1X))') '# dimensionless?, timeseries?, piezometer? :: ', &
          & s%dimless, s%timeseries, s%piezometer
     write(unit,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
@@ -572,6 +573,7 @@ contains
   
     ! echo input parameters at head of output file
     write(unit,'(A)') '# -*-auto-revert-*-'
+    write(unit,'(A,I0,1X,A)') '# model ',s%model,s%modelDescrip(s%model)
     write(unit,'(A,2(L1,1X))') '# dimensionless?, timeseries? :: ', &
          & s%dimless, s%timeseries
     write(unit,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &

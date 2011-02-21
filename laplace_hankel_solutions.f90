@@ -120,7 +120,7 @@ contains
              udp(1:np,1:nz1) = 1.0_EP - g(2,:,:)
           elsewhere
              ! above well screen (1-lD <= zD <= 1)
-             udp(1:np,1:nz) = g(1,:,:) - g(2,:,:)
+             udp(1:np,1:nz1) = g(1,:,:) - g(2,:,:)
           end where          
        end where
        
@@ -132,7 +132,7 @@ contains
        
        udp(1:np,1:nz1) = udp(:,:)*theis(a,lap%p,nz1)/w%bD
 
-       where(abseta < MAXEXP)
+       where(abseta(:,1:nz) < MAXEXP)
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz1),2,nz)* &
                & cosh(eta .X. s%zD)/spread(cosh(eta(:)) + xi(:)*sinh(eta(:)),2,nz)
        elsewhere
