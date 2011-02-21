@@ -41,14 +41,16 @@ program Driver
   integer :: i, j, k, m, n, nn
   logical :: first
 
-  !$ write(*,'(2(A,I0))') '# avail. processors: ',OMP_get_num_procs(), &
-  !$     & '  maximum # threads: ',OMP_get_max_threads()
-
   first = .true.
 
   ! read in data from file, do minor error checking
   ! and allocate some solution vectors
   call read_input(w,f,s,l,h,gl,ts)
+
+  !$ if (.not. s%quiet) then
+  !$ write(*,'(2(A,I0))') '# avail. processors: ',OMP_get_num_procs(), &
+  !$     & '  maximum # threads: ',OMP_get_max_threads()
+  !$ end if
   
   ! number of Laplace transform Fourier series coefficients
   l%np = 2*l%M + 1  
