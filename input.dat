@@ -1,4 +1,4 @@
-F  4  T  T  F                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
+F  0  T  T  F                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
 1.0D-3                       :: Q (volumetric pumping rate) [L^3/T]
 1.0D0  0.0D0                 :: l/b, d/b (normalized depth to bottom/top of screened interval)
 2.5D-2  2.5D-2               :: rw, rc (radius of well casing and tubing)
@@ -14,4 +14,4 @@ F  4  T  T  F                :: quiet output?, model choice, dimensionless outpu
 timedata.dat 0.25            :: file to read time data from (and default t otherwise)
 spacedata.dat 1.0           :: file to read space data from (and default r otherwise)
 1.0  0.0  3                  :: top of obs well screen/b, bottom of screen/b, # quadrature across screen
-malama-fp-test.out
+theis-test.out
