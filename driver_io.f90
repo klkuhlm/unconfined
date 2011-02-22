@@ -449,6 +449,7 @@ contains
     allocate(h%j0z(terms))
 
     ! ## compute zeros of J0 bessel function #####
+!!$    open(unit=56,file='bessel.zeros',action='write',status='replace')
 
     ! asymptotic estimate of zeros - initial guess
     !$OMP PARALLEL WORKSHARE
@@ -467,8 +468,10 @@ contains
           end if
        end do NR
        h%j0z(i) = x
-    end do
-    
+!!$       write(56,*) i,x
+    end do    
+!!$    close(56)
+
     ! split between finite/infinite part should be 
     ! small for large time, large for small time
     zRange = maxval(h%j0s(:)) - minval(h%j0s(:))
