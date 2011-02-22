@@ -5,7 +5,7 @@
 
 ## you can remove the -parallel flag, it can cause compatibility problems
 
-DEBUG = -O0 -g -warn all -check all -debug full -DDEBUG -traceback
+DEBUG = -O0 -g -warn all -check all -debug full -traceback
 INTEL = -DINTEL
 PERF = -O3 -ipo -static -openmp
 F90 =  ifort

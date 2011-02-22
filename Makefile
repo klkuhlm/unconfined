@@ -1,5 +1,15 @@
+##################################################
+# flags / settings for gfortran 4.6 compiler
 
-#EXTERNAL = cbessel.o  
+DEBUG = -O0 -g -Wall -Wextra -fbacktrace -fwhole-file
+DEBUG += -frange-check -fcheck=all ## -finit-integer=-999 -finit-real=snan -ffpe-trap=invalid
+PERF = -O2 -march=native -fwhole-file -fopenmp 
+F90 = gfortran-4.6
+CPP = -cpp
+FREE = -free
+PERFLDFLAGS = ${PERF}
+##################################################
+
 HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o
 OBJS = $(EXTERNAL) constants.o types.o invlap.o utility.o $(HILEV)
 
@@ -26,11 +36,11 @@ debug_driver: $(DEBUGOBJS)
 
 ####### rule for making optimized object files ############
 %.opt.o: %.f90
-	$(F90) -c -cpp $(INTEL) $(PERF) -o $@ $<
+	$(F90) -c $(INTEL) $(PERF) -o $@ $<
 
 ####### rule for making debugging object files ############
 %.debug.o: %.f90
-	$(F90) -c -cpp $(INTEL) $(DEBUG) -o $@ $<
+	$(F90) -c $(INTEL) $(DEBUG) -o $@ $<
 
 constants.opt.o constants.mod : constants.f90
 integration.opt.o integration.mod : integration.f90 constants.mod types.mod
