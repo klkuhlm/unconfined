@@ -82,7 +82,6 @@ contains
        ! Mishra/Neuman 2011 model
     end select
 
-    ! solution always evaluated in test well
     fp(1:np,1:nz) = a*bessel_j0(a*rD)*fp(:,:)*spread(lapTime(lap),2,nz)
 
   end function lap_hank_soln
