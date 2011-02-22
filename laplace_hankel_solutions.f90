@@ -24,9 +24,9 @@ contains
     complex(EP), dimension(np,nz) :: fp
 
     integer :: nz1
-    real(DP), allocatable :: zd1(:)
+    real(DP), allocatable :: zd1(:), zeta(:)
     complex(EP), allocatable :: eta(:), xi(:), g(:,:,:), f(:,:), udp(:,:)
-    real(EP), allocatable :: abseta(:,:)
+    logical, allocatable :: abseta(:,:)
 
     intrinsic :: bessel_j0
 
@@ -36,7 +36,30 @@ contains
        fp(1:np,1:nz) = theis(a,lap%p,nz)
     case(1)
        ! Hantush (partially penetrating, confined)
-       stop 'ERROR hantush model not implemented yet'
+       ! implemented in the form given in Malama,Kuhlman & Barrash 2008 (appendix A)
+       allocate(eta(np), udp(np,nz), zd1(nz), zeta(nz))
+       zd1 = s%zD - 1.0_DP  ! convention for zD is positive up from surface in that paper
+       eta(1:np) = sqrt((lap%p(:) + a**2)/frm%kappa)
+
+       udp(1:np,1:nz) = (spread(sinh(eta*w%dD),2,nz)*cosh(eta .X. (1.0_DP+zd1)) + &
+                       & spread(sinh(eta*(1.0_DP - w%lD)),2,nz)*cosh(eta .X. zd1))/ &
+                       & spread(sinh(eta),2,nz)
+       
+       where(s%zLay(:) == 3)
+          ! above top of screen
+          zeta(1:nz) = w%dD + zd1(:)
+       elsewhere
+          where(s%zLay(:) == 2)
+             ! next to screen
+             zeta(1:nz) = 0.0_DP
+          elsewhere
+             ! below bottom of screen
+             zeta(1:nz) = w%lD + zd1(:)
+          end where
+       end where
+
+       fp(1:np,1:nz) = theis(a,lap%p,nz)*(cosh(eta .X. zeta) - udp(:,:))/w%bD
+
     case(2)
        ! Boulton/Herrera (uconfined, non-physical boundary)
        stop 'ERROR Boulton/Herrera model not implemented yet'
@@ -48,18 +71,18 @@ contains
        ! Malama 2011 fully penetrating model (Neuman 72 when beta=0)
        allocate(eta(np),xi(np))
 
-       eta(1:np) = sqrt(lap%p(:) + a**2)/frm%kappa
+       eta(1:np) = sqrt((lap%p(:) + a**2)/frm%kappa)
        xi(1:np) = eta(:)*frm%alphaD/lap%p(:)
 
-       where(spread(abs(eta),2,nz) < MAXEXP)
+       where(spread(abs(eta) < MAXEXP ,2,nz) )
           ! naive implementation of formula
           fp(1:np,1:nz) = theis(a,lap%p,nz)*(1.0_EP - cosh(eta .X. s%zD)/ &
                & spread((1.0_EP + frm%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz))
        elsewhere
           ! substitute cosh()&sinh() -> exp() and re-arrange 
-          ! only valid when exp(-eta) is numerically = 0.0
+          ! only valid when cosh(eta) = 0.5*exp(eta) numerically 
           fp(1:np,1:nz) = theis(a,lap%p,nz)* &
-               & (1.0_EP - (exp(eta .X. (s%zD - 1.0_DP)) + exp(-eta .X. (s%zD + 1.0_DP)))/ &
+               & (1.0_EP - exp(eta .X. (s%zD - 1.0_DP))/ &
                & spread(1.0_EP + frm%betaD*eta*xi + xi,2,nz))
        end where
        deallocate(eta,xi)
@@ -70,15 +93,15 @@ contains
        allocate(eta(np),abseta(np,nz1),xi(np),f(3,np),zd1(nz1),udp(np,nz1))
        zd1 = [s%zD,1.0_DP] ! extra zD is for WT boundary (zD=1.0)
 
-       eta(1:np) = sqrt(lap%p(:) + a**2)/frm%kappa
+       eta(1:np) = sqrt((lap%p(:) + a**2)/frm%kappa)
        xi(1:np) = eta(:)*frm%alphaD/lap%p(:)
        f(1,1:np) = sinh(eta(:)*w%dD)
        f(2,1:np) = sinh(eta(:)*(1.0_DP - w%lD))
 
-       abseta = spread(abs(eta),2,nz1)
+       abseta = spread(abs(eta) < MAXEXP,2,nz1)
        if(any(s%zLay == 1)) then
           ! f3 only used in lower layer
-          where(abseta(:,1) < MAXEXP)
+          where(abseta(:,1))
              ! naive implementation of formula
              f(3,1:np) = exp(-eta(:)*(1.0_DP - w%lD)) - &
                   & (f(1,:) + exp(-eta(:))*f(2,:))/sinh(eta(:))
@@ -96,7 +119,7 @@ contains
           allocate(g(2,np,nz1))
           g(1,1:np,1:nz1) = cosh(eta(:) .X. (1.0_DP-w%dD-zD1))
 
-          where(abseta < MAXEXP)
+          where(abseta)
              g(2,1:np,1:nz1) = (spread(f(1,:),2,nz1)*cosh(eta .X. zD1) + &
                               & spread(f(2,:),2,nz1)*cosh(eta .X. (1.0_DP-zD1)))/&
                               & spread(sinh(eta),2,nz1)
@@ -130,7 +153,7 @@ contains
        deallocate(f,g,zd1)       
        udp(1:np,1:nz1) = udp(:,:)*theis(a,lap%p,nz1)/w%bD
 
-       where(abseta(:,1:nz) < MAXEXP)
+       where(abseta(:,1:nz))
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz1),2,nz)* &
                & cosh(eta .X. s%zD)/spread((1.0_EP + frm%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz)
        elsewhere
