@@ -6,12 +6,11 @@ module laplace_hankel_solutions
 
 contains
 
-  function lap_hank_soln(a,rD,np,nz,w,frm,s,lap) result(fp)
+  function lap_hank_soln(a,rD,np,nz,w,f,s,lap) result(fp)
     use constants, only : DP, EP, MAXEXP
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
     use utility, only : operator(.X.)  ! outer product operator
-
     implicit none
     
     real(EP), intent(in) :: a
@@ -20,13 +19,11 @@ contains
     type(invLaplace), intent(in) :: lap
     type(solution), intent(in) :: s
     type(well), intent(in) :: w
-    type(formation), intent(in) :: frm
+    type(formation), intent(in) :: f
     complex(EP), dimension(np,nz) :: fp
 
     integer :: nz1
-    real(DP), allocatable :: zd1(:), zeta(:)
-    complex(EP), allocatable :: eta(:), xi(:), g(:,:,:), f(:,:), udp(:,:)
-    logical, allocatable :: abseta(:,:)
+    complex(EP), allocatable :: eta(:), xi(:), udp(:,:)
 
     intrinsic :: bessel_j0
 
@@ -34,31 +31,10 @@ contains
     case(0)
        ! Theis (fully penetrating, confined)
        fp(1:np,1:nz) = theis(a,lap%p,nz)
+
     case(1)
        ! Hantush (partially penetrating, confined)
-       ! implemented in the form given in Malama,Kuhlman & Barrash 2008 (appendix A)
-       allocate(eta(np), udp(np,nz), zd1(nz), zeta(nz))
-       zd1 = s%zD - 1.0_DP  ! convention for zD is positive up from surface in that paper
-       eta(1:np) = sqrt((lap%p(:) + a**2)/frm%kappa)
-
-       udp(1:np,1:nz) = (spread(sinh(eta*w%dD),2,nz)*cosh(eta .X. (1.0_DP+zd1)) + &
-                       & spread(sinh(eta*(1.0_DP - w%lD)),2,nz)*cosh(eta .X. zd1))/ &
-                       & spread(sinh(eta),2,nz)
-       
-       where(s%zLay(:) == 3)
-          ! above top of screen
-          zeta(1:nz) = w%dD + zd1(:)
-       elsewhere
-          where(s%zLay(:) == 2)
-             ! next to screen
-             zeta(1:nz) = 0.0_DP
-          elsewhere
-             ! below bottom of screen
-             zeta(1:nz) = w%lD + zd1(:)
-          end where
-       end where
-
-       fp(1:np,1:nz) = theis(a,lap%p,nz)*(cosh(eta .X. zeta) - udp(:,:))/w%bD
+       fp(1:np,1:nz) = hantush(a,s%zD,s,lap%p,f,w)
 
     case(2)
        ! Boulton/Herrera (uconfined, non-physical boundary)
@@ -71,95 +47,38 @@ contains
        ! Malama 2011 fully penetrating model (Neuman 72 when beta=0)
        allocate(eta(np),xi(np))
 
-       eta(1:np) = sqrt((lap%p(:) + a**2)/frm%kappa)
-       xi(1:np) = eta(:)*frm%alphaD/lap%p(:)
+       eta(1:np) = sqrt((lap%p(:) + a**2)/f%kappa)
+       xi(1:np) = eta(:)*f%alphaD/lap%p(:)
 
        where(spread(abs(eta) < MAXEXP ,2,nz) )
           ! naive implementation of formula
           fp(1:np,1:nz) = theis(a,lap%p,nz)*(1.0_EP - cosh(eta .X. s%zD)/ &
-               & spread((1.0_EP + frm%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz))
+               & spread((1.0_EP + f%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz))
        elsewhere
           ! substitute cosh()&sinh() -> exp() and re-arrange 
           ! only valid when cosh(eta) = 0.5*exp(eta) numerically 
           fp(1:np,1:nz) = theis(a,lap%p,nz)* &
                & (1.0_EP - exp(eta .X. (s%zD - 1.0_DP))/ &
-               & spread(1.0_EP + frm%betaD*eta*xi + xi,2,nz))
+               & spread(1.0_EP + f%betaD*eta*xi + xi,2,nz))
        end where
        deallocate(eta,xi)
 
     case(5)
        ! Malama 2011 partial penetrating model (Neuman 74 when beta=0)
        nz1 = nz+1
-       allocate(eta(np),abseta(np,nz1),xi(np),f(3,np),zd1(nz1),udp(np,nz1))
-       zd1 = [s%zD,1.0_DP] ! extra zD is for WT boundary (zD=1.0)
+       allocate(eta(np),xi(np),udp(np,nz1))
 
-       eta(1:np) = sqrt((lap%p(:) + a**2)/frm%kappa)
-       xi(1:np) = eta(:)*frm%alphaD/lap%p(:)
-       f(1,1:np) = sinh(eta(:)*w%dD)
-       f(2,1:np) = sinh(eta(:)*(1.0_DP - w%lD))
+       eta(1:np) = sqrt((lap%p(:) + a**2)/f%kappa)
+       xi(1:np) = eta(:)*f%alphaD/lap%p(:)
+       udp(1:np,1:nz1) = hantush(a,[s%zD,1.0_DP],s,lap%p,f,w)
 
-       abseta = spread(abs(eta) < MAXEXP,2,nz1)
-       if(any(s%zLay == 1)) then
-          ! f3 only used in lower layer
-          where(abseta(:,1))
-             ! naive implementation of formula
-             f(3,1:np) = exp(-eta(:)*(1.0_DP - w%lD)) - &
-                  & (f(1,:) + exp(-eta(:))*f(2,:))/sinh(eta(:))
-          elsewhere
-             ! substitute cosh()&sinh() -> exp() and re-arrange 
-             ! only valid when exp(-eta) is numerically = 0.0
-             f(3,1:np) = exp(-eta*w%lD) - exp(eta*(w%dD-1.0_DP)) + &
-                       & exp(-eta*(w%dD+1.0_DP)) - exp(-eta*(w%lD+1.0_DP)) + &
-                       & exp(-eta*(w%lD+3.0_DP))
-          end where
-       end if
-       
-       if(any(s%zLay > 1)) then
-          ! g not used in lower layer
-          allocate(g(2,np,nz1))
-          g(1,1:np,1:nz1) = cosh(eta(:) .X. (1.0_DP-w%dD-zD1))
-
-          where(abseta)
-             g(2,1:np,1:nz1) = (spread(f(1,:),2,nz1)*cosh(eta .X. zD1) + &
-                              & spread(f(2,:),2,nz1)*cosh(eta .X. (1.0_DP-zD1)))/&
-                              & spread(sinh(eta),2,nz1)
-          elsewhere
-             g(2,1:np,1:nz1) = (exp(eta .X.(w%dD + zD1 - 1.0_DP)) + &
-                              & exp(eta .X.(w%dD - zD1 - 1.0_DP)) - &
-                              & exp(eta .X.(zD1 - w%dD - 1.0_DP)) - &
-                              & exp(-eta.X.(w%dD + zD1 + 1.0_DP)))/2.0_EP + &
-                              &(exp(eta .X.(1.0_DP - w%lD - zD1)) + &
-                              & exp(eta .X.(zD1 - w%lD - 1.0_DP)) - &
-                              & exp(eta .X.(w%lD - zD1 - 1.0_DP)) - &
-                              & exp(-eta.X.(3.0_DP - w%lD - zD1)))/2.0_EP
-          end where
-       else
-          allocate(g(0,0,0))
-       end if
-       
-       where(spread(s%zLay,1,np) == 1)
-          ! below well screen (0 <= zD <= 1-lD)
-          udp(1:np,1:nz1) =  spread(f(3,:),2,nz1)*cosh(eta .X. zd1) 
-       elsewhere
-          where(spread(s%zLay,1,np) == 2)
-             ! next to well screen (1-lD < zD < 1-dD)
-             udp(1:np,1:nz1) = 1.0_EP - g(2,:,:)
-          elsewhere
-             ! above well screen (1-lD <= zD <= 1)
-             udp(1:np,1:nz1) = g(1,:,:) - g(2,:,:)
-          end where          
-       end where
-       
-       deallocate(f,g,zd1)       
-       udp(1:np,1:nz1) = udp(:,:)*theis(a,lap%p,nz1)/w%bD
-
-       where(abseta(:,1:nz))
+       where(spread(abs(eta) < MAXEXP,2,nz1))
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz1),2,nz)* &
-               & cosh(eta .X. s%zD)/spread((1.0_EP + frm%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz)
+               & cosh(eta .X. s%zD)/spread((1.0_EP + f%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz)
        elsewhere
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz1),2,nz)* &
                & (exp(eta .X. (s%zD - 1.0_DP)) + exp(-eta .X. (s%zD + 1.0_DP)))/ &
-               & spread(1.0_EP + frm%betaD*eta*xi + xi,2,nz)
+               & spread(1.0_EP + f%betaD*eta*xi + xi,2,nz)
        end where
 
        deallocate(eta,xi,udp)
@@ -184,6 +103,71 @@ contains
 
   end function theis
 
+  function hantush(a,zD,s,p,f,w) result(udp)
+    ! implemented in the form given in Malama,Kuhlman & Barrash 2008 
+    use constants, only : DP, EP, MAXEXP
+    use types, only : well, formation, invLaplace, solution
+    use time, only : lapTime
+    use utility, only : operator(.X.)  ! outer product operator
+    implicit none
+    
+    real(EP), intent(in) :: a
+    real(DP), dimension(:), intent(in) :: zD
+    complex(EP), dimension(:), intent(in) :: p
+    type(solution), intent(in) :: s
+    type(well), intent(in) :: w
+    type(formation), intent(in) :: f
+    complex(EP), dimension(size(p),size(zd)) :: udp
+    complex(EP), dimension(size(p)) :: eta, xi
+    complex(EP), dimension(3,size(p),size(zd)) :: g
+    integer :: np,nz
+
+    nz = size(zD)
+    np = size(p)
+
+    eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
+    xi(1:np) = eta(:)*f%alphaD/p(:)
+
+    if(any(s%zLay == 3)) then
+       ! above well screen
+       g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0_DP-w%dD-zD))
+    end if
+    if(any(s%zLay == 1)) then
+       ! below well screen
+       g(3,1:np,1:nz) = cosh(eta(:) .X. (1.0_DP-w%lD-zD))
+    end if
+
+    where(spread(abs(eta) < MAXEXP,2,nz))
+       g(2,1:np,1:nz) = (spread(sinh(eta*w%dD),2,nz)*cosh(eta .X. zD) + &
+            & spread(sinh(eta*(1.0_DP-w%lD)),2,nz)*cosh(eta .X. (1.0_DP-zD)))/&
+            & spread(sinh(eta),2,nz)
+    elsewhere
+       g(2,1:np,1:nz) = (exp(eta .X.(w%dD + zD - 1.0_DP)) + &
+            & exp(eta .X.(w%dD - zd - 1.0_DP)) - &
+            & exp(eta .X.(zd - w%dD - 1.0_DP)) - &
+            & exp(-eta.X.(w%dD + zd + 1.0_DP)))/2.0_EP + &
+            &(exp(eta .X.(1.0_DP - w%lD - zd)) + &
+            & exp(eta .X.(zd - w%lD - 1.0_DP)) - &
+            & exp(eta .X.(w%lD - zd - 1.0_DP)) - &
+            & exp(-eta.X.(3.0_DP - w%lD - zd)))/2.0_EP
+    end where
+
+    where(spread(s%zLay,1,np) == 1)
+       ! below well screen (0 <= zD <= 1-lD)
+       udp(1:np,1:nz) =  (g(3,:,:) - g(2,:,:))
+    elsewhere
+       where(spread(s%zLay,1,np) == 2)
+          ! next to well screen (1-lD < zD < 1-dD)
+          udp(1:np,1:nz) = (1.0_EP - g(2,:,:))
+       elsewhere
+          ! above well screen (1-lD <= zD <= 1)
+          udp(1:np,1:nz) = (g(1,:,:) - g(2,:,:))
+       end where
+    end where
+
+    udp(1:np,1:nz) = udp(:,:)*theis(a,p,nz)/w%bD
+  end function hantush
+  
 end module laplace_hankel_solutions
 
 
