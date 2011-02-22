@@ -22,8 +22,7 @@ contains
     type(formation), intent(in) :: f
     complex(EP), dimension(np,nz) :: fp
 
-    integer :: nz1
-    complex(EP), allocatable :: eta(:), xi(:), udp(:,:)
+    complex(EP), allocatable :: eta(:), xi(:), udp(:,:), udf(:,:)
 
     intrinsic :: bessel_j0
 
@@ -43,44 +42,40 @@ contains
        ! Moench (unconfined w/ wellbore storage)
        stop 'ERROR Moench model not implmented yet'
     case(4)
-
        ! Malama 2011 fully penetrating model (Neuman 72 when beta=0)
-       allocate(eta(np),xi(np))
+       allocate(eta(np),xi(np),udf(np,nz))
 
        eta(1:np) = sqrt((lap%p(:) + a**2)/f%kappa)
        xi(1:np) = eta(:)*f%alphaD/lap%p(:)
+       udf(1:np,1:nz) = theis(a,lap%p,nz)
 
        where(spread(abs(eta) < MAXEXP ,2,nz) )
           ! naive implementation of formula
-          fp(1:np,1:nz) = theis(a,lap%p,nz)*(1.0_EP - cosh(eta .X. s%zD)/ &
+          fp(1:np,1:nz) = udf*(1.0_EP - cosh(eta .X. s%zD)/ &
                & spread((1.0_EP + f%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz))
        elsewhere
           ! substitute cosh()&sinh() -> exp() and re-arrange 
           ! only valid when cosh(eta) = 0.5*exp(eta) numerically 
-          fp(1:np,1:nz) = theis(a,lap%p,nz)* &
-               & (1.0_EP - exp(eta .X. (s%zD - 1.0_DP))/ &
+          fp(1:np,1:nz) = udf*(1.0_EP - exp(eta .X. (s%zD-1.0_DP))/ &
                & spread(1.0_EP + f%betaD*eta*xi + xi,2,nz))
        end where
        deallocate(eta,xi)
 
     case(5)
        ! Malama 2011 partial penetrating model (Neuman 74 when beta=0)
-       nz1 = nz+1
-       allocate(eta(np),xi(np),udp(np,nz1))
+       allocate(eta(np),xi(np),udp(np,nz+1))
 
        eta(1:np) = sqrt((lap%p(:) + a**2)/f%kappa)
        xi(1:np) = eta(:)*f%alphaD/lap%p(:)
-       udp(1:np,1:nz1) = hantush(a,[s%zD,1.0_DP],s,lap%p,f,w)
+       udp(1:np,1:nz+1) = hantush(a,[s%zD,1.0_DP],s,lap%p,f,w)
 
-       where(spread(abs(eta) < MAXEXP,2,nz1))
-          fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz1),2,nz)* &
+       where(spread(abs(eta)<MAXEXP,2,nz))
+          fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
                & cosh(eta .X. s%zD)/spread((1.0_EP + f%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz)
        elsewhere
-          fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz1),2,nz)* &
-               & (exp(eta .X. (s%zD - 1.0_DP)) + exp(-eta .X. (s%zD + 1.0_DP)))/ &
-               & spread(1.0_EP + f%betaD*eta*xi + xi,2,nz)
+          fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
+               & exp(eta .X. (s%zD-1.0_DP))/spread(1.0_EP + f%betaD*eta*xi + xi,2,nz)
        end where
-
        deallocate(eta,xi,udp)
 
     case(6)
