@@ -49,7 +49,7 @@ contains
        xi(1:np) = eta(:)*f%alphaD/lap%p(:)
        udf(1:np,1:nz) = theis(a,lap%p,nz)
 
-       where(spread(abs(eta) < MAXEXP ,2,nz) )
+       where(spread(abs(eta) < MAXEXP ,2,nz))
           ! naive implementation of formula
           fp(1:np,1:nz) = udf*(1.0_EP - cosh(eta .X. s%zD)/ &
                & spread((1.0_EP + f%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz))
