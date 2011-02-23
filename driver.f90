@@ -196,7 +196,9 @@ program Driver
            do m = 1,s%nz
 !!$              print *, 'np,nz, GLarea',j,m,GLarea(:,j,m)
               ! accelerate each series independently
-              infint(j,m) = wynn_epsilon(GLarea(1:gl%nacc,j,m))
+              if (any(abs(Glarea(:,j,m)) > 0)) then
+                 infint(j,m) = wynn_epsilon(GLarea(1:gl%nacc,j,m))
+              end if
            end do
         end do
         !$OMP END PARALLEL DO

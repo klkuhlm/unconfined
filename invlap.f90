@@ -102,7 +102,6 @@ contains
 
     else  !! entire f(p) vector is zero
        ft = 0.0
-       write(*,*) 'f(t) not computed: '
     end if
   end function deHoog_invLap_vect
 
