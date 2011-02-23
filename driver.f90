@@ -35,8 +35,9 @@ program Driver
   ! vectors of results and intermediate steps
   complex(EP), allocatable :: fa(:,:,:), tmp(:,:,:), GLz(:,:,:), GLarea(:,:,:)
   complex(EP), allocatable :: finint(:,:), infint(:,:), totlap(:,:)
-  real(EP), allocatable :: totint(:), GLy(:)
-  real(EP) :: totobs, lob, hib, width, arg
+  real(EP), allocatable :: totint(:), totintd(:), GLy(:)
+  real(EP) :: totobs, totderiv, lob, hib, width, arg
+  real(DP) :: tee
   complex(EP) :: dy
   integer :: i, j, k, m, n, nn
   logical :: first
@@ -58,7 +59,7 @@ program Driver
   ts%N = 2**ts%k - 1
 
   allocate(finint(l%np,s%nz), infint(l%np,s%nz), totlap(l%np,s%nz), totint(s%nz), &
-       & l%p(l%np), ts%kv(ts%R), ts%Nv(ts%R), ts%Q(ts%R), ts%hv(ts%R))
+       & totintd(s%nz), l%p(l%np), ts%kv(ts%R), ts%Nv(ts%R), ts%Q(ts%R), ts%hv(ts%R))
 
   forall (m = 1:ts%R) 
      ! count up to k, a vector of length R
@@ -75,7 +76,7 @@ program Driver
        
   ! loop over all desired calculation times
   do i = 1, s%nt
-     if (.not. s%quiet) then
+     if (.not. s%quiet .and. s%timeseries) then
         write(*,'(I5,A,'//RFMT//')') i,' td ',s%tD(i)
      end if
      
@@ -88,7 +89,10 @@ program Driver
 
      ! loop over all desired calculation radial distances
      do k = 1, s%nr
-
+        if (.not. s%quiet .and. .not. s%timeseries) then
+           write(*,'(I5,A,'//RFMT//')') i,' rd ',s%rD(k)
+        end if
+        
         ! compute abcissa and for highest-order case (others are subsets)
         ! split between finite & infinite integrals
         arg = h%j0z(h%sv(i))/s%rD(k)
@@ -198,10 +202,13 @@ program Driver
         !$OMP END PARALLEL DO
 
         totlap(1:l%np,1:s%nz) = finint(1:l%np,1:s%nz) + infint(1:l%np,1:s%nz) 
-
-        !$OMP PARALLEL DO SHARED(totint,l,s,totlap,i)
+        tee = s%tD(i)*TEE_MULT
+        
+        !$OMP PARALLEL DO SHARED(totint,totintd,l,s,totlap,i,tee)
         do m = 1,s%nz
-           totint(m) = dehoog(s%tD(i),s%tD(i)*TEE_MULT,totlap(1:l%np,m),l) 
+           totint(m)  = dehoog(s%tD(i),tee,totlap(1:l%np,m),l) 
+           ! dh/d(ln(t)) = t*dh/dt = t*h*p
+           totintd(m) = dehoog(s%tD(i),tee,totlap(1:l%np,m)*l%p(:),l)*s%tD(i)
         end do
         !$OMP END PARALLEL DO
 
@@ -212,9 +219,12 @@ program Driver
               ! weights are uniform, except for endpoints
               ! divide by interval length
               totObs = (totint(1)/2.0 + sum(totint(2:s%zOrd)) + &
-                   & totint(s%zOrd)/2.0)/(s%zOrd-1)
+                   & totint(s%zOrd)/2.0)/(s%zOrd - 1)
+              totDeriv = (totintd(1)/2.0 + sum(totintd(2:s%zOrd)) + &
+                   & totintd(s%zOrd)/2.0)/(s%zOrd - 1)
            else
               totObs = totint(1) ! one point, interval has no length
+              totDeriv = totintd(1)
            end if
         end if
         
@@ -223,24 +233,27 @@ program Driver
            if (s%dimless) then
               ! dimensionless time series output
               write (UNIT,'('//RFMT//',1X,2('//HFMT//',1X))') &
-                   & s%td(i), totObs ! TODO add derivative wrt logt
+                   & s%td(i), totObs, totDeriv
            else
               ! dimensional time series output
               write (UNIT,'('//RFMT//',1X,2('//HFMT//',1X))') &
-                   & s%t(i), totObs*s%Hc ! TODO add derivative wrt logt
+                   & s%t(i), totObs*s%Hc, totDeriv*s%Hc
            end if
         else
+           ! not sure it makes sense to have derivative with respect
+           ! to time, plotted as a contour map in space...
+
            if (s%dimless) then
               ! dimensionless contour map output
               do m = 1,s%nz
                  write (UNIT,'(2('//RFMT//',1X),2('//HFMT//',1X))') &
-                      & s%zD(m), s%rD(k), totint(m) ! TODO add derivative wrt logt
+                      & s%zD(m), s%rD(k), totint(m), totintd(m)
               end do
            else
               ! dimensional contour map output
               do m = 1,s%nz
                  write (UNIT,'(2('//RFMT//',1X),2('//HFMT//',1X))') &
-                      & s%z(m), s%r(k), totint(m)*s%Hc ! TODO add derivative wrt logt
+                      & s%z(m), s%r(k), totint(m)*s%Hc, totintd(m)*s%Hc
               end do
            end if
         end if

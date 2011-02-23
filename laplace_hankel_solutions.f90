@@ -115,19 +115,27 @@ contains
     complex(EP), dimension(size(p)) :: eta, xi
     complex(EP), dimension(3,size(p),size(zd)) :: g
     integer :: np,nz
+    integer, allocatable :: zLay(:)
 
     nz = size(zD)
     np = size(p)
 
+    allocate(zLay(nz))
+    if(size(s%zLay) == nz) then
+       zLay = s%zLay
+    else
+       zLay = [s%zLay, 3] ! last point is at the water table (always layer 3)
+    end if
+
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
     xi(1:np) = eta(:)*f%alphaD/p(:)
 
-    where(spread(s%zLay(1:nz) == 3,1,np))
+    where(spread(zLay == 3,1,np))
        ! above well screen
        g(1,1:np,1:nz) = cosh(eta(1:np) .X. (1.0 - w%dD - zD(1:nz)))
     end where
     
-    where(spread(s%zLay(1:nz) == 1,1,np))
+    where(spread(zLay == 1,1,np))
        ! below well screen
        g(3,1:np,1:nz) = spread(exp(-eta*(1.0 - w%lD)) - &
             & (sinh(eta*w%dD) + exp(-eta)*sinh(eta*(1.0 - w%lD)))/sinh(eta),2,nz)
@@ -148,11 +156,11 @@ contains
 !!$                       & exp(-eta .X. (3.0 - w%lD - zd)))/2.0_EP
 !!$    end where
 
-    where(spread(s%zLay(1:nz) == 1,1,np))
+    where(spread(zLay(1:nz) == 1,1,np))
        ! below well screen (0 <= zD <= 1-lD)
        udp(1:np,1:nz) =  g(3,:,:)*cosh(eta .X. zD)
     elsewhere
-       where(spread(s%zLay(1:nz) == 2,1,np))
+       where(spread(zLay(1:nz) == 2,1,np))
           ! next to well screen (1-lD < zD < 1-dD)
           udp(1:np,1:nz) = (1.0_EP - g(2,:,:))
        elsewhere

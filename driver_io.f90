@@ -538,15 +538,15 @@ contains
     write(unit,'(A,I0)') '# times :: ',s%nt
     write(unit,'(A,2('//RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
     if (s%dimless) then
-       write (unit,'(A,/,A,/,A)') '#','#       t_D              '//&
-            & trim(s%modelDescrip(s%model)), &
-            & '#----------------------------------------'
+       write (unit,'(A,/,A,/,A)') '#','#     t_D          '//&
+            & trim(s%modelDescrip(s%model))//'         t*dh/d(log(t))', &
+            & '#-------------------------------------------------------------'
        ! TODO add header for derivative wrt logt
     else
        write(unit,'(A,1'//RFMT//')') '# characteristic head ::',s%Hc
-       write (unit,'(A,/,A,/,A)') '#','#       t                '//&
-            & trim(s%modelDescrip(s%model)), &
-            & '#----------------------------------------'
+       write (unit,'(A,/,A,/,A)') '#','#     t            '//&
+            & trim(s%modelDescrip(s%model))//'         t*dh/d(log(t))', &
+            & '#-------------------------------------------------------------'
        ! TODO add header for derivative wrt logt
     end if
 
@@ -606,14 +606,14 @@ contains
     write(unit,fmt) '# num z locations, zlocs :: ',s%nz, s%z(:)
     write(unit,'(A,'//RFMT//')') '# time :: ',s%t(1)
     if (s%dimless) then
-       write (unit,'(A,/,A,/,A)') '#','#         z_D           r_D           '&
-            & //'             '// trim(s%modelDescrip(s%model)), &
-            & '#------------------------------------------------------------'
-       ! TODO add header for derivative wrt logt
+       write (unit,'(A,/,A,/,A)') '#','#     z_D           r_D      '&
+            & //'     '// trim(s%modelDescrip(s%model))//'          t*dh/d(log(t))', &
+            & '#----------------------------------------------------------------------------'
+
     else
-       write (unit,'(A,/,A,/,A)') '#','#         z              r            '&
-            & //'             '// trim(s%modelDescrip(s%model)), &
-            & '#------------------------------------------------------------'
+       write (unit,'(A,/,A,/,A)') '#','#      z            r        '&
+            & //'     '// trim(s%modelDescrip(s%model))//'          t*dh/d(log(t))', &
+            & '#----------------------------------------------------------------------------'
        ! TODO add header for derivative wrt logt
     end if
 
