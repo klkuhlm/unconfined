@@ -56,7 +56,7 @@ contains
        elsewhere
           ! substitute cosh()&sinh() -> exp() and re-arrange 
           ! only valid when cosh(eta) = 0.5*exp(eta) numerically 
-          fp(1:np,1:nz) = udf*(1.0_EP - exp(eta .X. (s%zD-1.0_DP))/ &
+          fp(1:np,1:nz) = udf*(1.0_EP - exp(eta .X. (s%zD - 1.0))/ &
                & spread(1.0_EP + f%betaD*eta*xi + xi,2,nz))
        end where
        deallocate(eta,xi)
@@ -67,14 +67,14 @@ contains
 
        eta(1:np) = sqrt((lap%p(:) + a**2)/f%kappa)
        xi(1:np) = eta(:)*f%alphaD/lap%p(:)
-       udp(1:np,1:nz+1) = hantush(a,[s%zD,1.0_DP],s,lap%p,f,w)
+       udp(1:np,1:nz+1) = hantush(a,[s%zD,1.0],s,lap%p,f,w)
 
        where(spread(abs(eta)<MAXEXP,2,nz))
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
                & cosh(eta .X. s%zD)/spread((1.0_EP + f%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz)
        elsewhere
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
-               & exp(eta .X. (s%zD-1.0_DP))/spread(1.0_EP + f%betaD*eta*xi + xi,2,nz)
+               & exp(eta .X. (s%zD-1.0))/spread(1.0_EP + f%betaD*eta*xi + xi,2,nz)
        end where
        deallocate(eta,xi,udp)
 
@@ -122,35 +122,37 @@ contains
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
     xi(1:np) = eta(:)*f%alphaD/p(:)
 
-    if(any(s%zLay == 3)) then
+    where(spread(s%zLay(1:nz) == 3,1,np))
        ! above well screen
-       g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0_DP-w%dD-zD))
-    end if
-    if(any(s%zLay == 1)) then
+       g(1,1:np,1:nz) = cosh(eta(1:np) .X. (1.0 - w%dD - zD(1:nz)))
+    end where
+    
+    where(spread(s%zLay(1:nz) == 1,1,np))
        ! below well screen
-       g(3,1:np,1:nz) = cosh(eta(:) .X. (1.0_DP-w%lD-zD))
-    end if
-
-    where(spread(abs(eta) < MAXEXP,2,nz))
-       g(2,1:np,1:nz) = (spread(sinh(eta*w%dD),2,nz)*cosh(eta .X. zD) + &
-            & spread(sinh(eta*(1.0_DP-w%lD)),2,nz)*cosh(eta .X. (1.0_DP-zD)))/&
-            & spread(sinh(eta),2,nz)
-    elsewhere
-       g(2,1:np,1:nz) = (exp(eta .X.(w%dD + zD - 1.0_DP)) + &
-            & exp(eta .X.(w%dD - zd - 1.0_DP)) - &
-            & exp(eta .X.(zd - w%dD - 1.0_DP)) - &
-            & exp(-eta.X.(w%dD + zd + 1.0_DP)))/2.0_EP + &
-            &(exp(eta .X.(1.0_DP - w%lD - zd)) + &
-            & exp(eta .X.(zd - w%lD - 1.0_DP)) - &
-            & exp(eta .X.(w%lD - zd - 1.0_DP)) - &
-            & exp(-eta.X.(3.0_DP - w%lD - zd)))/2.0_EP
+       g(3,1:np,1:nz) = spread(exp(-eta*(1.0 - w%lD)) - &
+            & (sinh(eta*w%dD) + exp(-eta)*sinh(eta*(1.0 - w%lD)))/sinh(eta),2,nz)
     end where
 
-    where(spread(s%zLay,1,np) == 1)
+!!$    where(spread(abs(eta(1:np)) < MAXEXP,2,nz))
+       g(2,1:np,1:nz) = (spread(sinh(eta*w%dD),2,nz)*cosh(eta .X. zD) + &
+                       & spread(sinh(eta*(1.0-w%lD)),2,nz)*cosh(eta .X. (1.0-zD)))/&
+                       & spread(sinh(eta),2,nz)
+!!$    elsewhere
+!!$       g(2,1:np,1:nz) = (exp(eta .X. (w%dD + zD - 1.0)) + &
+!!$                       & exp(eta  .X. (w%dD - zd - 1.0)) - &
+!!$                       & exp(eta  .X. (zd - w%dD - 1.0)) - &
+!!$                       & exp(-eta .X. (w%dD + zd + 1.0)))/2.0_EP + &
+!!$                       &(exp(eta  .X. (1.0 - w%lD - zd)) + &
+!!$                       & exp(eta  .X. (zd - w%lD - 1.0)) - &
+!!$                       & exp(eta  .X. (w%lD - zd - 1.0)) - &
+!!$                       & exp(-eta .X. (3.0 - w%lD - zd)))/2.0_EP
+!!$    end where
+
+    where(spread(s%zLay(1:nz) == 1,1,np))
        ! below well screen (0 <= zD <= 1-lD)
-       udp(1:np,1:nz) =  (g(3,:,:) - g(2,:,:))
+       udp(1:np,1:nz) =  g(3,:,:)*cosh(eta .X. zD)
     elsewhere
-       where(spread(s%zLay,1,np) == 2)
+       where(spread(s%zLay(1:nz) == 2,1,np))
           ! next to well screen (1-lD < zD < 1-dD)
           udp(1:np,1:nz) = (1.0_EP - g(2,:,:))
        elsewhere

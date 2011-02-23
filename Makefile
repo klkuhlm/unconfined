@@ -4,6 +4,8 @@
 DEBUG = -O0 -g -Wall -Wextra -fbacktrace -fwhole-file
 DEBUG += -frange-check -fcheck=all ## -finit-integer=-999 -finit-real=snan -ffpe-trap=invalid
 PERF = -O2 -march=native -fwhole-file -fopenmp 
+DEBUG += -fdefault-real-8  # for constants like 1.0, 2.0, etc.
+PERF += -fdefault-real-8
 F90 = gfortran-4.6
 CPP = -cpp
 FREE = -free
