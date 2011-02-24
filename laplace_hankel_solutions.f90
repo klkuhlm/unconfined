@@ -79,7 +79,9 @@ contains
        deallocate(eta,xi,udp)
 
     case(6)
-       ! Mishra/Neuman 2011 model
+       ! Mishra/Neuman no storage 2010 model
+       
+       
     end select
 
     fp(1:np,1:nz) = a*bessel_j0(a*rD)*fp(:,:)*spread(lapTime(lap),2,nz)
