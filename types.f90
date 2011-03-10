@@ -117,13 +117,20 @@ module types
      real(DP) :: Sy = -999. ! specific yield
      real(DP) :: gamma = -999.  ! dimensionless skin (1=no skin)
      real(DP) :: usL = -999. ! thickness of unsaturated zone
-     real(DP) :: usalpha = -999. ! unzaturated zone sorbtive number
-     real(DP) :: beta = -999. ! Malama linearization parameter
+     ! Mishra & Neuman unsaturated parameters
+     ! moisture capacity & hydraulic conductivity sorptive numbers (1/length) 
+     real(DP) :: ak = -999., ac = -999. 
+     ! air-entry pressure (<= 0), pressure for saturation (<= 0)
+     real(DP) :: psia = 999., psik = 999.
+     ! Malama linearization parameter
+     real(DP) :: beta = -999. 
 
      ! computed aquifer parameters
      real(DP) :: sigma = -999.  ! Sy/(Ss*b)
      real(DP) :: alphaD = -999. ! kappa/sigma
-     real(DP) :: betaD = -999.
+     real(DP) :: betaD = -999., usLD = -999.
+     real(DP) :: akD = -999., acD = -999.
+     real(DP) :: psikD = 999., psiaD = 999.
   end type formation
 
   ! parameters related to numerical solution

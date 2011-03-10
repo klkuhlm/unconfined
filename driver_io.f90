@@ -48,7 +48,7 @@ contains
 
     open(unit=19, file=inputFileName, status='old', action='read', iostat=ioerr)
     if(ioerr /= 0) then
-       write(*,'(A)') 'ERROR opening main input file '//trim(inputFileName)//&
+       write(*,*) 'ERROR opening main input file '//trim(inputFileName)//&
             & ' for reading'
        stop
     end if
@@ -108,8 +108,14 @@ contains
     ! aquifer specific storage [1/L] and specific yield [-]
     read(19,*) f%Ss, f%Sy
 
-    ! unsaturated zone thickness [L] and exponential sorbtive parameter [1/L]
-    read(19,*) f%usl, f%usalpha, f%beta 
+    ! Malama linearization beta parameter
+    read(19,*) f%beta 
+    
+    ! Mishra/Neuman unsaturated model parameters
+    ! capacity & conductivity sorptive numbers (1/length)
+    ! air-entry & saturation pressures (<=0)
+    ! unsaturated zone thickness (length)
+    read(19,*) f%ac, f%ak, f%psia, f%psik, f%usL
     
     ! ## echo check parameters #####
 
@@ -137,6 +143,10 @@ contains
        write(*,'(A,2('//RFMT//',1X))') 'rw,rc (well and casing radii):: ', w%rw, w%rc  
        write(*,'(A,3('//RFMT//',1X))') 'Kr,kappa,gamma:: ', f%Kr, f%kappa, f%gamma
        write(*,'(A,2('//RFMT//',1X))') 'Ss,Sy:: ', f%Ss, f%Sy
+       write(*,'(A,'//RFMT//')') 'beta (Malama linearization factor):: ',f%beta
+       write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman ac,ak (sorptive #s), psia,psik '//&
+            & '(air-entry & sat. pressures):: ', f%ac,f%ak,f%psia,f%psik
+       write(*,'(A,'//RFMT//')') 'unsaturated zone thickness:: ',f%usL
     end if
 
     if(any([f%Sy, f%gamma, w%d, w%l] < 0.0)) then
@@ -145,7 +155,6 @@ contains
        stop
     end if   
 
-    ! spacing(0.) is the spacing between computer representable numbers @ 0
     if(any([f%b,f%Kr,f%kappa,f%Ss,w%rw,w%rc] < spacing(0.0))) then
        write(*,*) 'ERROR: zero or negative parameters:', &
             &  f%b, f%Kr, f%kappa, f%Ss, w%l, w%rw, w%rc
@@ -153,10 +162,21 @@ contains
     end if
 
     if (w%d >= w%l) then
-       write(*,'(2(A,'//RFMT//'))') 'ERROR: l must be > d; l=',w%l,' d=',w%d
+       write(*,*) 'ERROR: screen top/bottom l must be > d; l=',w%l,' d=',w%d
        stop
     end if
-  
+
+    if (any([f%ac,f%ak,f%usL,-f%psia,-f%psik] < 0.0)) then
+       write(*,*) 'ERROR: ivalid Mishra/Neuman parameters',&
+            & f%ac,f%ak,f%usL,f%psia,f%psik
+       stop
+    end if
+    
+    if (f%beta < 0.0) then
+       write(*,*) 'ERROR: Malama beta cannot be negative',f%beta
+       stop
+    end if
+      
     ! ## numerical implementation-related parameters #####
 
     ! Laplace transform (deHoog et al) parameters
@@ -173,7 +193,7 @@ contains
     ! ## checking of numerical parameters #####
 
     if (lap%M < 2) then
-       write(*,'(A,I0)')  'ERROR: deHoog # FS terms must be >= 1 M=',lap%M
+       write(*,*)  'ERROR: deHoog # FS terms must be >= 1 M=',lap%M
        stop 
     end if
 
@@ -191,7 +211,7 @@ contains
     end if
 
     if(any([h%j0s(:),gl%nacc, ts%k] < 1)) then
-       write(*,'(2A,4(I0,1X))') 'ERROR max/min split, # accelerated terms, ',&
+       write(*,*) 'ERROR max/min split, # accelerated terms, ',&
             & 'and tanh-sinh k must be >= 1:',h%j0s(:),gl%nacc, ts%k
        stop
     end if
@@ -259,7 +279,7 @@ contains
        open(unit=22, file=trim(timeFileName), status='old', &
             & action='read',iostat=ioerr)
        if(ioerr /= 0) then
-          write(*,'(A)') 'ERROR opening time input file '// &
+          write(*,*) 'ERROR opening time input file '// &
                & trim(timeFileName)//' for reading'
        end if
        
@@ -313,7 +333,7 @@ contains
        open(unit=23, file=trim(spaceFileName), status='old', &
             & action='read',iostat=ioerr)
        if(ioerr /= 0) then
-          write(*,'(A)') 'ERROR opening space input file '// &
+          write(*,*) 'ERROR opening space input file '// &
                & trim(spaceFileName)//' for reading'
        end if
 
@@ -389,6 +409,14 @@ contains
     w%dD = w%d/s%Lc
     w%bD = abs(w%lD - w%dD)
 
+    ! dimensionless sorptive numbers
+    f%acD = f%ac*s%Lc
+    f%akD = f%ak*s%Lc
+
+    ! dimensionless pressures
+    f%psiaD = f%psia/s%Lc
+    f%psikD = f%psik/s%Lc
+
     s%zD(:) = s%z(:)/s%Lc
     s%rD(:) = s%r(:)/s%Lc
 
@@ -443,6 +471,10 @@ contains
             & ts%k, ts%R
        write(*,'(A,4(I0,1X))'), 'GL: J0 split, num zeros accel, GL-order ',&
             & h%j0s(:), gl%nacc, gl%ord
+!!$       write(*,'(A,'//RFMT//')') 'Malama betaD (linearization factor):: ',f%betaD
+       write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman acD,akD, psiaD,psikD :: ', &
+            & f%acD,f%akD,f%psiaD,f%psikD
+       write(*,'(A,'//RFMT//')') 'Mishra&Neuman LD:: ',f%usLD
     end if
 
     terms = maxval(h%j0s(:)) + gl%nacc + 1
@@ -535,6 +567,15 @@ contains
        write(unit,'(A,3('//RFMT//',1X),I0)') '# screened obs well r,zTop,zBot,zOrd :: ',&
             & s%r(1), s%zTop, s%zBot, s%zOrd
     end if
+    if(s%model == 4 .or. s%model == 5) then
+       ! malama solutions
+       write(unit,'(A,'//RFMT//')') '# Malama beta linearization parameter :: ',f%beta
+    elseif(s%model == 6) then
+       ! mishra/neuman solution
+       write(unit,'(A,4('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ad,psia,psik ::',&
+            & f%ac,f%ak,f%psia,f%psik
+    end if
+    
     write(unit,'(A,I0)') '# times :: ',s%nt
     write(unit,'(A,2('//RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
     if (s%dimless) then
@@ -605,6 +646,16 @@ contains
     write(fmt(10:13),'(I4.4)') s%nz
     write(unit,fmt) '# num z locations, zlocs :: ',s%nz, s%z(:)
     write(unit,'(A,'//RFMT//')') '# time :: ',s%t(1)
+
+    if(s%model == 4 .or. s%model == 5) then
+       ! malama solutions
+       write(unit,'(A,'//RFMT//')') '# Malama beta linearization parameter :: ',f%beta
+    elseif(s%model == 6) then
+       ! mishra/neuman solution
+       write(unit,'(A,4('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ad,psia,psik ::',&
+            & f%ac,f%ak,f%psia,f%psik
+    end if
+
     if (s%dimless) then
        write (unit,'(A,/,A,/,A)') '#','#     z_D           r_D      '&
             & //'     '// trim(s%modelDescrip(s%model))//'          t*dh/d(log(t))', &

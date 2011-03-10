@@ -143,20 +143,9 @@ contains
             & (sinh(eta*w%dD) + exp(-eta)*sinh(eta*(1.0 - w%lD)))/sinh(eta),2,nz)
     end where
 
-!!$    where(spread(abs(eta(1:np)) < MAXEXP,2,nz))
-       g(2,1:np,1:nz) = (spread(sinh(eta*w%dD),2,nz)*cosh(eta .X. zD) + &
-                       & spread(sinh(eta*(1.0-w%lD)),2,nz)*cosh(eta .X. (1.0-zD)))/&
-                       & spread(sinh(eta),2,nz)
-!!$    elsewhere
-!!$       g(2,1:np,1:nz) = (exp(eta .X. (w%dD + zD - 1.0)) + &
-!!$                       & exp(eta  .X. (w%dD - zd - 1.0)) - &
-!!$                       & exp(eta  .X. (zd - w%dD - 1.0)) - &
-!!$                       & exp(-eta .X. (w%dD + zd + 1.0)))/2.0_EP + &
-!!$                       &(exp(eta  .X. (1.0 - w%lD - zd)) + &
-!!$                       & exp(eta  .X. (zd - w%lD - 1.0)) - &
-!!$                       & exp(eta  .X. (w%lD - zd - 1.0)) - &
-!!$                       & exp(-eta .X. (3.0 - w%lD - zd)))/2.0_EP
-!!$    end where
+    g(2,1:np,1:nz) = (spread(sinh(eta*w%dD),2,nz)*cosh(eta .X. zD) + &
+                    & spread(sinh(eta*(1.0-w%lD)),2,nz)*cosh(eta .X. (1.0-zD)))/&
+                    & spread(sinh(eta),2,nz)
 
     where(spread(zLay(1:nz) == 1,1,np))
        ! below well screen (0 <= zD <= 1-lD)
