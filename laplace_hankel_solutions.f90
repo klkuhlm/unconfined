@@ -172,7 +172,6 @@ contains
     use time, only : lapTime
     use utility, only : operator(.X.)  ! outer product operator
     use cbessel, only : cbesj, cbesy ! Amos routines
-
     implicit none
     
     complex(DP), parameter :: EYE = cmplx(0.0,1.0,DP)
@@ -186,8 +185,8 @@ contains
     type(formation), intent(in) :: f
     complex(EP), dimension(np,nz) :: sHsU, sH, sU
 
-    complex(DP), dimension(np,NMAX) :: chi, qb
-    complex(DP), dimension(np) :: BD, phi
+    complex(DP), dimension(np,NMAX) :: chi
+    complex(DP), dimension(np) :: BD, phi, qb
     complex(EP), dimension(np) :: etasq
     complex(DP), dimension(np,nz) :: udp, udf
     integer, dimension(NMAX) :: nn
@@ -204,7 +203,7 @@ contains
     ! Hantush, formulated in terms of finite cosine series
     sH(1:np,1:nz) = 4.0/(PIEP*w%bD)*sum(spread(cos((1.0-s%zD(:)) .X. nn(:)*PI)*&
          & spread(sin(nn(:)*PIEP*w%lD) - sin(nn(:)*PIEP*w%dD),1,nz),1,np)/&
-         & spread(spread(etasq(:),2,NMAX) + spread((nn(:)*PIEP/f%b)**2,1,np),2,nz),dim=3)
+         & spread(spread(etasq(:),2,NMAX) + spread((nn(:)*PIEP/f%b)**2,1,np),2,nz),3)
     
     ! re-formulate BD to get rid of t & r 
     BD(1:np) = lap%p(:)*f%sigma*f%acD*exp(f%psikD - f%psiaD)/(alphaS*f%kappa/f%b**2)
@@ -246,10 +245,10 @@ contains
     end do
 
     ! is this summed first?  this has a dimension wrt n, but the solution it goes in does not...
-    qb(1:np,1:NMAX) = spread(f%akD/2.0 + nn(:)*f%lambdaD/2.0,1,np) - spread(EYE*sqrt(BD(:)),2,NMAX)*&
-         & (J(:,2:NMAX+1) + chi(:,:)*Y(:,2:NMAX+1))/(J(:,1:NMAX) + chi(:,:)*Y(:,1:NMAX))
+    qb(1:np) = sum(spread(f%akD/2.0 + nn(:)*f%lambdaD/2.0,1,np) - spread(EYE*sqrt(BD(:)),2,NMAX)*&
+         & (J(:,2:NMAX+1) + chi(:,:)*Y(:,2:NMAX+1))/(J(:,1:NMAX) + chi(:,:)*Y(:,1:NMAX)),2)
 
-!    sU(1:np,1:nz) = 2.0/f%kappa*cosh(eta(1:np) .X. s%zD(1:zd))/()
+    sU(1:np,1:nz) = 2.0/f%kappa*cosh(eta .X. s%zD)/()
     
 
   end function mishraNeuman2010
