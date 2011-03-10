@@ -4,7 +4,7 @@ module utility
   public :: logspace, linspace, is_finite, operator(.x.)
 
   interface operator(.x.)
-     module procedure outerprod_zd, outerprod_dz
+     module procedure outerprod_zd, outerprod_dz, outerprod_dd
   end interface
   
 contains
@@ -42,6 +42,13 @@ contains
     pred = .not. (isnan(abs(x)) .or. abs(x) > huge(abs(x)))
   end function is_finite
 
+  pure function outerprod_dd(da,db) result(c)
+    use constants, only : DP
+    real(DP), intent(in), dimension(:) :: da,db
+    real(DP), dimension(size(da),size(db)) :: c
+    c = spread(da,dim=2,ncopies=size(db))*spread(db,dim=1,ncopies=size(da))    
+  end function outerprod_dd
+  
   pure function outerprod_zd(za,db) result(c)
     use constants, only : EP,DP
     complex(EP), intent(in), dimension(:) :: za

@@ -11,7 +11,7 @@ Module CBessel
   IMPLICIT NONE
 
   ! same selected_real_kind as in calling program
-  INTEGER, PARAMETER, private  :: dp = SELECTED_REAL_KIND(15, 307)
+  INTEGER, PARAMETER, private  :: dp = SELECTED_REAL_KIND(p=15, r=300)
 
   PRIVATE
   PUBLIC  :: cbesh, cbesi, cbesj, cbesk, cbesy, gamln, cairy, cbiry

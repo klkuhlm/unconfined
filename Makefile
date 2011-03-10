@@ -12,6 +12,7 @@ FREE = -free
 PERFLDFLAGS = ${PERF}
 ##################################################
 
+EXTERNAL = cbessel.o
 HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o
 OBJS = $(EXTERNAL) constants.o types.o invlap.o utility.o $(HILEV)
 
@@ -38,11 +39,15 @@ debug_driver: $(DEBUGOBJS)
 
 ####### rule for making optimized object files ############
 %.opt.o: %.f90
-	$(F90) -c $(INTEL) $(PERF) -o $@ $<
+	$(F90) -c $(PERF) -o $@ $<
 
 ####### rule for making debugging object files ############
 %.debug.o: %.f90
-	$(F90) -c $(INTEL) $(DEBUG) -o $@ $<
+	$(F90) -c $(DEBUG) -o $@ $<
+
+# always compile external libray with debugging off
+cbessel.debug.o: cbessel.f90
+	$(F90) -c -O2 -march=native -o cbessel.debug.o cbessel.f90
 
 constants.opt.o constants.mod : constants.f90
 integration.opt.o integration.mod : integration.f90 constants.mod types.mod

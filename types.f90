@@ -129,7 +129,7 @@ module types
      real(DP) :: sigma = -999.  ! Sy/(Ss*b)
      real(DP) :: alphaD = -999. ! kappa/sigma
      real(DP) :: betaD = -999., usLD = -999.
-     real(DP) :: akD = -999., acD = -999.
+     real(DP) :: akD = -999., acD = -999., lambdaD = -999.
      real(DP) :: psikD = 999., psiaD = 999.
   end type formation
 

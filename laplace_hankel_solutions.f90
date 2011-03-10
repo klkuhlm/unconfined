@@ -11,6 +11,7 @@ contains
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
     use utility, only : operator(.X.)  ! outer product operator
+
     implicit none
     
     real(EP), intent(in) :: a
@@ -79,8 +80,10 @@ contains
        deallocate(eta,xi,udp)
 
     case(6)
-       ! Mishra/Neuman no storage 2010 model
-       
+       ! Mishra/Neuman  2010 model
+       ! mishraNeuman2010 implements (DeltaS + Su)
+       fp(1:np,1:nz) = theis(a,lap%p,nz) + &
+            & mishraNeuman2010(a,rD,np,nz,w,f,s,lap)
        
     end select
 
@@ -163,6 +166,93 @@ contains
     udp(1:np,1:nz) = udp(:,:)*theis(a,p,nz)/w%bD
   end function hantush
   
+  function mishraNeuman2010(a,rD,np,nz,w,f,s,lap) result(sHsU)
+    use constants, only : DP, EP, MAXEXP, PIEP, PI
+    use types, only : well, formation, invLaplace, solution
+    use time, only : lapTime
+    use utility, only : operator(.X.)  ! outer product operator
+    use cbessel, only : cbesj, cbesy ! Amos routines
+
+    implicit none
+    
+    complex(DP), parameter :: EYE = cmplx(0.0,1.0,DP)
+    integer, parameter :: NMAX = 50
+    real(EP), intent(in) :: a
+    real(DP), intent(in) :: rD
+    integer, intent(in) :: np,nz
+    type(invLaplace), intent(in) :: lap
+    type(solution), intent(in) :: s
+    type(well), intent(in) :: w
+    type(formation), intent(in) :: f
+    complex(EP), dimension(np,nz) :: sHsU, sH, sU
+
+    complex(DP), dimension(np,NMAX) :: chi, qb
+    complex(DP), dimension(np) :: BD, phi
+    complex(EP), dimension(np) :: etasq
+    complex(DP), dimension(np,nz) :: udp, udf
+    integer, dimension(NMAX) :: nn
+    real(DP), dimension(np,NMAX) :: arg1
+    complex(DP), dimension(np,NMAX) :: arg2
+    complex(DP), dimension(np,NMAX+1) :: J,Y
+    integer :: i, n, nzero, ierr
+    real(DP) :: alphaS
+
+    alphaS = f%Kr/f%Ss
+    etasq(1:np) = (a**2 + lap%p(1:np)/alphaS)/f%kappa
+    forall (n=1:NMAX) nn(n) = n 
+    
+    ! Hantush, formulated in terms of finite cosine series
+    sH(1:np,1:nz) = 4.0/(PIEP*w%bD)*sum(spread(cos((1.0-s%zD(:)) .X. nn(:)*PI)*&
+         & spread(sin(nn(:)*PIEP*w%lD) - sin(nn(:)*PIEP*w%dD),1,nz),1,np)/&
+         & spread(spread(etasq(:),2,NMAX) + spread((nn(:)*PIEP/f%b)**2,1,np),2,nz),dim=3)
+    
+    ! re-formulate BD to get rid of t & r 
+    BD(1:np) = lap%p(:)*f%sigma*f%acD*exp(f%psikD - f%psiaD)/(alphaS*f%kappa/f%b**2)
+    phi(1:np) = sqrt(4.0*BD(:)/f%lambdaD**2)*exp(f%lambdaD*f%usLD/2.0)
+
+    do i=1,np
+       ! scaled bessel functions (scalings cancel in product)
+       call cbesj(EYE*phi(i),1.0,2,NMAX+1,J(i,1:NMAX+1),nzero,ierr)
+       if (ierr > 0 .and. ierr /= 3) then
+          print *, 'ERROR: CBESJ',i,ierr,nzero
+          stop
+       end if
+       call cbesy(EYE*phi(i),1.0,2,NMAX+1,Y(i,1:NMAX+1),nzero,ierr)
+       if (ierr > 0 .and. ierr /= 3) then
+          print *, 'ERROR: CBESY',i,ierr,nzero
+          stop
+       end if
+    end do
+
+    arg1(:,1:NMAX) = spread(f%akD + nn(:)*f%lambdaD,1,np)
+    arg2(:,1:NMAX) = spread(2.0*EYE*sqrt(BD(:)*exp(f%lambdaD*f%usLD)),2,NMAX)
+
+    chi(1:np,1:NMAX) = -(arg1(:,:)*J(:,1:NMAX) - arg2(:,:)*J(:,2:NMAX+1))/&
+                      & (arg1(:,:)*Y(:,1:NMAX) - arg2(:,:)*Y(:,2:NMAX+1))
+
+    phi(1:np) = sqrt(4.0*BD(:)/f%lambdaD**2)
+    do i=1,np
+       ! scaled bessel functions (scalings cancel in product)
+       call cbesj(EYE*phi(i),1.0,2,NMAX+1,J(i,1:NMAX+1),nzero,ierr)
+       if (ierr > 0 .and. ierr /= 3) then
+          print *, 'ERROR: CBESJ',i,ierr,nzero
+          stop
+       end if
+       call cbesy(EYE*phi(i),1.0,2,NMAX+1,Y(i,1:NMAX+1),nzero,ierr)
+       if (ierr > 0 .and. ierr /= 3) then
+          print *, 'ERROR: CBESY',i,ierr,nzero
+          stop
+       end if
+    end do
+
+    ! is this summed first?  this has a dimension wrt n, but the solution it goes in does not...
+    qb(1:np,1:NMAX) = spread(f%akD/2.0 + nn(:)*f%lambdaD/2.0,1,np) - spread(EYE*sqrt(BD(:)),2,NMAX)*&
+         & (J(:,2:NMAX+1) + chi(:,:)*Y(:,2:NMAX+1))/(J(:,1:NMAX) + chi(:,:)*Y(:,1:NMAX))
+
+!    sU(1:np,1:nz) = 2.0/f%kappa*cosh(eta(1:np) .X. s%zD(1:zd))/()
+    
+
+  end function mishraNeuman2010
 end module laplace_hankel_solutions
 
 
