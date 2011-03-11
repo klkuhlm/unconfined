@@ -185,19 +185,17 @@ contains
     type(formation), intent(in) :: f
     complex(EP), dimension(np,nz) :: sHsU, sH, sU
 
-    complex(DP), dimension(np,NMAX) :: chi
-    complex(DP), dimension(np) :: BD, phi, qb
-    complex(EP), dimension(np) :: etasq
+    complex(DP), dimension(np) :: BD, phi, qb, arg2, chi
+    complex(EP), dimension(np) :: etasq, eta, mu
     complex(DP), dimension(np,nz) :: udp, udf
     integer, dimension(NMAX) :: nn
-    real(DP), dimension(np,NMAX) :: arg1
-    complex(DP), dimension(np,NMAX) :: arg2
-    complex(DP), dimension(np,NMAX+1) :: J,Y
+    complex(DP), dimension(np,2) :: J,Y
     integer :: i, n, nzero, ierr
-    real(DP) :: alphaS
+    real(DP) :: alphaS, nu, arg1
 
     alphaS = f%Kr/f%Ss
     etasq(1:np) = (a**2 + lap%p(1:np)/alphaS)/f%kappa
+    eta(1:np) = sqrt(etasq(:))
     forall (n=1:NMAX) nn(n) = n 
     
     ! Hantush, formulated in terms of finite cosine series
@@ -208,47 +206,47 @@ contains
     ! re-formulate BD to get rid of t & r 
     BD(1:np) = lap%p(:)*f%sigma*f%acD*exp(f%psikD - f%psiaD)/(alphaS*f%kappa/f%b**2)
     phi(1:np) = sqrt(4.0*BD(:)/f%lambdaD**2)*exp(f%lambdaD*f%usLD/2.0)
+    nu = sqrt((f%akD**2 + 4.0*a**2)/f%lambdaD**2)
 
-    do i=1,np
+    do i= 1,np
        ! scaled bessel functions (scalings cancel in product)
-       call cbesj(EYE*phi(i),1.0,2,NMAX+1,J(i,1:NMAX+1),nzero,ierr)
+       call cbesj(EYE*phi(i),nu,2,2,J(i,1:2),nzero,ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ',i,ierr,nzero
           stop
        end if
-       call cbesy(EYE*phi(i),1.0,2,NMAX+1,Y(i,1:NMAX+1),nzero,ierr)
+       call cbesy(EYE*phi(i),nu,2,2,Y(i,1:2),nzero,ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY',i,ierr,nzero
           stop
        end if
     end do
+    
+    arg1 = f%akD + nu*f%lambdaD
+    arg2(1:np) = 2.0*EYE*sqrt(BD(:)*exp(f%lambdaD*f%usLD))
 
-    arg1(:,1:NMAX) = spread(f%akD + nn(:)*f%lambdaD,1,np)
-    arg2(:,1:NMAX) = spread(2.0*EYE*sqrt(BD(:)*exp(f%lambdaD*f%usLD)),2,NMAX)
-
-    chi(1:np,1:NMAX) = -(arg1(:,:)*J(:,1:NMAX) - arg2(:,:)*J(:,2:NMAX+1))/&
-                      & (arg1(:,:)*Y(:,1:NMAX) - arg2(:,:)*Y(:,2:NMAX+1))
-
+    chi(1:np) = -(arg1*J(:,1) - arg2(:)*J(:,2))/&
+               & (arg1*Y(:,1) - arg2(:)*Y(:,2))
     phi(1:np) = sqrt(4.0*BD(:)/f%lambdaD**2)
+
     do i=1,np
        ! scaled bessel functions (scalings cancel in product)
-       call cbesj(EYE*phi(i),1.0,2,NMAX+1,J(i,1:NMAX+1),nzero,ierr)
+       call cbesj(EYE*phi(i),1.0,2,2,J(i,1:2),nzero,ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ',i,ierr,nzero
           stop
        end if
-       call cbesy(EYE*phi(i),1.0,2,NMAX+1,Y(i,1:NMAX+1),nzero,ierr)
+       call cbesy(EYE*phi(i),1.0,2,2,Y(i,1:2),nzero,ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY',i,ierr,nzero
           stop
        end if
     end do
 
-    ! is this summed first?  this has a dimension wrt n, but the solution it goes in does not...
-    qb(1:np) = sum(spread(f%akD/2.0 + nn(:)*f%lambdaD/2.0,1,np) - spread(EYE*sqrt(BD(:)),2,NMAX)*&
-         & (J(:,2:NMAX+1) + chi(:,:)*Y(:,2:NMAX+1))/(J(:,1:NMAX) + chi(:,:)*Y(:,1:NMAX)),2)
+    qb(1:np) = f%akD/2.0 + nu*f%lambdaD/2.0 - EYE*sqrt(BD(:))*&
+         & (J(:,2) + chi(:)*Y(:,2))/(J(:,1) + chi(:)*Y(:,1))
 
-    sU(1:np,1:nz) = 2.0/f%kappa*cosh(eta .X. s%zD)/()
+    sU(1:np,1:nz) = 2.0/f%kappa*cosh(eta .X. s%zD)/(cosh(eta(:)*) - eta(:)/qb(:)*cosh())
     
 
   end function mishraNeuman2010
