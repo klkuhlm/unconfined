@@ -247,7 +247,7 @@ contains
     amat(2,2,1:np) = arg1*Y(:,1) - arg2*Y(:,2)
 
     delta2(1:np) = abs(amat(1,1,:)*amat(2,2,:) - amat(1,2,:)*amat(2,1,:))
-    delta1(1:np) = (amat(1,1,:)*Y(:,1) - amat(2,1,:)*J(:,1))*2.0*eta(:)* &
+    delta1(1:np) = 2.0*eta(:)*(amat(1,1,:)*Y(:,1) - amat(2,1,:)*J(:,1))* &
          & sinh(eta(:))/delta2(:) - cosh(eta(:))
 
     sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(:),2,nz)*cosh(eta(:) .X. s%zD(:))
