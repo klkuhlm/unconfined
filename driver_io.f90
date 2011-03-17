@@ -113,7 +113,7 @@ contains
     
     ! Mishra/Neuman unsaturated model parameters
     ! capacity & conductivity sorptive numbers (1/length)
-    ! air-entry & saturation pressures (<=0)
+    ! negative air-entry & saturation pressures (>0)
     ! unsaturated zone thickness (length)
     read(19,*) f%ac, f%ak, f%psia, f%psik, f%usL
     
@@ -145,7 +145,7 @@ contains
        write(*,'(A,2('//RFMT//',1X))') 'Ss,Sy:: ', f%Ss, f%Sy
        write(*,'(A,'//RFMT//')') 'beta (Malama linearization factor):: ',f%beta
        write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman ac,ak (sorptive #s), psia,psik '//&
-            & '(air-entry & sat. pressures):: ', f%ac,f%ak,f%psia,f%psik
+            & '(neg air-entry & sat. pressures):: ', f%ac,f%ak,f%psia,f%psik
        write(*,'(A,'//RFMT//')') 'unsaturated zone thickness:: ',f%usL
     end if
 
@@ -166,7 +166,7 @@ contains
        stop
     end if
 
-    if (any([f%ac,f%ak,f%usL,-f%psia,-f%psik] < 0.0)) then
+    if (any([f%ac,f%ak,f%usL,f%psia,f%psik] < 0.0)) then
        write(*,*) 'ERROR: ivalid Mishra/Neuman parameters',&
             & f%ac,f%ak,f%usL,f%psia,f%psik
        stop
@@ -417,6 +417,7 @@ contains
     ! dimensionless pressures
     f%psiaD = f%psia/s%Lc
     f%psikD = f%psik/s%Lc
+    f%usLD = f%usL/f%b
 
     s%zD(:) = s%z(:)/s%Lc
     s%rD(:) = s%r(:)/s%Lc

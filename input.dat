@@ -1,17 +1,18 @@
-F  4  T  T  T                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
-1.0D-3                       :: Q (volumetric pumping rate) [L^3/T]
-6.0D-1  4.0D-1                 :: l/b, d/b (normalized depth to bottom/top of screened interval)
-2.5D-2  2.5D-2               :: rw, rc (radius of well casing and tubing)
+F  6  T  T  T                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
+2.02D-1                      :: Q (volumetric pumping rate) [L^3/T]
+3.54D-1 7.76D-2              :: l/b, d/b (normalized depth to bottom/top of screened interval)
+0.1    0.1                       :: rw, rc (radius of well casing and tubing)
 1.0D0                        :: gamma (dimensionless wellbore skin)
 001  0.0D0  1.0D0            :: pumping well time behavior and parameters 
-2.0D0                        :: b (initial saturated thickness)
-1.0D-4  1.0D0                :: Kr,kappa (radial K and ratio Kz/Kr)
-1.0D-4  2.5D-1               :: Ss,Sy
-5.0D-1  -2.0D0  2.0D0        :: unsat parameters (length & sorptive number), beta Malama linearization parameter
+51.82                        :: b (initial saturated thickness)
+1.17D-3  6.077D-1                :: Kr,kappa (radial K and ratio Kz/Kr)
+4.27D-5  2.6D-1               :: Ss,Sy
+2.0D0                        ::  beta Malama linearization parameter
+0.37  2.95  7.39   5.61  5.79      :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L
 20  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
 8  6                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
 2  3  20  16                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
 timedata.dat 0.25            :: file to read time data from (and default t otherwise)
 spacedata.dat 0.25           :: file to read space data from (and default r otherwise)
 5.0D-1  0.0D0  3                  :: top of obs well screen/b, bottom of screen/b, # quadrature across screen
-malama-fp-test.out
+mishra-neuman10-test.out
