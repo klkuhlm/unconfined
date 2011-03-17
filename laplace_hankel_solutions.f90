@@ -81,9 +81,7 @@ contains
 
     case(6)
        ! Mishra/Neuman  2010 model
-       ! mishraNeuman2010 implements (DeltaS + Su)
-       fp(1:np,1:nz) = theis(a,lap%p,nz) + &
-            & mishraNeuman2010(a,rD,np,nz,w,f,s,lap)
+       fp(1:np,1:nz) = mishraNeuman2010(a,np,nz,w,f,s,lap)
        
     end select
 
@@ -166,7 +164,7 @@ contains
     udp(1:np,1:nz) = udp(:,:)*theis(a,p,nz)/w%bD
   end function hantush
   
-  function mishraNeuman2010(a,rD,np,nz,w,f,s,lap) result(sHsU)
+  function mishraNeuman2010(a,np,nz,w,f,s,lap) result(sU)
     use constants, only : DP, EP, MAXEXP, PIEP, PI
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
@@ -175,81 +173,87 @@ contains
     implicit none
     
     complex(DP), parameter :: EYE = cmplx(0.0,1.0,DP)
-    integer, parameter :: NMAX = 50
     real(EP), intent(in) :: a
-    real(DP), intent(in) :: rD
     integer, intent(in) :: np,nz
     type(invLaplace), intent(in) :: lap
     type(solution), intent(in) :: s
     type(well), intent(in) :: w
     type(formation), intent(in) :: f
-    complex(EP), dimension(np,nz) :: sHsU, sH, sU
+    complex(EP), dimension(np,nz) :: sU
+    complex(EP), dimension(np,nz+1) :: sH
 
-    complex(DP), dimension(np) :: BD, phi, qb, arg2, chi
-    complex(EP), dimension(np) :: etasq, eta, mu
-    complex(DP), dimension(np,nz) :: udp, udf
-    integer, dimension(NMAX) :: nn
+    complex(EP), dimension(np) :: eta
     complex(DP), dimension(np,2) :: J,Y
-    integer :: i, n, nzero, ierr
-    real(DP) :: alphaS, nu, arg1
+    integer :: i, nzero, ierr
+    real(DP) :: nu, B2
 
-    alphaS = f%Kr/f%Ss
-    etasq(1:np) = (a**2 + lap%p(1:np)/alphaS)/f%kappa
-    eta(1:np) = sqrt(etasq(:))
-    forall (n=1:NMAX) nn(n) = n 
+    real(DP), dimension(0:3) :: beta
+    complex(DP), dimension(np) :: B1, phi
+    complex(EP) :: arg1
+    complex(EP), dimension(np) :: arg2
+    complex(EP), dimension(np) :: delta1
+    real(EP), dimension(np) :: delta2
+    complex(EP), dimension(2,2,np) :: amat
     
-    ! Hantush, formulated in terms of finite cosine series
-    sH(1:np,1:nz) = 4.0/(PIEP*w%bD)*sum(spread(cos((1.0-s%zD(:)) .X. nn(:)*PI)*&
-         & spread(sin(nn(:)*PIEP*w%lD) - sin(nn(:)*PIEP*w%dD),1,nz),1,np)/&
-         & spread(spread(etasq(:),2,NMAX) + spread((nn(:)*PIEP/f%b)**2,1,np),2,nz),3)
+    beta(0) = f%ac*f%Sy/f%Ss
+    beta(1) = f%lambdaD !f%b*(f%ak - f%ac)
+    beta(2) = f%ak*(f%psia - f%psik) ! f%ak*f%b1
+    beta(3) = f%akD ! f%ak*f%b
+    B2 = real(a**2,DP)/f%kappa
+
+    eta(1:np) = sqrt((a**2 + lap%p(1:np))/f%kappa)
+    sH(1:np,1:nz+1) = hantush(a,[s%zD,1.0],s,lap%p,f,w)
     
-    ! re-formulate BD to get rid of t & r 
-    BD(1:np) = lap%p(:)*f%sigma*f%acD*exp(f%psikD - f%psiaD)/(alphaS*f%kappa/f%b**2)
-    phi(1:np) = sqrt(4.0*BD(:)/f%lambdaD**2)*exp(f%lambdaD*f%usLD/2.0)
-    nu = sqrt((f%akD**2 + 4.0*a**2)/f%lambdaD**2)
+    B1(1:np) = cmplx(real(lap%p),aimag(lap%p),DP)*beta(0)/f%kappa*exp(-beta(2))
+    phi(1:np) = 2.0*EYE*sqrt(B1/beta(1)**2)*exp(beta(1)*f%usLD/2.0)
+    nu = sqrt((beta(3) + 4.0*B2)/beta(1)**2)
 
     do i= 1,np
        ! scaled bessel functions (scalings cancel in product)
-       call cbesj(EYE*phi(i),nu,2,2,J(i,1:2),nzero,ierr)
+       call cbesj(phi(i),nu,2,2,J(i,1:2),nzero,ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ',i,ierr,nzero
           stop
        end if
-       call cbesy(EYE*phi(i),nu,2,2,Y(i,1:2),nzero,ierr)
+       call cbesy(phi(i),nu,2,2,Y(i,1:2),nzero,ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY',i,ierr,nzero
           stop
        end if
     end do
-    
-    arg1 = f%akD + nu*f%lambdaD
-    arg2(1:np) = 2.0*EYE*sqrt(BD(:)*exp(f%lambdaD*f%usLD))
 
-    chi(1:np) = -(arg1*J(:,1) - arg2(:)*J(:,2))/&
-               & (arg1*Y(:,1) - arg2(:)*Y(:,2))
-    phi(1:np) = sqrt(4.0*BD(:)/f%lambdaD**2)
+    arg1 = real(beta(3),EP) + real(nu*beta(1),EP)
+    arg2 = real(beta(1)*phi(:),EP)
+    amat(1,1,1:np) = arg1*J(:,1) - arg2*J(:,2)
+    amat(1,2,1:np) = arg1*Y(:,1) - arg2*Y(:,2)
+    phi(1:np) = 2.0*EYE*sqrt(B1/beta(1)**2)
 
     do i=1,np
        ! scaled bessel functions (scalings cancel in product)
-       call cbesj(EYE*phi(i),1.0,2,2,J(i,1:2),nzero,ierr)
+       call cbesj(phi(i),1.0,2,2,J(i,1:2),nzero,ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ',i,ierr,nzero
           stop
        end if
-       call cbesy(EYE*phi(i),1.0,2,2,Y(i,1:2),nzero,ierr)
+       call cbesy(phi(i),1.0,2,2,Y(i,1:2),nzero,ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY',i,ierr,nzero
           stop
        end if
     end do
-
-    qb(1:np) = f%akD/2.0 + nu*f%lambdaD/2.0 - EYE*sqrt(BD(:))*&
-         & (J(:,2) + chi(:)*Y(:,2))/(J(:,1) + chi(:)*Y(:,1))
-
-    sU(1:np,1:nz) = 2.0/f%kappa*cosh(eta .X. s%zD)/(cosh(eta(:)*) - eta(:)/qb(:)*cosh())
     
+    arg2 = real(beta(1)*phi(:),EP)
+    amat(2,1,1:np) = arg1*J(:,1) - arg2*J(:,2)
+    amat(2,2,1:np) = arg1*Y(:,1) - arg2*Y(:,2)
+
+    delta2(1:np) = abs(amat(1,1,:)*amat(2,2,:) - amat(1,2,:)*amat(2,1,:))
+    delta1(1:np) = (amat(1,1,:)*Y(:,1) - amat(2,1,:)*J(:,1))*2.0*eta(:)* &
+         & sinh(eta(:))/delta2(:) - cosh(eta(:))
+
+    sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(:),2,nz)*cosh(eta(:) .X. s%zD(:))
 
   end function mishraNeuman2010
+
 end module laplace_hankel_solutions
 
 
