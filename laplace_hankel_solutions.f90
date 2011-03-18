@@ -193,6 +193,7 @@ contains
     complex(EP), dimension(2,2,size(p)) :: aa
     complex(EP), dimension(size(p)) :: eta
     complex(DP), dimension(size(p),2) :: J,Y
+    complex(DP), dimension(2) :: tmp
     
     np = size(p)
     nz = size(zD)
@@ -211,15 +212,19 @@ contains
 
     do i= 1,np
        ! scaled bessel functions (scalings cancel in product)
-       call cbesj(phi(i),nu,2,2,J(i,1:2),nzero,ierr)
+       call cbesj(phi(i),nu,2,2,tmp(1:2),nzero,ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ',i,ierr,nzero
           stop
+       else
+          J(i,1:2) = tmp(1:2)
        end if
-       call cbesy(phi(i),nu,2,2,Y(i,1:2),nzero,ierr)
+       call cbesy(phi(i),nu,2,2,tmp(1:2),nzero,ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY',i,ierr,nzero
           stop
+       else
+          Y(i,1:2) = tmp(1:2)
        end if
     end do
 
@@ -231,15 +236,19 @@ contains
 
     do i=1,np
        ! scaled bessel functions (scalings cancel in product)
-       call cbesj(phi(i),1.0,2,2,J(i,1:2),nzero,ierr)
+       call cbesj(phi(i),1.0,2,2,tmp(1:2),nzero,ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ',i,ierr,nzero
           stop
+       else
+          J(i,1:2) = tmp(1:2)          
        end if
-       call cbesy(phi(i),1.0,2,2,Y(i,1:2),nzero,ierr)
+       call cbesy(phi(i),1.0,2,2,tmp(1:2),nzero,ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY',i,ierr,nzero
           stop
+       else
+          Y(i,1:2) = tmp(1:2)  
        end if
     end do
     
@@ -252,7 +261,7 @@ contains
          & sinh(eta(:))/delta2(:) - cosh(eta(:))
 
     sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(:),2,nz)*cosh(eta(:) .X. s%zD(:))
-    sD(1:np,1:nz) = sH(:,:) + sU(:,:)
+    sD(1:np,1:nz) = sH(:,1:nz) + sU(:,:)
 
   end function mishraNeuman2010
 
