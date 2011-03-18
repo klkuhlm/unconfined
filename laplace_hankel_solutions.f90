@@ -81,7 +81,7 @@ contains
 
     case(6)
        ! Mishra/Neuman  2010 model
-       fp(1:np,1:nz) = mishraNeuman2010(a,np,nz,w,f,s,lap)
+       fp(1:np,1:nz) = mishraNeuman2010(a,s%zD,s,lap%p,f,w)
        
     end select
 
@@ -164,49 +164,50 @@ contains
     udp(1:np,1:nz) = udp(:,:)*theis(a,p,nz)/w%bD
   end function hantush
   
-  function mishraNeuman2010(a,np,nz,w,f,s,lap) result(sU)
-    use constants, only : DP, EP, MAXEXP, PIEP, PI
-    use types, only : well, formation, invLaplace, solution
-    use time, only : lapTime
+  function mishraNeuman2010(a,zD,s,p,f,w) result(sD)
+    use constants, only : DP, EP, EYE
+    use types, only : well, formation, solution
     use utility, only : operator(.X.)  ! outer product operator
     use cbessel, only : cbesj, cbesy ! Amos routines
     implicit none
     
-    complex(DP), parameter :: EYE = cmplx(0.0,1.0,DP)
     real(EP), intent(in) :: a
-    integer, intent(in) :: np,nz
-    type(invLaplace), intent(in) :: lap
+    real(DP), dimension(:), intent(in) :: zD
+    complex(EP), dimension(:), intent(in) :: p
     type(solution), intent(in) :: s
     type(well), intent(in) :: w
     type(formation), intent(in) :: f
-    complex(EP), dimension(np,nz) :: sU
-    complex(EP), dimension(np,nz+1) :: sH
 
-    complex(EP), dimension(np) :: eta
-    complex(DP), dimension(np,2) :: J,Y
-    integer :: i, nzero, ierr
-    real(DP) :: nu, B2
+    complex(EP), dimension(size(p),size(zD)) :: sD, sU
+    complex(EP), dimension(size(p),size(zD)+1) :: sH
 
-    real(DP), dimension(0:3) :: beta
-    complex(DP), dimension(np) :: B1, phi
+    integer :: i, nzero, ierr, np, nz
+
+    real(DP) :: nu
+    real(EP), dimension(size(p)) :: delta2
+
+    complex(DP), dimension(size(p)) :: phi
     complex(EP) :: arg1
-    complex(EP), dimension(np) :: arg2
-    complex(EP), dimension(np) :: delta1
-    real(EP), dimension(np) :: delta2
-    complex(EP), dimension(2,2,np) :: amat
-    
-    beta(0) = f%ac*f%Sy/f%Ss
-    beta(1) = f%lambdaD !f%b*(f%ak - f%ac)
-    beta(2) = f%ak*(f%psia - f%psik) ! f%ak*f%b1
-    beta(3) = f%akD ! f%ak*f%b
-    B2 = real(a**2,DP)/f%kappa
+    complex(EP), dimension(size(p)) :: arg2, B1, delta1
 
-    eta(1:np) = sqrt((a**2 + lap%p(1:np))/f%kappa)
-    sH(1:np,1:nz+1) = hantush(a,[s%zD,1.0],s,lap%p,f,w)
+    complex(EP), dimension(2,2,size(p)) :: aa
+    complex(EP), dimension(size(p)) :: eta
+    complex(DP), dimension(size(p),2) :: J,Y
     
-    B1(1:np) = cmplx(real(lap%p),aimag(lap%p),DP)*beta(0)/f%kappa*exp(-beta(2))
-    phi(1:np) = 2.0*EYE*sqrt(B1/beta(1)**2)*exp(beta(1)*f%usLD/2.0)
-    nu = sqrt((beta(3) + 4.0*B2)/beta(1)**2)
+    np = size(p)
+    nz = size(zD)
+
+!    beta(0) = f%acD*f%sigma      ! f%ac*f%Sy/f%Ss
+!    beta(1) = f%lambdaD          ! f%b*(f%ak - f%ac)
+!    beta(2) = f%ak*f%b1          ! f%ak*(f%psia - f%psik)
+!    beta(3) = f%akD              ! f%ak*f%b
+
+    eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
+    sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
+    
+    B1(1:np) = p*f%acD*f%sigma/f%kappa*exp(-f%ak*f%b1)
+    phi(1:np) = 2.0_EP*EYE*sqrt(B1/f%lambdaD**2)*exp(f%lambdaD*f%usLD/2.0_EP) ! DP <- EP (zD = LD)
+    nu = sqrt((f%akD**2 + 4.0*a**2/f%kappa)/f%lambdaD**2) ! DP <- EP
 
     do i= 1,np
        ! scaled bessel functions (scalings cancel in product)
@@ -222,11 +223,11 @@ contains
        end if
     end do
 
-    arg1 = real(beta(3),EP) + real(nu*beta(1),EP)
-    arg2 = real(beta(1)*phi(:),EP)
-    amat(1,1,1:np) = arg1*J(:,1) - arg2*J(:,2)
-    amat(1,2,1:np) = arg1*Y(:,1) - arg2*Y(:,2)
-    phi(1:np) = 2.0*EYE*sqrt(B1/beta(1)**2)
+    arg1 = real(f%akD,EP) + real(nu*f%lambdaD,EP)
+    arg2 = f%lambdaD*phi(:)  ! EP <- DP
+    aa(1,1,1:np) = arg1*J(:,1) - arg2*J(:,2)
+    aa(1,2,1:np) = arg1*Y(:,1) - arg2*Y(:,2)
+    phi(1:np) = 2.0*EYE*sqrt(B1/f%lambdaD**2) ! DP <- EP (zD = 0)
 
     do i=1,np
        ! scaled bessel functions (scalings cancel in product)
@@ -242,15 +243,16 @@ contains
        end if
     end do
     
-    arg2 = real(beta(1)*phi(:),EP)
-    amat(2,1,1:np) = arg1*J(:,1) - arg2*J(:,2)
-    amat(2,2,1:np) = arg1*Y(:,1) - arg2*Y(:,2)
+    arg2 = f%lambdaD*phi(:)  ! EP <- DP
+    aa(2,1,1:np) = arg1*J(:,1) - arg2*J(:,2)
+    aa(2,2,1:np) = arg1*Y(:,1) - arg2*Y(:,2)
 
-    delta2(1:np) = abs(amat(1,1,:)*amat(2,2,:) - amat(1,2,:)*amat(2,1,:))
-    delta1(1:np) = 2.0*eta(:)*(amat(1,1,:)*Y(:,1) - amat(2,1,:)*J(:,1))* &
+    delta2(1:np) = abs(aa(1,1,:)*aa(2,2,:) - aa(1,2,:)*aa(2,1,:))
+    delta1(1:np) = 2.0*eta(:)*(aa(1,1,:)*Y(:,1) - aa(1,2,:)*J(:,1))* &
          & sinh(eta(:))/delta2(:) - cosh(eta(:))
 
     sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(:),2,nz)*cosh(eta(:) .X. s%zD(:))
+    sD(1:np,1:nz) = sH(:,:) + sU(:,:)
 
   end function mishraNeuman2010
 

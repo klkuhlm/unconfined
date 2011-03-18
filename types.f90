@@ -130,7 +130,7 @@ module types
      real(DP) :: alphaD = -999. ! kappa/sigma
      real(DP) :: betaD = -999., usLD = -999.
      real(DP) :: akD = -999., acD = -999., lambdaD = -999.
-     real(DP) :: psikD = 999., psiaD = 999.
+     real(DP) :: psikD = 999., psiaD = 999., b1 = -999.
   end type formation
 
   ! parameters related to numerical solution

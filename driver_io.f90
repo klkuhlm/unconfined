@@ -418,6 +418,7 @@ contains
     f%psiaD = f%psia/s%Lc
     f%psikD = f%psik/s%Lc
     f%usLD = f%usL/f%b
+    f%b1 = f%psia - f%psik
 
     s%zD(:) = s%z(:)/s%Lc
     s%rD(:) = s%r(:)/s%Lc

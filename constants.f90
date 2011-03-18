@@ -13,6 +13,7 @@ module constants
   real(DP), parameter :: PI =    4.0_DP*atan(1.0_DP) 
   real(EP), parameter :: PIEP =  4.0_EP*atan(1.0_EP) 
   real(DP), parameter :: PIOV2EP = 2.0_EP*atan(1.0_EP)
+  complex(EP), parameter :: EYE = cmplx(0.0,1.0,EP)
 
   !! maximum argument for which sinh(x)-cosh(x) > 0
   ! this is the point where the approximation for sinh()/cosh() -> 0.5*e
