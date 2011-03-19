@@ -264,7 +264,7 @@ contains
        end if
 
        allocate(s%z(s%zOrd), s%zD(s%zOrd))       
-       if (s%piezometer) then
+       if (s%piezometer) then 
           s%z(1) = s%zTop*f%b
        else
           if (s%zOrd > 1) then

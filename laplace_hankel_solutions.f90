@@ -198,16 +198,11 @@ contains
     np = size(p)
     nz = size(zD)
 
-!    beta(0) = f%acD*f%sigma      ! f%ac*f%Sy/f%Ss
-!    beta(1) = f%lambdaD          ! f%b*(f%ak - f%ac)
-!    beta(2) = f%ak*f%b1          ! f%ak*(f%psia - f%psik)
-!    beta(3) = f%akD              ! f%ak*f%b
-
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
     
     B1(1:np) = p*f%acD*f%sigma/f%kappa*exp(-f%ak*f%b1)
-    phi(1:np) = 2.0_EP*EYE*sqrt(B1/f%lambdaD**2)*exp(f%lambdaD*f%usLD/2.0_EP) ! DP <- EP (zD = LD)
+    phi(1:np) = 2.0*EYE*sqrt(B1/f%lambdaD**2)*exp(f%lambdaD*f%usLD/2.0_EP) ! DP <- EP (zD = LD)
     nu = sqrt((f%akD**2 + 4.0*a**2/f%kappa)/f%lambdaD**2) ! DP <- EP
 
     do i= 1,np
