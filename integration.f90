@@ -49,6 +49,7 @@ contains
     use constants, only : PIEP, EP
     use types, only : GaussLobatto
     implicit none
+
     type(GaussLobatto), intent(inout) :: gl
     real(EP), dimension(gl%ord,gl%ord) :: P
     real(EP), dimension(gl%ord) :: x, xold, w
@@ -99,34 +100,62 @@ contains
   !! ###################################################
   !! wynn-epsilon acceleration of partial sums, given a series
   !! all intermediate sums / differences are done in extended precision
-  function wynn_epsilon(series) result(accsum)
+  function wynn_epsilon(series,quiet) result(accsum)
     use constants, only : EP
     use utility, only : is_finite
-
     implicit none
+
+    integer, parameter :: MINTERMS = 4
     complex(EP), dimension(:), intent(in) :: series
+    logical, intent(in) :: quiet
     complex(EP) :: accsum, denom 
     integer :: ns, i, j, m
     complex(EP), dimension(1:size(series),-1:size(series)-1) :: eps
 
     ns = size(series)
 
+    ! build up partial sums, but check for problems
+    check: do i=1,ns
+!!$       write(*,'(I0,A,ES12.3E4,A,ES12.3E4,A)',advance='no'), i,'(',real(series(i)),',',aimag(series(i)),') '
+       if (.not. is_finite(series(i))) then
+          ns = i-1
+          if(ns < MINTERMS) then
+             if (.not. quiet) then
+                write(*,'(A)',advance='no') 'not enough Wynn-Epsilon series to accelerate '
+             end if
+             accsum = -999999.9  ! make it clear answer is bogus
+             goto 777
+          else
+             if (.not. quiet) then
+                write(*,'(A,I3,A)',advance='no') 'Wynn-Epsilon series&
+                     &, truncated to ',ns,' terms. '
+             end if
+             exit check
+          end if
+       else
+          ! term is good, continue
+          eps(i,0) = sum(series(1:i))
+       end if
+    end do check
+
     ! first column is intiallized to zero
     eps(:,-1) = 0.0_EP
-
-    forall(i=1:ns)
-       eps(i,0) = sum(series(1:i),mask=is_finite(series(1:i)))
-    end forall
 
     ! build up epsilon table (each column has one less entry)
     do j = 0,ns-2 
        do m = 1,ns-(j+1)
           denom = eps(m+1,j) - eps(m,j)
-          if(abs(denom) > spacing(0.0)) then ! check for div by zero
-             eps(m,j+1) = eps(m+1,j-1) + 1.0/denom
+          if(abs(denom) > epsilon(abs(denom))) then ! check for div by zero
+             eps(m,j+1) = eps(m+1,j-1) + 1.0_EP/denom
           else
              accsum = eps(m+1,j)
-             write(*,'(A,I2,1X,I2,A)',advance='no') 'epsilon cancel ',m,j,' '
+             if (.not. quiet) then
+                write(*,'(A,I0,1X,I0,A)') 'epsilon cancel ',m,j,':'
+!!$                write(*,'(A,I0,1X,I0,3(A,ES12.3E4,A,ES12.3E4),A)',advance='no') &
+!!$                     & 'epsilon cancel ',m,j,' denom(',real(denom),',',aimag(denom),&
+!!$                     &') eps(m+1,j)=(',real(eps(m+1,j)),',',aimag(eps(m+1,j)),&
+!!$                     &') eps(m,j)=(',real(eps(m,j)),',',aimag(eps(m,j)),') : '
+             end if
              goto 777
           end if
        end do
@@ -153,6 +182,7 @@ contains
 
     use constants, only : DP, EP
     implicit none
+
     real(EP), dimension(:), intent(IN) :: xa
     complex(EP), dimension(:), intent(in) :: ya
     real(EP), intent(IN) :: x

@@ -202,8 +202,8 @@ contains
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
     
     B1(1:np) = p*f%acD*f%sigma/f%kappa*exp(-f%ak*f%b1)
-    phi(1:np) = 2.0*EYE*sqrt(B1/f%lambdaD**2)*exp(f%lambdaD*f%usLD/2.0_EP) ! DP <- EP (zD = LD)
-    nu = sqrt((f%akD**2 + 4.0*a**2/f%kappa)/f%lambdaD**2) ! DP <- EP
+    phi(1:np) = cmplx(2.0*EYE*sqrt(B1/f%lambdaD**2)*exp(f%lambdaD*f%usLD/2.0_EP),kind=DP)
+    nu = real(sqrt((f%akD**2 + 4.0*a**2/f%kappa)/f%lambdaD**2),kind=DP)
 
     do i= 1,np
        ! scaled bessel functions (scalings cancel in product)
@@ -224,10 +224,10 @@ contains
     end do
 
     arg1 = real(f%akD,EP) + real(nu*f%lambdaD,EP)
-    arg2 = f%lambdaD*phi(:)  ! EP <- DP
+    arg2 = cmplx(f%lambdaD*phi(:),kind=EP)
     aa(1,1,1:np) = arg1*J(:,1) - arg2*J(:,2)
     aa(1,2,1:np) = arg1*Y(:,1) - arg2*Y(:,2)
-    phi(1:np) = 2.0*EYE*sqrt(B1/f%lambdaD**2) ! DP <- EP (zD = 0)
+    phi(1:np) = cmplx(2.0*EYE*sqrt(B1/f%lambdaD**2),kind=DP)
 
     do i=1,np
        ! scaled bessel functions (scalings cancel in product)
