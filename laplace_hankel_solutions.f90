@@ -165,12 +165,13 @@ contains
   end function hantush
   
   function mishraNeuman2010(a,zD,s,p,f,w) result(sD)
-    use constants, only : DP, EP, EYE
+    use constants, only : DP, EP, EYE, PIEP, E, SQRT2
     use types, only : well, formation, solution
     use utility, only : operator(.X.)  ! outer product operator
     use cbessel, only : cbesj, cbesy ! Amos routines
     implicit none
     
+    real(DP), parameter :: NUCUTOFF = 40.0
     real(EP), intent(in) :: a
     real(DP), dimension(:), intent(in) :: zD
     complex(EP), dimension(:), intent(in) :: p
@@ -181,10 +182,15 @@ contains
     complex(EP), dimension(size(p),size(zD)) :: sD, sU
     complex(EP), dimension(size(p),size(zD)+1) :: sH
 
-    integer :: i, nzero, ierr, np, nz
+    integer :: i,k, nzero, ierr, np, nz
 
-    real(DP) :: nu
+    ! only used in asymptotic expansion
+    real(EP), allocatable :: nuep(:)
+    complex(EP), allocatable :: phiep(:)
+
+    real(DP) :: nu, B2
     real(EP), dimension(size(p)) :: delta2
+    real(DP), dimension(0:3) :: beta
 
     complex(DP), dimension(size(p)) :: phi
     complex(EP) :: arg1
@@ -192,67 +198,96 @@ contains
 
     complex(EP), dimension(2,2,size(p)) :: aa
     complex(EP), dimension(size(p)) :: eta
-    complex(DP), dimension(size(p),2) :: J,Y
+    complex(EP), dimension(size(p),2) :: J,Y
     complex(DP), dimension(2) :: tmp
+    
     
     np = size(p)
     nz = size(zD)
 
+    beta(0) = f%acD*f%sigma
+    beta(1) = f%lambdaD
+    beta(2) = f%ak*f%b1
+    beta(3) = f%akD
+
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
     
-    B1(1:np) = p*f%acD*f%sigma/f%kappa*exp(-f%ak*f%b1)
-    phi(1:np) = cmplx(2.0*EYE*sqrt(B1/f%lambdaD**2)*exp(f%lambdaD*f%usLD/2.0_EP),kind=DP)
-    nu = real(sqrt((f%akD**2 + 4.0*a**2/f%kappa)/f%lambdaD**2),kind=DP)
+    B1(1:np) = p(1:np)*beta(0)/f%kappa*exp(-beta(2))
+    B2 = real(a**2/f%kappa,DP)
 
-    do i= 1,np
+    phi(1:np) = cmplx(2.0*EYE*sqrt(B1/beta(1)**2)*exp(beta(1)*f%usLD/2.0),kind=DP)
+    nu = sqrt((beta(3)**2 + 4.0*B2)/beta(2)**2)
+
+    if (nu > NUCUTOFF) then
+       allocate(phiep(np),nuep(2))
+       phiep(1:np) = 2.0_EP*EYE*sqrt(B1/beta(1)**2)*exp(beta(1)*f%usLD/2.0_EP)
+       nuep(1:2) = real([nu,nu+1.0],EP)
+
+       ! use asymptotic expansions for large order
+       forall (k=1:np, i=1:2)
+          J(k,i) = 1.0/sqrt(2.0*PIEP*nuep(i))*(E*phiep(k)/(2.0*nuep(i)))**nuep(i)
+          Y(k,i) = -SQRT2/(PIEP*nuep(i))*(E*phiep(k)/(2.0*nuep(i)))**(-nuep(i))
+       end forall
+       
+    else
+       do i= 1,np
        ! scaled bessel functions (scalings cancel in product)
-       call cbesj(phi(i),nu,2,2,tmp(1:2),nzero,ierr)
-       if (ierr > 0 .and. ierr /= 3) then
-          print *, 'ERROR: CBESJ',i,ierr,nzero
-          stop
-       else
-          J(i,1:2) = tmp(1:2)
-       end if
-       call cbesy(phi(i),nu,2,2,tmp(1:2),nzero,ierr)
-       if (ierr > 0 .and. ierr /= 3) then
-          print *, 'ERROR: CBESY',i,ierr,nzero
-          stop
-       else
-          Y(i,1:2) = tmp(1:2)
-       end if
-    end do
-
-    arg1 = real(f%akD,EP) + real(nu*f%lambdaD,EP)
-    arg2 = cmplx(f%lambdaD*phi(:),kind=EP)
-    aa(1,1,1:np) = arg1*J(:,1) - arg2*J(:,2)
-    aa(1,2,1:np) = arg1*Y(:,1) - arg2*Y(:,2)
-    phi(1:np) = cmplx(2.0*EYE*sqrt(B1/f%lambdaD**2),kind=DP)
-
-    do i=1,np
-       ! scaled bessel functions (scalings cancel in product)
-       call cbesj(phi(i),1.0,2,2,tmp(1:2),nzero,ierr)
-       if (ierr > 0 .and. ierr /= 3) then
-          print *, 'ERROR: CBESJ',i,ierr,nzero
-          stop
-       else
-          J(i,1:2) = tmp(1:2)          
-       end if
-       call cbesy(phi(i),1.0,2,2,tmp(1:2),nzero,ierr)
-       if (ierr > 0 .and. ierr /= 3) then
-          print *, 'ERROR: CBESY',i,ierr,nzero
-          stop
-       else
-          Y(i,1:2) = tmp(1:2)  
-       end if
-    end do
+          call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+          if (ierr > 0 .and. ierr /= 3) then
+             print *, 'ERROR: CBESJ (zD=LD)',phi(i),nu,i,ierr,nzero
+             stop
+          else
+             J(i,1:2) = tmp(1:2)
+          end if
+          call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+          if (ierr > 0 .and. ierr /= 3) then
+             print *, 'ERROR: CBESY (zD=LD)',phi(i),nu,i,ierr,nzero
+             stop
+          else
+             Y(i,1:2) = tmp(1:2)
+          end if
+       end do
+    end if
     
-    arg2 = f%lambdaD*phi(:)  ! EP <- DP
-    aa(2,1,1:np) = arg1*J(:,1) - arg2*J(:,2)
-    aa(2,2,1:np) = arg1*Y(:,1) - arg2*Y(:,2)
+    arg1 = real(beta(3),EP) + real(nu*beta(1),EP)
+    arg2(1:np) = beta(1)*phi(1:np)
+    aa(1,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
+    aa(1,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
+    phi(1:np) = cmplx(2.0*EYE*sqrt(B1/beta(1)**2),kind=DP)
+
+    if (nu > NUCUTOFF) then
+       phiep(1:np) = 2.0_EP*EYE*sqrt(B1/beta(1)**2)
+
+       forall (k=1:np, i=1:2)
+          J(k,i) = 1.0/sqrt(2.0*PIEP*nuep(i))*(E*phiep(k)/(2.0*nuep(i)))**nuep(i)
+          Y(k,i) = -SQRT2/(PIEP*nuep(i))*(E*phiep(k)/(2.0*nuep(i)))**(-nuep(i))
+       end forall
+    else
+       do i=1,np
+          call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+          if (ierr > 0 .and. ierr /= 3) then
+             print *, 'ERROR: CBESJ (zD=0)',phi(i),nu,i,ierr,nzero
+             stop
+          else
+             J(i,1:2) = tmp(1:2)
+          end if
+          call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+          if (ierr > 0 .and. ierr /= 3) then
+             print *, 'ERROR: CBESY (zD=0)',phi(i),nu,i,ierr,nzero
+             stop
+          else
+             Y(i,1:2) = tmp(1:2)
+          end if
+       end do
+    end if
+    
+    arg2(1:np) = beta(1)*phi(1:np)
+    aa(2,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
+    aa(2,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
     delta2(1:np) = abs(aa(1,1,:)*aa(2,2,:) - aa(1,2,:)*aa(2,1,:))
-    delta1(1:np) = 2.0*eta(:)*(aa(1,1,:)*Y(:,1) - aa(1,2,:)*J(:,1))* &
+    delta1(1:np) = (aa(1,1,:)*Y(:,1) - aa(1,2,:)*J(:,1))*2.0*eta(:)* &
          & sinh(eta(:))/delta2(:) - cosh(eta(:))
 
     sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(:),2,nz)*cosh(eta(:) .X. s%zD(:))
