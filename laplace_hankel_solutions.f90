@@ -226,7 +226,6 @@ contains
 
        ! use asymptotic expansions for large order
        call besselAsymptoticOrder(nuep,phiep,J,Y)
-
     else
        do i= 1,np
        ! scaled bessel functions (scalings cancel in product)
@@ -255,9 +254,8 @@ contains
 
     if (nu > NUCUTOFF) then
        phiep(1:np) = 2.0_EP*EYE*sqrt(B1/beta(1)**2)
-
        call besselAsymptoticOrder(nuep,phiep,J,Y)
-
+       deallocate(phiep,nuep)
     else
        do i=1,np
           call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
@@ -296,6 +294,10 @@ contains
     complex(EP), dimension(:), intent(in) :: z ! argument
     complex(EP), dimension(size(z),2), intent(out) :: J,Y
     integer :: i,k
+
+    ! evaluate the asymptotic expansion using extended range
+    ! so it can be used when the double-precision Amos routines
+    ! return overflow or underflow
 
     ! http://dlmf.nist.gov/10.19#i
     forall (k=1:size(z), i=1:2)
