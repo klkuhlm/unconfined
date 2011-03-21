@@ -1,9 +1,9 @@
 module utility
   implicit none
   private
-  public :: logspace, linspace, is_finite, operator(.x.)
+  public :: logspace, linspace, is_finite, operator(.X.)
 
-  interface operator(.x.)
+  interface operator(.X.)
      module procedure outerprod_zd, outerprod_dz, outerprod_dd
   end interface
   
@@ -19,13 +19,9 @@ contains
     rnum = real(num - 1,DP)
     range = abs(hi - lo) 
     sgn = sign(1.0_DP,hi-lo) ! if lo > high, count backwards
-    
-    !$OMP PARALLEL WORKSHARE
     forall (i=0:num-1) 
        v(i+1) = lo + sgn*real(i,DP)*range/rnum
     end forall
-    !$OMP END PARALLEL WORKSHARE
-
   end function linspace
 
   function logspace(lo,hi,num) result(v)
