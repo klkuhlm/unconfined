@@ -10,7 +10,7 @@ F  6  T  T  T                :: quiet output?, model choice, dimensionless outpu
 2.0D0                        ::  beta Malama linearization parameter
 0.37  2.95  7.39   5.61  5.79      :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L
 10  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
-8  6                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
+7  5                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
 1  1  8  40                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
 timedata.dat  0.25            :: file to read time data from (and default t otherwise)
 spacedata.dat 0.25           :: file to read space data from (and default r otherwise)

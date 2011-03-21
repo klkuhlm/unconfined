@@ -171,7 +171,7 @@ contains
     use cbessel, only : cbesj, cbesy ! Amos routines
     implicit none
     
-    real(DP), parameter :: NUCUTOFF = 40.0
+    real(DP), parameter :: NUCUTOFF = 70.0
     real(EP), intent(in) :: a
     real(DP), dimension(:), intent(in) :: zD
     complex(EP), dimension(:), intent(in) :: p
@@ -285,6 +285,10 @@ contains
 
     sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(:),2,nz)*cosh(eta(:) .X. s%zD(:))
     sD(1:np,1:nz) = sH(:,1:nz) + sU(:,:)
+
+    write(*,999) ' nu:',nu,' z:',phi(1:3),' sU:',su(1:3,1), ' sH:',sH(1:3,1)
+
+999 format(A,ES11.3E3,3(A,3('(',ES12.3E4,',',ES12.3E4,')')))
 
   end function mishraNeuman2010
 
