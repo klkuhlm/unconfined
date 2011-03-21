@@ -182,7 +182,7 @@ contains
     complex(EP), dimension(size(p),size(zD)) :: sD, sU
     complex(EP), dimension(size(p),size(zD)+1) :: sH
 
-    integer :: i,k, nzero, ierr, np, nz
+    integer :: i, nzero, ierr, np, nz
 
     ! only used in asymptotic expansion
     real(EP), allocatable :: nuep(:)
@@ -225,11 +225,8 @@ contains
        nuep(1:2) = real([nu,nu+1.0],EP)
 
        ! use asymptotic expansions for large order
-       forall (k=1:np, i=1:2)
-          J(k,i) = 1.0/sqrt(2.0*PIEP*nuep(i))*(E*phiep(k)/(2.0*nuep(i)))**nuep(i)
-          Y(k,i) = -SQRT2/(PIEP*nuep(i))*(E*phiep(k)/(2.0*nuep(i)))**(-nuep(i))
-       end forall
-       
+       call besselAsymptoticOrder(nuep,phiep,J,Y)
+
     else
        do i= 1,np
        ! scaled bessel functions (scalings cancel in product)
@@ -259,10 +256,8 @@ contains
     if (nu > NUCUTOFF) then
        phiep(1:np) = 2.0_EP*EYE*sqrt(B1/beta(1)**2)
 
-       forall (k=1:np, i=1:2)
-          J(k,i) = 1.0/sqrt(2.0*PIEP*nuep(i))*(E*phiep(k)/(2.0*nuep(i)))**nuep(i)
-          Y(k,i) = -SQRT2/(PIEP*nuep(i))*(E*phiep(k)/(2.0*nuep(i)))**(-nuep(i))
-       end forall
+       call besselAsymptoticOrder(nuep,phiep,J,Y)
+
     else
        do i=1,np
           call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
@@ -294,6 +289,21 @@ contains
     sD(1:np,1:nz) = sH(:,1:nz) + sU(:,:)
 
   end function mishraNeuman2010
+
+  subroutine besselAsymptoticOrder(nu,z,J,Y)
+    use constants, only : EP, PIEP, E, SQRT2
+    real(EP), dimension(2), intent(in) :: nu ! order
+    complex(EP), dimension(:), intent(in) :: z ! argument
+    complex(EP), dimension(size(z),2), intent(out) :: J,Y
+    integer :: i,k
+
+    ! http://dlmf.nist.gov/10.19#i
+    forall (k=1:size(z), i=1:2)
+       J(k,i) = 1.0/sqrt(2.0*PIEP*nu(i))*(E*z(k)/(2.0*nu(i)))**nu(i)
+       Y(k,i) =      -SQRT2/(PIEP*nu(i))*(E*z(k)/(2.0*nu(i)))**(-nu(i))
+    end forall
+
+  end subroutine besselAsymptoticOrder
 
 end module laplace_hankel_solutions
 
