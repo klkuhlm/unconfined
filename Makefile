@@ -1,11 +1,25 @@
+####################################################
+### flags / settings for intel >= 12.0 compiler
+### version 12 still doesn't seem to handle complex extended-precision
+### hyperbolic trig functions (although these are part of F2008)
+##
+##DEBUG = -O0 -g -warn all -check all -traceback
+##PERF = -fast -openmp
+##REAL = -real-size 64
+##F90 = ifort
+##CPP = -cpp
+##FREE = -free
+##PERFLDFLAGS = ${PERF}
+####################################################
+
+
 ##################################################
-# flags / settings for gfortran 4.6 compiler
+# flags / settings for gfortran >= 4.6 compiler
 
 DEBUG = -O0 -g -Wall -Wextra -fbacktrace -fwhole-file
-DEBUG += -frange-check -fcheck=all ## -finit-integer=-999 -finit-real=snan -ffpe-trap=invalid
+DEBUG += -frange-check -fcheck=all -finit-integer=-999 -finit-real=snan ## -ffpe-trap=invalid
 PERF = -O2 -march=native -fwhole-file -fopenmp 
-DEBUG += -fdefault-real-8  # for constants like 1.0, 2.0, etc.
-PERF += -fdefault-real-8
+REAL = -fdefault-real-8  # for constants like 1.0, 2.0, etc.
 F90 = gfortran-4.6
 CPP = -cpp
 FREE = -free
@@ -32,22 +46,27 @@ LD = $(F90)
 driver: $(OPTOBJS)
 	$(LD)  $(PERFLDFLAGS) -o $(OUT) $(OPTOBJS)
 
+
 ####### compiler debugging ### 
 ##(no optimization, checks for out-of-bounds arrays and gives more warninngs, but still runs to completion)
 debug_driver: $(DEBUGOBJS)
 	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS)
 
+
+# always compile external libray with debugging off (and no default-real-8)
+cbessel.debug.o: cbessel.f90
+	$(F90) -c $(PERF) -o cbessel.debug.o cbessel.f90
+cbessel.opt.o: cbessel.f90
+	$(F90) -c $(PERF) -o cbessel.opt.o cbessel.f90
+
+
 ####### rule for making optimized object files ############
 %.opt.o: %.f90
-	$(F90) -c $(PERF) -o $@ $<
+	$(F90) -c $(PERF) $(REAL) -o $@ $<
 
 ####### rule for making debugging object files ############
 %.debug.o: %.f90
-	$(F90) -c $(DEBUG) -o $@ $<
-
-# always compile external libray with debugging off
-cbessel.debug.o: cbessel.f90
-	$(F90) -c -O2 -march=native -o cbessel.debug.o cbessel.f90
+	$(F90) -c $(DEBUG) $(REAL) -o $@ $<
 
 constants.opt.o constants.mod : constants.f90
 integration.opt.o integration.mod : integration.f90 constants.mod types.mod
