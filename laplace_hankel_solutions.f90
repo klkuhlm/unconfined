@@ -171,7 +171,6 @@ contains
     use cbessel, only : cbesj, cbesy ! Amos routines
     implicit none
     
-    real(DP), parameter :: NUCUTOFF = 70.0
     real(EP), intent(in) :: a
     real(DP), dimension(:), intent(in) :: zD
     complex(EP), dimension(:), intent(in) :: p
@@ -185,8 +184,8 @@ contains
     integer :: i, nzero, ierr, np, nz
 
     ! only used in asymptotic expansion
-    real(EP), allocatable :: nuep(:)
-    complex(EP), allocatable :: phiep(:)
+    real(EP), dimension(size(p)) :: nuep
+    complex(EP), dimension(size(p)) :: phiep
 
     real(DP) :: nu, B2
     real(EP), dimension(size(p)) :: delta2
@@ -219,16 +218,14 @@ contains
     phi(1:np) = cmplx(2.0*EYE*sqrt(B1/beta(1)**2)*exp(beta(1)*f%usLD/2.0),kind=DP)
     nu = sqrt((beta(3)**2 + 4.0*B2)/beta(2)**2)
 
-    if (nu > NUCUTOFF) then
-       allocate(phiep(np),nuep(2))
-       phiep(1:np) = 2.0_EP*EYE*sqrt(B1/beta(1)**2)*exp(beta(1)*f%usLD/2.0_EP)
-       nuep(1:2) = real([nu,nu+1.0],EP)
+    phiep(1:np) = 2.0_EP*EYE*sqrt(B1/beta(1)**2)*exp(beta(1)*f%usLD/2.0_EP)
+    nuep(1:2) = real([nu,nu+1.0],EP)
 
-       ! use asymptotic expansions for large order
-       call besselAsymptoticOrder(nuep,phiep,J,Y)
+    call cbesj(z=phi(1),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+    if (ierr == 4 .or. ierr == 2 .or. abs(tmp(2)) >= huge(1.0_DP)) then
+       J(:,:) = besselJAsymptoticOrder(nuep,phiep)
     else
        do i= 1,np
-       ! scaled bessel functions (scalings cancel in product)
           call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
              print *, 'ERROR: CBESJ (zD=LD)',phi(i),nu,i,ierr,nzero
@@ -236,6 +233,14 @@ contains
           else
              J(i,1:2) = tmp(1:2)
           end if
+       end do
+    end if
+
+    call cbesy(z=phi(1),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+    if (ierr == 4 .or. ierr == 2 .or. abs(tmp(2)) >= huge(1.0_DP)) then
+       Y(:,:) = besselYAsymptoticOrder(nuep,phiep)
+    else
+       do i=1,np
           call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
              print *, 'ERROR: CBESY (zD=LD)',phi(i),nu,i,ierr,nzero
@@ -252,22 +257,30 @@ contains
     aa(1,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
     phi(1:np) = cmplx(2.0*EYE*sqrt(B1/beta(1)**2),kind=DP)
 
-    if (nu > NUCUTOFF) then
-       phiep(1:np) = 2.0_EP*EYE*sqrt(B1/beta(1)**2)
-       call besselAsymptoticOrder(nuep,phiep,J,Y)
-       deallocate(phiep,nuep)
+
+    call cbesj(z=phi(1),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+    if (ierr == 4 .or. ierr == 2 .or. abs(tmp(2)) >= huge(1.0_DP)) then
+       J(:,:) = besselJAsymptoticOrder(nuep,phiep)
     else
-       do i=1,np
+       do i= 1,np
           call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
-             print *, 'ERROR: CBESJ (zD=0)',phi(i),nu,i,ierr,nzero
+             print *, 'ERROR: CBESJ (zD=LD)',phi(i),nu,i,ierr,nzero
              stop
           else
              J(i,1:2) = tmp(1:2)
           end if
+       end do
+    end if
+
+    call cbesy(z=phi(1),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+    if (ierr == 4 .or. ierr == 2 .or. abs(tmp(2)) >= huge(1.0_DP)) then
+       Y(:,:) = besselYAsymptoticOrder(nuep,phiep)
+    else
+       do i=1,np
           call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
-             print *, 'ERROR: CBESY (zD=0)',phi(i),nu,i,ierr,nzero
+             print *, 'ERROR: CBESY (zD=LD)',phi(i),nu,i,ierr,nzero
              stop
           else
              Y(i,1:2) = tmp(1:2)
@@ -286,17 +299,19 @@ contains
     sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(:),2,nz)*cosh(eta(:) .X. s%zD(:))
     sD(1:np,1:nz) = sH(:,1:nz) + sU(:,:)
 
-    write(*,999) ' nu:',nu,' z:',phi(1:3),' sU:',su(1:3,1), ' sH:',sH(1:3,1)
+    write(*,999) ' nu:',nu,' z:',phi(1:3),' sU:',su(1:3,1),' D1:',delta1(1:3),&
+         & ' D2:',delta2(1:3),' sH:',sH(1:3,1)
 
-999 format(A,ES11.3E3,3(A,3('(',ES12.3E4,',',ES12.3E4,')')))
+999 format(A,ES11.3E3,3(A,3('(',ES12.3E4,',',ES12.3E4,')')),A,3(ES12.3E4,1X),A,&
+         & 3('(',ES12.3E4,',',ES12.3E4,')'))
 
   end function mishraNeuman2010
 
-  subroutine besselAsymptoticOrder(nu,z,J,Y)
+  function besselJAsymptoticOrder(nu,z) result(J)
     use constants, only : EP, PIEP, E, SQRT2
     real(EP), dimension(2), intent(in) :: nu ! order
     complex(EP), dimension(:), intent(in) :: z ! argument
-    complex(EP), dimension(size(z),2), intent(out) :: J,Y
+    complex(EP), dimension(size(z),2) :: J
     integer :: i,k
 
     ! evaluate the asymptotic expansion using extended range
@@ -306,10 +321,28 @@ contains
     ! http://dlmf.nist.gov/10.19#i
     forall (k=1:size(z), i=1:2)
        J(k,i) = 1.0/sqrt(2.0*PIEP*nu(i))*(E*z(k)/(2.0*nu(i)))**nu(i)
+    end forall
+
+  end function  besselJAsymptoticOrder
+
+  function besselYAsymptoticOrder(nu,z) result (Y)
+    use constants, only : EP, PIEP, E, SQRT2
+    real(EP), dimension(2), intent(in) :: nu ! order
+    complex(EP), dimension(:), intent(in) :: z ! argument
+    complex(EP), dimension(size(z),2) :: Y
+    integer :: i,k
+
+    ! evaluate the asymptotic expansion using extended range
+    ! so it can be used when the double-precision Amos routines
+    ! return overflow or underflow
+
+    ! http://dlmf.nist.gov/10.19#i
+    forall (k=1:size(z), i=1:2)
        Y(k,i) =      -SQRT2/(PIEP*nu(i))*(E*z(k)/(2.0*nu(i)))**(-nu(i))
     end forall
 
-  end subroutine besselAsymptoticOrder
+  end function besselYAsymptoticOrder
+
 
 end module laplace_hankel_solutions
 

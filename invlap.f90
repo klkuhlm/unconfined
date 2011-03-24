@@ -36,7 +36,7 @@ contains
     complex(EP), dimension(0:2*lap%M) :: d
     complex(EP), dimension(-1:2*lap%M,size(t)) :: A,B
     complex(EP), dimension(size(t)) :: z,brem,rem
-    integer :: r, rq, n, max, nt, M
+    integer ::  r, rq, n, max, nt, M
     real(EP) :: gamma
 
     M = lap%M
@@ -130,10 +130,9 @@ contains
     ! TODO: be the constant set in driver.f90?
     sigma = real(lap%alpha,EP) - log(real(lap%tol,EP))/(2.0_EP*tee) 
 
-    !$OMP PARALLEL WORKSHARE
     forall (i=0:2*lap%M)
        p(i+1) = cmplx(sigma, PIEP*i/tee, EP)
     end forall
-    !$OMP END PARALLEL WORKSHARE
+    
   end function deHoog_pvalues
 end module invlap

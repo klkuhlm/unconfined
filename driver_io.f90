@@ -477,7 +477,7 @@ contains
 !!$       write(*,'(A,'//RFMT//')') 'Malama betaD (linearization factor):: ',f%betaD
        write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman acD,akD, psiaD,psikD :: ', &
             & f%acD,f%akD,f%psiaD,f%psikD
-       write(*,'(A,'//RFMT//')') 'Mishra&Neuman LD:: ',f%usLD
+       write(*,'(A,3('//RFMT//',1X))') 'Mishra&Neuman LD, lambdaD, b1:: ',f%usLD, f%lambdaD, f%b1
     end if
 
     terms = maxval(h%j0s(:)) + gl%nacc + 1
@@ -487,11 +487,9 @@ contains
 !!$    open(unit=56,file='bessel.zeros',action='write',status='replace')
 
     ! asymptotic estimate of zeros - initial guess
-    !$OMP PARALLEL WORKSHARE
     forall (i=0:terms-1) 
        h%j0z(i+1) = (i + 0.75)*PIEP
     end forall
-    !$OMP END PARALLEL WORKSHARE
     do i=1,terms
        x = h%j0z(i)
        NR: do

@@ -1,5 +1,5 @@
 T   100         :: compute times?, if not # times to read from this file 
--2  10  100     :: minlogt (integer), maxlogt (integer), # times for log-spaced data  
+4  10  100     :: minlogt (integer), maxlogt (integer), # times for log-spaced data  
 1.0000e-04     :: beginning of time vector read from file (one time per row)
 1.1498e-04
 1.3219e-04
