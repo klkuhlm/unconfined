@@ -48,7 +48,7 @@ program Driver
   ! and allocate some solution vectors
   call read_input(w,f,s,l,h,gl,ts)
 
-  !$ if (.not. s%quiet) then
+  !$ if (s%quiet > 0)
   !$ write(*,'(2(A,I0))') '# avail. processors: ',OMP_get_num_procs(), &
   !$     & '  maximum # threads: ',OMP_get_max_threads()
   !$ end if
@@ -76,7 +76,7 @@ program Driver
        
   ! loop over all desired calculation times
   do i = 1, s%nt
-     if (.not. s%quiet .and. s%timeseries) then
+     if (s%quiet > 0 .and. s%timeseries) then
         write(*,'(I5,A,'//RFMT//')') i,' td ',s%tD(i)
      end if
      
@@ -89,7 +89,7 @@ program Driver
 
      ! loop over all desired calculation radial distances
      do k = 1, s%nr
-        if (.not. s%quiet .and. .not. s%timeseries) then
+        if (s%quiet > 0 .and. .not. s%timeseries) then
            write(*,'(I5,A,'//RFMT//')') i,' rd ',s%rD(k)
         end if
         
@@ -209,10 +209,22 @@ program Driver
         !$OMP PARALLEL DO SHARED(totint,totintd,l,s,totlap,i,tee)
         do m = 1,s%nz
            totint(m)  = dehoog(s%tD(i),tee,totlap(1:l%np,m),l) 
-           ! dh/d(ln(t)) = t*dh/dt = t*h*p
-           totintd(m) = dehoog(s%tD(i),tee,totlap(1:l%np,m)*l%p(:),l)*s%tD(i)
         end do
         !$OMP END PARALLEL DO
+
+        ! pre-multiply by p, to avoid doing multiplication in argument of function
+        ! and creating an array temporary.
+        totlap(1:l%np,1:s%nz) = totlap(:,:)*spread(l%p(1:l%np),2,s%nz)
+
+        !$OMP PARALLEL DO SHARED(totint,totintd,l,s,totlap,i,tee)
+        do m = 1,s%nz
+           ! dh/d(ln(t)) = t*dh/dt = t*h*p
+           totintd(m) = dehoog(s%tD(i),tee,totlap(1:l%np,m),l)
+        end do
+        !$OMP END PARALLEL DO
+
+        ! multiply by t for last part of log-derivative
+        totintd(1:s%nz) = totintd(:)*s%tD(i) 
 
         ! do trapezoid rule across monitoring well screen if necessary
         ! result is divided by length of interval to get average value

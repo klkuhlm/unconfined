@@ -156,7 +156,7 @@ module types
           & 'Moench         ', 'Malama full pen', 'Malama part pen', &
           & 'Mishra/Neuman  ']
 
-     logical :: quiet = .false.  ! output debugging to stdout?
+     integer :: quiet = -999  ! verbosity flag (0=quiet, 1=some, 2=lots)
      logical :: dimless = .false.  ! output dimensionless solution?
      logical :: timeseries = .false. ! vector of times, one location?
      logical :: piezometer = .false. ! point observation location?

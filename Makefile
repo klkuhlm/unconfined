@@ -81,7 +81,7 @@ driver.opt.o: laplace_hankel_solution.mod constants.mod utilities.mod io.mod dri
 time.opt.o time_mod.mod: time.f90 constants.mod types.mod
 types.opt.o types.mod: types.f90 constants.mod
 driver_io.opt.o io.mod: driver_io.f90 constants.mod types.mod utilities.mod 
-driver.opt.o: driver.f90 types.mod constants.mod laplace_hankel_solution.mod \
+driver.opt.o: driver.f90 types.mod constants.mod integration.mod laplace_hankel_solution.mod \
  inverse_laplace_transform.mod 
 
 constants.debug.o constants.mod : constants.f90
@@ -94,7 +94,7 @@ driver.debug.o: laplace_hankel_solution.mod constants.mod utilities.mod io.mod d
 time.debug.o time_mod.mod: time.f90 constants.mod types.mod
 types.debug.o types.mod: types.f90 constants.mod
 driver_io.debug.o io.mod: driver_io.f90 constants.mod types.mod utilities.mod 
-driver.debug.o: driver.f90 types.mod constants.mod laplace_hankel_solution.mod \
+driver.debug.o: driver.f90 types.mod constants.mod integration.mod laplace_hankel_solution.mod \
  inverse_laplace_transform.mod 
 
 ###### clean up #################################

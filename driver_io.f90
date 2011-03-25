@@ -119,7 +119,7 @@ contains
     
     ! ## echo check parameters #####
 
-    if (.not. s%quiet) then
+    if (s%quiet > 0) then
        write(*,'(A,A,1X,1L)') 'model, dimless output?:: ',&
             & trim(s%modelDescrip(s%model)) ,s%dimless
        write(*,'(A,2(L1,1X))') 'time-series plot?, piezometer?:: ', &
@@ -445,7 +445,7 @@ contains
 
     ! ## echo computed quantities #####
 
-    if (.not. s%quiet) then
+    if (s%quiet > 0) then
        write(*,'(A,'//RFMT//')') 'kappa:   ',f%kappa
        write(*,'(A,'//RFMT//')') 'sigma:   ',f%sigma
        write(*,'(A,'//RFMT//')') 'alpha_D: ',f%alphaD
@@ -474,7 +474,6 @@ contains
             & ts%k, ts%R
        write(*,'(A,4(I0,1X))'), 'GL: J0 split, num zeros accel, GL-order ',&
             & h%j0s(:), gl%nacc, gl%ord
-!!$       write(*,'(A,'//RFMT//')') 'Malama betaD (linearization factor):: ',f%betaD
        write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman acD,akD, psiaD,psikD :: ', &
             & f%acD,f%akD,f%psiaD,f%psikD
        write(*,'(A,3('//RFMT//',1X))') 'Mishra&Neuman LD, lambdaD, b1:: ',f%usLD, f%lambdaD, f%b1
@@ -573,8 +572,8 @@ contains
        write(unit,'(A,'//RFMT//')') '# Malama beta linearization parameter :: ',f%beta
     elseif(s%model == 6) then
        ! mishra/neuman solution
-       write(unit,'(A,4('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ad,psia,psik ::',&
-            & f%ac,f%ak,f%psia,f%psik
+       write(unit,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ad,psia,psik,b1 ::',&
+            & f%ac,f%ak,f%psia,f%psik,f%b1
     end if
     
     write(unit,'(A,I0)') '# times :: ',s%nt
@@ -583,13 +582,11 @@ contains
        write (unit,'(A,/,A,/,A)') '#','#     t_D          '//&
             & trim(s%modelDescrip(s%model))//'         t*dh/d(log(t))', &
             & '#-------------------------------------------------------------'
-       ! TODO add header for derivative wrt logt
     else
        write(unit,'(A,1'//RFMT//')') '# characteristic head ::',s%Hc
        write (unit,'(A,/,A,/,A)') '#','#     t            '//&
             & trim(s%modelDescrip(s%model))//'         t*dh/d(log(t))', &
             & '#-------------------------------------------------------------'
-       ! TODO add header for derivative wrt logt
     end if
 
   end subroutine write_timeseries_header
@@ -653,8 +650,8 @@ contains
        write(unit,'(A,'//RFMT//')') '# Malama beta linearization parameter :: ',f%beta
     elseif(s%model == 6) then
        ! mishra/neuman solution
-       write(unit,'(A,4('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ad,psia,psik ::',&
-            & f%ac,f%ak,f%psia,f%psik
+       write(unit,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ad,psia,psik,b1 ::',&
+            & f%ac,f%ak,f%psia,f%psik,f%b1
     end if
 
     if (s%dimless) then
@@ -666,7 +663,6 @@ contains
        write (unit,'(A,/,A,/,A)') '#','#      z            r        '&
             & //'     '// trim(s%modelDescrip(s%model))//'          t*dh/d(log(t))', &
             & '#----------------------------------------------------------------------------'
-       ! TODO add header for derivative wrt logt
     end if
 
   end subroutine write_contour_header

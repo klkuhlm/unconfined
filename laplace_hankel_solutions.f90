@@ -187,7 +187,8 @@ contains
     real(EP), dimension(size(p)) :: nuep
     complex(EP), dimension(size(p)) :: phiep
 
-    real(DP) :: nu, B2
+    real(EP) :: B2
+    real(DP) :: nu
     real(EP), dimension(size(p)) :: delta2
     real(DP), dimension(0:3) :: beta
 
@@ -200,7 +201,6 @@ contains
     complex(EP), dimension(size(p),2) :: J,Y
     complex(DP), dimension(2) :: tmp
     
-    
     np = size(p)
     nz = size(zD)
 
@@ -212,19 +212,22 @@ contains
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
     
-    B1(1:np) = p(1:np)*beta(0)/f%kappa*exp(-beta(2))
-    B2 = real(a**2/f%kappa,DP)
+    B1(1:np) = p(:)*beta(0)/f%kappa*exp(-beta(2))
+    B2 = a**2/f%kappa
 
-    phi(1:np) = cmplx(2.0*EYE*sqrt(B1/beta(1)**2)*exp(beta(1)*f%usLD/2.0),kind=DP)
-    nu = sqrt((beta(3)**2 + 4.0*B2)/beta(2)**2)
+    phiep(1:np) = 2.0_EP*EYE/beta(1)*sqrt(B1)*exp(beta(1)*f%usLD/2.0_EP)
+    phi(1:np) = cmplx(phiep,kind=DP)
 
-    phiep(1:np) = 2.0_EP*EYE*sqrt(B1/beta(1)**2)*exp(beta(1)*f%usLD/2.0_EP)
-    nuep(1:2) = real([nu,nu+1.0],EP)
+    nuep(1) = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
+    nuep(2) = nuep(1) + 1.0_EP
+    nu = real(nuep(1),kind=DP)
 
-    call cbesj(z=phi(1),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+    call cbesj(z=phi(np),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
     if (ierr == 4 .or. ierr == 2 .or. abs(tmp(2)) >= huge(1.0_DP)) then
+       if (s%quiet > 1) write(*,'(A)',advance='no') 'A' 
        J(:,:) = besselJAsymptoticOrder(nuep,phiep)
     else
+       if (s%quiet > 1) write(*,'(A)',advance='no') 'B'
        do i= 1,np
           call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
@@ -236,10 +239,12 @@ contains
        end do
     end if
 
-    call cbesy(z=phi(1),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+    call cbesy(z=phi(np),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
     if (ierr == 4 .or. ierr == 2 .or. abs(tmp(2)) >= huge(1.0_DP)) then
+       if (s%quiet > 1) write(*,'(A)',advance='no') 'C' 
        Y(:,:) = besselYAsymptoticOrder(nuep,phiep)
     else
+       if (s%quiet > 1) write(*,'(A)',advance='no') 'D' 
        do i=1,np
           call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
@@ -255,13 +260,16 @@ contains
     arg2(1:np) = beta(1)*phi(1:np)
     aa(1,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(1,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
-    phi(1:np) = cmplx(2.0*EYE*sqrt(B1/beta(1)**2),kind=DP)
 
+    phiep(1:np) = 2.0_EP*EYE*sqrt(B1/beta(1)**2)
+    phi(1:np) = cmplx(phiep,kind=DP)
 
     call cbesj(z=phi(1),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
     if (ierr == 4 .or. ierr == 2 .or. abs(tmp(2)) >= huge(1.0_DP)) then
+       if (s%quiet > 1) write(*,'(A)',advance='no') 'a' 
        J(:,:) = besselJAsymptoticOrder(nuep,phiep)
     else
+       if (s%quiet > 1) write(*,'(A)',advance='no') 'b' 
        do i= 1,np
           call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
@@ -275,8 +283,10 @@ contains
 
     call cbesy(z=phi(1),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
     if (ierr == 4 .or. ierr == 2 .or. abs(tmp(2)) >= huge(1.0_DP)) then
+       if (s%quiet > 1) write(*,'(A)',advance='no') 'c' 
        Y(:,:) = besselYAsymptoticOrder(nuep,phiep)
     else
+       if (s%quiet > 1) write(*,'(A)',advance='no') 'd' 
        do i=1,np
           call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
@@ -288,7 +298,7 @@ contains
        end do
     end if
     
-    arg2(1:np) = beta(1)*phi(1:np)
+    arg2(1:np) = beta(1)*phiep(1:np)
     aa(2,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(2,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
@@ -299,14 +309,15 @@ contains
     sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(:),2,nz)*cosh(eta(:) .X. s%zD(:))
     sD(1:np,1:nz) = sH(:,1:nz) + sU(:,:)
 
-    write(*,999) ' nu:',nu,' z:',phi(1:3),' sU:',su(1:3,1),' D1:',delta1(1:3),&
-         & ' D2:',delta2(1:3),' sH:',sH(1:3,1)
+    if (s%quiet > 1) then
+       write(*,999) ' nu:',nu,' z:',phiep(1:3),' sU:',su(1:3,1),' D1:',delta1(1:3),&
+            & ' D2:',delta2(1:3),' sH:',sH(1:3,1)
+    end if
 
-999 format(A,ES11.3E3,3(A,3('(',ES12.3E4,',',ES12.3E4,')')),A,3(ES12.3E4,1X),A,&
-         & 3('(',ES12.3E4,',',ES12.3E4,')'))
-
+999    format(A,ES11.3E3,3(A,3('(',ES12.3E4,',',ES12.3E4,')')),A,3(ES12.3E4,1X),A,&
+            & 3('(',ES12.3E4,',',ES12.3E4,')'))   
   end function mishraNeuman2010
-
+  
   function besselJAsymptoticOrder(nu,z) result(J)
     use constants, only : EP, PIEP, E, SQRT2
     real(EP), dimension(2), intent(in) :: nu ! order

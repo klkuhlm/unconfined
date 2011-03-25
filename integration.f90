@@ -107,7 +107,7 @@ contains
 
     integer, parameter :: MINTERMS = 4
     complex(EP), dimension(:), intent(in) :: series
-    logical, intent(in) :: quiet
+    integer, intent(in) :: quiet
     complex(EP) :: accsum, denom 
     integer :: ns, i, j, m
     complex(EP), dimension(1:size(series),-1:size(series)-1) :: eps
@@ -120,13 +120,13 @@ contains
        if (.not. is_finite(series(i))) then
           ns = i-1
           if(ns < MINTERMS) then
-             if (.not. quiet) then
+             if (quiet > 1) then
                 write(*,'(A)',advance='no') 'not enough Wynn-Epsilon series to accelerate '
              end if
              accsum = -999999.9  ! make it clear answer is bogus
              goto 777
           else
-             if (.not. quiet) then
+             if (quiet > 1) then
                 write(*,'(A,I3,A)',advance='no') 'Wynn-Epsilon series&
                      &, truncated to ',ns,' terms. '
              end if
@@ -149,7 +149,7 @@ contains
              eps(m,j+1) = eps(m+1,j-1) + 1.0_EP/denom
           else
              accsum = eps(m+1,j)
-             if (.not. quiet) then
+             if (quiet > 1) then
                 write(*,'(A,I0,1X,I0,A)') 'epsilon cancel ',m,j,':'
 !!$                write(*,'(A,I0,1X,I0,3(A,ES12.3E4,A,ES12.3E4),A)',advance='no') &
 !!$                     & 'epsilon cancel ',m,j,' denom(',real(denom),',',aimag(denom),&
