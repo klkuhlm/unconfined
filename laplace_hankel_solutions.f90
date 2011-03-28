@@ -323,7 +323,7 @@ contains
        ! build up k! and 8**k as we step
        gam = gam*i
        ek = ek*8.0_EP
-       a(i:M,1:2) = a(i:M,1:2)* spread((4.0*nu(1:2) - i**2)/(gam*ek),1,M-i+1)
+       a(i:M,1:2) = a(i:M,1:2)*spread((4.0*nu(1:2) - i**2)/(gam*ek),1,M-i+1)
     end do
     
     omega(1:nz,1:2) = spread(z(:),2,2) - spread(nu(:)*PIOV2EP,1,nz) - PIOV4EP
