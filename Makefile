@@ -18,7 +18,7 @@ PERFLDFLAGS = ${PERF}
 ### flags / settings for gfortran >= 4.6 compiler
 ##
 ##DEBUG = -O0 -g -Wall -Wextra -fbacktrace -fwhole-file
-##DEBUG += -frange-check -fcheck=all -finit-integer=-999 -finit-real=snan ## -ffpe-trap=invalid
+##DEBUG += -frange-check -fcheck=all #-finit-integer=-999 -finit-real=snan ## -ffpe-trap=invalid
 ##OMP = -openmp
 ##PERF = -O2 -march=native -fwhole-file 
 ##REAL = -fdefault-real-8  # for constants like 1.0, 2.0, etc.
