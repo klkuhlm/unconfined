@@ -1,9 +1,8 @@
-module laplace_hankel_solutions
+ module laplace_hankel_solutions
   implicit none
 
   private
   public :: lap_hank_soln
-
 contains
 
   function lap_hank_soln(a,rD,np,nz,w,f,s,lap) result(fp)
@@ -227,22 +226,22 @@ contains
        ! see p.20-21 of SAND83-0643 for a more exact form
        ! uniform asymptotic expansion for nu -> infinity
        call besselJYAsymptoticOrder(nuep,phiep,J,Y)
-    elseif (all(abs(phiep) > 0.5*nuep(1)**2)) then
-       ! uniform asymptotic expansion for |z| -> infinity
-       call besselJYAsymptoticArg(nuep,phiep,J,Y)
+!!$    elseif (all(abs(phiep) > 0.5*nuep(1)**2)) then
+!!$       ! uniform asymptotic expansion for |z| -> infinity
+!!$       call besselJYAsymptoticArg(nuep,phiep,J,Y)
     else
        do i= 1,np
           call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
              print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
-             stop
+!!$             stop
           else
              J(i,1:2) = tmp(1:2)
           end if
           call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
              print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
-             stop
+!!$             stop
           else
              Y(i,1:2) = tmp(1:2)
           end if
@@ -260,22 +259,22 @@ contains
     if (nuep(1) >= 100.0) then
        ! uniform asymptotic expansion for nu -> infinity
        call besselJYAsymptoticOrder(nuep,phiep,J,Y)
-    elseif (all(abs(phiep) > 0.5*nuep(1)**2)) then
-       ! uniform asymptotic expansion for |z| -> infinity
-       call besselJYAsymptoticArg(nuep,phiep,J,Y)
+!!$    elseif (all(abs(phiep) > 0.5*nuep(1)**2)) then
+!!$       ! uniform asymptotic expansion for |z| -> infinity
+!!$       call besselJYAsymptoticArg(nuep,phiep,J,Y)
     else
        do i= 1,np
           call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
              print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
-             stop
+!!$             stop
           else
              J(i,1:2) = tmp(1:2)
           end if
           call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
              print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
-             stop
+!!$             stop
           else
              Y(i,1:2) = tmp(1:2)
           end if
