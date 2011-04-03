@@ -412,7 +412,7 @@ contains
     ! dimensionless sorptive numbers
     f%acD = f%ac*s%Lc
     f%akD = f%ak*s%Lc
-    f%lambdaD = f%akD - f%acD
+    f%lambdaD = (f%ak - f%ac)*s%Lc
 
     ! dimensionless pressures
     f%psiaD = f%psia/s%Lc

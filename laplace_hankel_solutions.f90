@@ -196,16 +196,16 @@ contains
     complex(EP), dimension(size(p)) :: arg2, B1, delta1
 
     complex(EP), dimension(2,2,size(p)) :: aa
-    complex(EP), dimension(size(p)) :: eta
+    complex(EP), dimension(size(p)) :: eta, bigA
     complex(EP), dimension(size(p),2) :: J,Y
     complex(DP), dimension(2) :: tmp
     
     np = size(p)
     nz = size(zD)
 
-    beta(0) = f%acD*f%sigma
-    beta(1) = f%lambdaD
-    beta(2) = f%ak*f%b1
+    beta(0) = f%ac*f%Sy/f%Ss
+    beta(1) = f%lambdaD  ! b*(ak-ac)
+    beta(2) = f%ak*f%b1  ! ak*(psi_a - psi_k);
     beta(3) = f%akD
 
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
@@ -214,7 +214,7 @@ contains
     B1(1:np) = p(:)*beta(0)/f%kappa*exp(-beta(2))
     B2 = a**2/f%kappa
 
-    phiep(1:np) = 2.0*EYE*sqrt(B1/beta(1)**2)*exp(beta(1)*f%usLD/2.0_EP)
+    phiep(1:np) = EYE*sqrt(4.0*B1/beta(1)**2)*exp(beta(1)*f%usLD/2.0_EP)
     phi(1:np) = cmplx(phiep,kind=DP)
 
     nuep(1) = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
@@ -226,9 +226,6 @@ contains
        ! see p.20-21 of SAND83-0643 for a more exact form
        ! uniform asymptotic expansion for nu -> infinity
        call besselJYAsymptoticOrder(nuep,phiep,J,Y)
-!!$    elseif (all(abs(phiep) > 0.5*nuep(1)**2)) then
-!!$       ! uniform asymptotic expansion for |z| -> infinity
-!!$       call besselJYAsymptoticArg(nuep,phiep,J,Y)
     else
        do i= 1,np
           call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
@@ -253,25 +250,23 @@ contains
     aa(1,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(1,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
-    phiep(1:np) = 2.0*EYE*sqrt(B1/beta(1)**2)
+    phiep(1:np) = EYE*sqrt(4.0*B1/beta(1)**2)
     phi(1:np) = cmplx(phiep,kind=DP)
 
     if (nuep(1) >= 100.0) then
        ! uniform asymptotic expansion for nu -> infinity
        call besselJYAsymptoticOrder(nuep,phiep,J,Y)
-!!$    elseif (all(abs(phiep) > 0.5*nuep(1)**2)) then
-!!$       ! uniform asymptotic expansion for |z| -> infinity
-!!$       call besselJYAsymptoticArg(nuep,phiep,J,Y)
     else
+       ! unscaled versions of bessel functions
        do i= 1,np
-          call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+          call cbesj(z=phi(i),fnu=nu,kode=1,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
              print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
 !!$             stop
           else
              J(i,1:2) = tmp(1:2)
           end if
-          call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+          call cbesy(z=phi(i),fnu=nu,kode=1,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
           if (ierr > 0 .and. ierr /= 3) then
              print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
 !!$             stop
@@ -285,8 +280,10 @@ contains
     aa(2,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(2,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
-    delta2(1:np) = abs(aa(1,1,:)*aa(2,2,:) - aa(1,2,:)*aa(2,1,:))
-    delta1(1:np) = (aa(1,1,:)*Y(:,1) - aa(1,2,:)*J(:,1))*2.0*eta(:)* &
+    bigA(1:np) = aa(1,2,:)/aa(1,1,:)  ! normalizations cancel
+
+    delta2(1:np) = aa(2,2,:) - bigA(:)*aa(2,1,:)
+    delta1(1:np) = (Y(:,1) - bigA(:)*J(:,1))*2.0*eta(:)* &
          & sinh(eta(:))/delta2(:) - cosh(eta(:))
 
     sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(:),2,nz)*cosh(eta(:) .X. s%zD(:))
