@@ -7,8 +7,8 @@ M=10; %Number of zeros of BesselJ0 to use in Hankel transform inversion
 J0=load('besJ0zeros.dat');
 estimates = exp(params0)
 
-Kr = estimates(1); %Vertical hydraulic conductivity
-kappa = estimates(2); %Horizontal hydraulic conductivity
+Kr = estimates(1); %Horiz hydraulic conductivity
+kappa = estimates(2); %anisotropy
 Ss = estimates(3); %Specific storage
 Sy = estimates(4); %Specific yield
 
@@ -23,8 +23,8 @@ r = 6.5837; %Radial position of observation point
 Lc = b;
 sF = 20.0; %Observation well shape factor
 L = 20.0; %Thickness of unsaturated zone
-ak = 25.4; %Unsaturated conductivity exponential decay constant
-ac = 5.2; %Effective saturation exponential decay constant
+ak = 5.4; %Unsaturated conductivity exponential decay constant
+ac = 25.2; %Effective saturation exponential decay constant
 phi_a = 0.739; %Air entry pressure head
 phi_k = 0.521; %Pressure head above which k0 = 1.0
 

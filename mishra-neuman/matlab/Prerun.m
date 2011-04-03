@@ -16,20 +16,20 @@ tic
    %end
    
    times = logspace(-3,4,100); %Time vector
-   %run_mod(params,times);%Run forward model
+   run_mod(params,times);%Run forward model
 
-   h1=load('mishra_ac1ak1.txt'); 
-   loglog(h1(:,1),h1(:,2),'b-','LineWidth',2);
-   hold on;
-   h2=load('mishra_ac1ak2.txt'); 
-   loglog(h2(:,1),h2(:,2),'r-','LineWidth',2);
-   h3=load('mishra_ac1ak3.txt'); 
-   loglog(h3(:,1),h3(:,2),'m-','LineWidth',2);
-   h4=load('mishra.txt'); 
-   loglog(h4(:,1),h4(:,2),'m-','LineWidth',2);
-   axis([1e-3 1e4 1e-2 0.5]);
-   xlabel('t (s)');
-   ylabel('s (m)')
-   legend('a_k = 20.4','a_k = 15.4','a_k = 10.4','a_k = 5.4');
-   hold off;
+%    h1=load('mishra_ac1ak1.txt'); 
+%    loglog(h1(:,1),h1(:,2),'b-','LineWidth',2);
+%    hold on;
+%    h2=load('mishra_ac1ak2.txt'); 
+%    loglog(h2(:,1),h2(:,2),'r-','LineWidth',2);
+%    h3=load('mishra_ac1ak3.txt'); 
+%    loglog(h3(:,1),h3(:,2),'m-','LineWidth',2);
+%    h4=load('mishra.txt'); 
+%    loglog(h4(:,1),h4(:,2),'m-','LineWidth',2);
+%    axis([1e-3 1e4 1e-2 0.5]);
+%    xlabel('t (s)');
+%    ylabel('s (m)')
+%    legend('a_k = 20.4','a_k = 15.4','a_k = 10.4','a_k = 5.4');
+%    hold off;
    toc
