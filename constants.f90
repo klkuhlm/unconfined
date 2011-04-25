@@ -14,7 +14,7 @@ module constants
   real(EP), parameter :: PIEP =  4.0_EP*atan(1.0_EP) 
   real(EP), parameter :: PIOV2EP = 2.0_EP*atan(1.0_EP)
   real(EP), parameter :: PIOV4EP = atan(1.0_EP)
-  complex(EP), parameter :: EYE = cmplx(0.0,1.0,EP)
+  complex(EP), parameter :: EYE = (0.0_DP,1.0_EP)
   real(EP), parameter :: E = exp(1.0_EP)
   real(EP), parameter :: SQRT2 = sqrt(2.0_EP)
 
@@ -28,7 +28,7 @@ module constants
 
   !! format strings used in output
   character(7) :: RFMT = 'ES14.07'    ! format for general output
-  character(9) :: HFMT = 'ES23.15E3'  ! format for results
+  character(9) :: HFMT = 'ES24.15E4'  ! format for results
   character(7) :: SFMT = 'ES09.03'    ! short format for long (+ only) vectors
 
 end module constants

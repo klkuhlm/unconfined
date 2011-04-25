@@ -218,71 +218,63 @@ contains
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
     
-    B1(1:np) = p(:)*beta(0)/f%kappa*exp(-beta(2))
-    B2 = a**2/f%kappa
+    B1(1:np) = p(:)*beta(0)*exp(-beta(2))/f%kappa
+    B2 = (a**2)/f%kappa
 
-    phiep(1:np) = EYE*sqrt(4.0*B1/beta(1)**2)*exp(beta(1)*f%usLD/2.0_EP)
-    phi(1:np) = cmplx(phiep,kind=DP)
+    ! compute v1
+    phiep(1:np) = EYE*sqrt(4.0*B1/(beta(1)**2))*exp(beta(1)*f%usLD/2.0_EP)
+    phi(1:np) = cmplx(phiep,kind=DP) 
 
     nuep(1) = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
     nuep(2) = nuep(1) + 1.0_EP
-    nu = real(nuep(1),kind=DP)
+    nu = real(nuep(1),kind=DP) 
     
-!!$    if (nuep(1) >= 100.0) then
-!!$       ! this is the cutoff (for double precision) used by Amos library
-!!$       ! see p.20-21 of SAND83-0643 for a more exact form
-!!$       ! uniform asymptotic expansion for nu -> infinity
-!!$       call besselJYAsymptoticOrder(nuep,phiep,J,Y)
-!!$    else
-       do i= 1,np
-          ! kode=2 is scaled BF
-          call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
-          if (ierr > 0 .and. ierr /= 3) then
-             print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
+    do i= 1,np
+       ! kode=2 is scaled BF
+       call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+       if (ierr > 0 .and. ierr /= 3) then
+          print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
 !!$             stop
-          else
-             J(i,1:2) = tmp(1:2)
-          end if
-          call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
-          if (ierr > 0 .and. ierr /= 3) then
-             print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
+       else
+          J(i,1:2) = tmp(1:2)
+       end if
+       call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+       if (ierr > 0 .and. ierr /= 3) then
+          print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
 !!$             stop
-          else
-             Y(i,1:2) = tmp(1:2)
-          end if
-       end do
-!!$    end if
+       else
+          Y(i,1:2) = tmp(1:2)
+       end if
+    end do
     
+    ! compute v3
     arg1 = real(beta(3),EP) + real(nu*beta(1),EP)
-    arg2(1:np) = beta(1)*phi(1:np)
+    arg2(1:np) = beta(1)*phiep(1:np)
+
     aa(1,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(1,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
+    ! compute v2
     phiep(1:np) = EYE*sqrt(4.0*B1/beta(1)**2)
     phi(1:np) = cmplx(phiep,kind=DP)
 
-!!$    if (nuep(1) >= 100.0) then
-!!$       ! uniform asymptotic expansion for nu -> infinity
-!!$       call besselJYAsymptoticOrder(nuep,phiep,J,Y)
-!!$    else
-       ! kode=1 is unscaled BF
-       do i= 1,np
-          call cbesj(z=phi(i),fnu=nu,kode=1,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
-          if (ierr > 0 .and. ierr /= 3) then
-             print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
+    ! kode=2 is scaled BF
+    do i= 1,np
+       call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+       if (ierr > 0 .and. ierr /= 3) then
+          print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
 !!$             stop
-          else
-             J(i,1:2) = tmp(1:2)
-          end if
-          call cbesy(z=phi(i),fnu=nu,kode=1,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
-          if (ierr > 0 .and. ierr /= 3) then
-             print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
+       else
+          J(i,1:2) = tmp(1:2)
+       end if
+       call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+       if (ierr > 0 .and. ierr /= 3) then
+          print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
 !!$             stop
-          else
-             Y(i,1:2) = tmp(1:2)
-          end if
-       end do
-!!$    end if
+       else
+          Y(i,1:2) = tmp(1:2)
+       end if
+    end do
     
     arg2(1:np) = beta(1)*phiep(1:np)
     aa(2,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
@@ -290,20 +282,20 @@ contains
 
     bigA(1:np) = aa(1,2,:)/aa(1,1,:)  ! normalizations cancel
 
-    delta2(1:np) = aa(2,2,:) - bigA(:)*aa(2,1,:)
-    delta1(1:np) = (Y(:,1) - bigA(:)*J(:,1))*2.0*eta(:)* &
-         & sinh(eta(:))/delta2(:) - cosh(eta(:))
+    delta2(1:np) = (aa(2,2,:) - bigA(:)*aa(2,1,:))
+    delta1(1:np) = (Y(:,1) - bigA(:)*J(:,1))*(2.0*eta(:)* &
+         & sinh(eta(:))/delta2(:)) - cosh(eta(:))
 
-    sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(:),2,nz)*cosh(eta(:) .X. s%zD(:))
-    sD(1:np,1:nz) = sH(:,1:nz) + sU(:,:)
+    sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(1:np),2,nz)*cosh(eta(1:np) .X. s%zD(1:nz))
+    sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
-    if (s%quiet > 1) then
-       write(*,999) ' nu:',nu,' z:',phiep(1:3),' sU:',su(1:3,1),' D1:',delta1(1:3),&
-            & ' D2:',delta2(1:3),' sH:',sH(1:3,1)
-    end if
-
-999    format(A,ES11.3E3,3(A,3('(',ES12.3E4,',',ES12.3E4,')')),A,3(ES12.3E4,1X),A,&
-            & 3('(',ES12.3E4,',',ES12.3E4,')'))   
+!!$    if (s%quiet > 1) then
+!!$       write(*,999) ' nu:',nu,' z:',phiep(1:3),' sU:',su(1:3,1),' D1:',delta1(1:3),&
+!!$            & ' D2:',delta2(1:3),' sH:',sH(1:3,1)
+!!$    end if
+!!$
+!!$999    format(A,ES11.3E3,3(A,3('(',ES12.3E4,',',ES12.3E4,')')),A,3(ES12.3E4,1X),A,&
+!!$            & 3('(',ES12.3E4,',',ES12.3E4,')'))   
   end function mishraNeuman2010
   
 !!$  subroutine besselJYAsymptoticArg(nu,z,J,Y)
