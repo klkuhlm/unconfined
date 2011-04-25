@@ -195,7 +195,7 @@ contains
     real(DP) :: nu
     real(DP), dimension(0:3) :: beta
 
-    real(EP), dimension(size(p)) :: delta2
+    complex(EP), dimension(size(p)) :: delta2
     real(EP) :: B2
 
     complex(DP), dimension(size(p)) :: phi
@@ -204,7 +204,7 @@ contains
     complex(EP) :: arg1
     complex(EP), dimension(size(p)) :: arg2, B1, delta1
     complex(EP), dimension(2,2,size(p)) :: aa
-    complex(EP), dimension(size(p)) :: eta, bigA
+    complex(EP), dimension(size(p)) :: eta
     complex(EP), dimension(size(p),2) :: J,Y
     
     np = size(p)
@@ -248,7 +248,7 @@ contains
     end do
     
     ! compute v3
-    arg1 = real(beta(3),EP) + real(nu*beta(1),EP)
+    arg1 = real(beta(3),EP) + nuep(1)*beta(1)
     arg2(1:np) = beta(1)*phiep(1:np)
 
     aa(1,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
@@ -280,22 +280,22 @@ contains
     aa(2,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(2,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
-    bigA(1:np) = aa(1,2,:)/aa(1,1,:)  ! normalizations cancel
+    ! product of phi(0) and phi(lD) normalizations
+    delta2(1:np) = (aa(1,1,:)*aa(2,2,:) - aa(1,2,:)*aa(2,1,:)) 
 
-    delta2(1:np) = (aa(2,2,:) - bigA(:)*aa(2,1,:))
-    delta1(1:np) = (Y(:,1) - bigA(:)*J(:,1))*(2.0*eta(:)* &
-         & sinh(eta(:))/delta2(:)) - cosh(eta(:))
+    ! products of normalizations cancel
+    delta1(1:np) = (aa(1,1,:)*Y(:,1) - aa(1,2,:)*J(:,1))/delta2(:)* &
+         & 2.0*eta(:)*sinh(eta(:)) - cosh(eta(:))
 
     sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(1:np),2,nz)*cosh(eta(1:np) .X. s%zD(1:nz))
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
-!!$    if (s%quiet > 1) then
-!!$       write(*,999) ' nu:',nu,' z:',phiep(1:3),' sU:',su(1:3,1),' D1:',delta1(1:3),&
-!!$            & ' D2:',delta2(1:3),' sH:',sH(1:3,1)
-!!$    end if
-!!$
-!!$999    format(A,ES11.3E3,3(A,3('(',ES12.3E4,',',ES12.3E4,')')),A,3(ES12.3E4,1X),A,&
-!!$            & 3('(',ES12.3E4,',',ES12.3E4,')'))   
+    if (s%quiet > 1) then
+       write(*,999) ' nu:',nu,' phi:',phiep(1:3),' sU:',su(1:3,1),' D1:',delta1(1:3),&
+            & ' D2:',delta2(1:3),' sH:',sH(1:3,1)
+    end if
+
+999    format(A,ES11.3E3,5(A,3('(',ES12.3E4,',',ES12.3E4,')')))
   end function mishraNeuman2010
   
 !!$  subroutine besselJYAsymptoticArg(nu,z,J,Y)
