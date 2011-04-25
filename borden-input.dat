@@ -1,0 +1,18 @@
+2  6  T  T  T                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
+2.0189D-2                      :: Q (volumetric pumping rate) [L^3/T]
+6.944D-1   2.889D-1               :: l/b, d/b (normalized depth to bottom/top of screened interval)
+0.1    0.1                       :: rw, rc (radius of well casing and tubing)
+1.0D0                        :: gamma (dimensionless wellbore skin)
+001  0.0D0  1.0D0            :: pumping well time behavior and parameters 
+9.0                        :: b (initial saturated thickness)
+6.37D-5  4.458D-1                :: Kr,kappa (radial K and ratio Kz/Kr)
+5.67D-5  3.01D-1               :: Ss,Sy
+2.0D0                        ::  beta Malama linearization parameter
+5.2D0  2.54D+1   34.1D-2  30.98D-2   2.75      :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L
+10  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
+8  6                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
+2  2  8  40                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
+timedata.dat  15.5            :: file to read time data from (and default t otherwise)
+spacedata.dat 0.25           :: file to read space data from (and default r otherwise)
+5.0D-1  0.0D0  3                  :: top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
+mishra-neuman-test.out

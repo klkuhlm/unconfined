@@ -48,7 +48,7 @@ program Driver
   ! and allocate some solution vectors
   call read_input(w,f,s,l,h,gl,ts)
 
-  !$ if (s%quiet > 0)
+  !$ if (s%quiet > 0) then
   !$ write(*,'(2(A,I0))') '# avail. processors: ',OMP_get_num_procs(), &
   !$     & '  maximum # threads: ',OMP_get_max_threads()
   !$ end if

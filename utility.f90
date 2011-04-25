@@ -12,7 +12,7 @@ module utility
   end interface
   
   interface operator(.X.)
-     module procedure outerprod_zd, outerprod_dz, outerprod_dd
+     module procedure outerprod_zd, outerprod_dz, outerprod_dd, outerprod_zz
   end interface
   
 contains
@@ -92,6 +92,15 @@ contains
     complex(EP), dimension(size(da),size(zb)) :: c
     c = spread(da,dim=2,ncopies=size(zb))*spread(zb,dim=1,ncopies=size(da))
   end function outerprod_dz
+
+  pure function outerprod_zz(za,zb) result(c)
+    use constants, only : EP
+    complex(EP), intent(in), dimension(:) :: za,zb
+    complex(EP), dimension(size(za),size(zb)) :: c
+    c = spread(za,dim=2,ncopies=size(zb))*spread(zb,dim=1,ncopies=size(za))    
+  end function outerprod_zz
+  
+
 end module utility
 
 

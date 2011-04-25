@@ -1,32 +1,33 @@
 ##################################################
-# flags / settings for intel >= 12.0 compiler
-# version 12 still doesn't seem to handle complex extended-precision
-# hyperbolic trig functions (although these are part of F2008)
-
-DEBUG = -O0 -g -warn all -check all -traceback
-OMP = -openmp
-PERF = -O3 -xHOST -ipo 
-REAL = -real-size 64
-F90 = ifort
-CPP = -cpp
-FREE = -free
-PERFLDFLAGS = ${PERF}
-##################################################
-
-
-####################################################
-### flags / settings for gfortran >= 4.6 compiler
+### flags / settings for intel >= 12.0 compiler
+### version 12 still doesn't seem to handle complex extended-precision
+### hyperbolic trig functions (although these are part of F2008)
 ##
-##DEBUG = -O0 -g -Wall -Wextra -fbacktrace -fwhole-file
-##DEBUG += -frange-check -fcheck=all #-finit-integer=-999 -finit-real=snan ## -ffpe-trap=invalid
+##DEBUG = -O0 -g -warn all -check all -traceback
 ##OMP = -openmp
-##PERF = -O2 -march=native -fwhole-file 
-##REAL = -fdefault-real-8  # for constants like 1.0, 2.0, etc.
-##F90 = gfortran-4.6
+##PERF = -O3 -xHOST -ipo 
+##REAL = -real-size 64
+##F90 = ifort
 ##CPP = -cpp
 ##FREE = -free
 ##PERFLDFLAGS = ${PERF}
 ####################################################
+
+
+##################################################
+# flags / settings for gfortran >= 4.6 compiler
+
+DEBUG = -O0 -g -Wall -Wextra -fbacktrace -fwhole-file
+DEBUG += -frange-check -fcheck=all #-finit-integer=-999 -finit-real=snan ## -ffpe-trap=invalid
+OMP = -fopenmp
+PERF = -O2 -march=native -fwhole-file 
+#PERF += ${OMP}
+REAL = -fdefault-real-8  # for constants like 1.0, 2.0, etc.
+F90 = gfortran-4.6
+CPP = -cpp
+FREE = -free
+PERFLDFLAGS = ${PERF}
+##################################################
 
 EXTERNAL = cbessel.o
 HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o

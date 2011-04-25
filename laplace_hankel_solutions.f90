@@ -119,49 +119,55 @@ contains
     complex(EP), dimension(size(p),size(zd)) :: udp
     complex(EP), dimension(size(p)) :: eta, xi
     complex(EP), dimension(3,size(p),size(zd)) :: g
+    complex(EP), dimension(2,size(p),size(zd)) :: ff
     integer :: np,nz
-    integer, allocatable :: zLay(:)
+    integer, allocatable :: zLay(:,:)
 
     nz = size(zD) ! # z vals requested 
     np = size(p)
 
-    allocate(zLay(nz))
+    allocate(zLay(np,nz))
 
     ! are # zvals requested same as given in program input?
     if(size(s%zLay) == nz) then
-       zLay = s%zLay
+       zLay(1:np,1:nz) = spread(s%zLay,1,np)
     else
-       ! last point is at the water table (for boundary conditions)
-       ! (always layer 3)
-       zLay = [s%zLay, 3]
+       ! last point is at the water table for boundary conditions
+       ! (top boundary condition is always layer 3)
+       zLay(1:np,1:nz) = spread([s%zLay, 3],1,np)
     end if
 
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
     xi(1:np) = eta(:)*f%alphaD/p(:)
 
-    where(spread(zLay == 3,dim=1,ncopies=np))
+    ff(1,1:np,1:nz) = spread(sinh(eta*w%dD),dim=2,ncopies=nz)
+    ff(2,1:np,1:nz) = spread(sinh(eta*(1.0-w%lD)),dim=2,ncopies=nz)
+
+    where(zLay == 3)
        ! above well screen
        g(1,1:np,1:nz) = cosh(eta(1:np) .X. (1.0 - w%dD - zD(1:nz)))
     end where
 
-    g(2,1:np,1:nz) = (spread(sinh(eta*w%dD),2,nz)*cosh(eta .X. zD) + &
-                    & spread(sinh(eta*(1.0-w%lD)),2,nz)*cosh(eta .X. (1.0-zD)))/&
-                    & spread(sinh(eta),2,nz)
+    where(zLay == 1 .or. zLay == 2)
+       g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zD) + ff(2,:,:)*cosh(eta .X. (1.0-zD)))/&
+            & spread(sinh(eta),2,nz)
+    end where
     
-    where(spread(zLay == 1,dim=1,ncopies=np))
+    where(zLay == 1)
        ! below well screen
        g(3,1:np,1:nz) = spread(exp(-eta*(1.0 - w%lD)) - &
-            & (sinh(eta*w%dD) + exp(-eta)*sinh(eta*(1.0 - w%lD)))/sinh(eta),2,nz)
+            & (ff(1,:,1) + exp(-eta)*ff(2,:,1))/sinh(eta),2,nz)
     end where
 
-    where(spread(zLay(1:nz) == 1,dim=1,ncopies=np))
+    where(zLay == 1)
        ! below well screen (0 <= zD <= 1-lD)
        udp(1:np,1:nz) =  g(3,:,:)*cosh(eta .X. zD)
     elsewhere
-       where(spread(zLay(1:nz) == 2,dim=1,ncopies=np))
+       where(zLay == 2)
           ! next to well screen (1-lD < zD < 1-dD)
           udp(1:np,1:nz) = 1.0_EP - g(2,:,:)
        elsewhere
+          ! zLay == 3
           ! above well screen (1-lD <= zD <= 1)
           udp(1:np,1:nz) = g(1,:,:) - g(2,:,:)
        end where
@@ -295,7 +301,7 @@ contains
             & ' D2:',delta2(1:3),' sH:',sH(1:3,1)
     end if
 
-999    format(A,ES11.3E3,5(A,3('(',ES12.3E4,',',ES12.3E4,')')))
+999 format(A,ES11.3E3,5(A,3('(',ES12.3E4,',',ES12.3E4,')')))
   end function mishraNeuman2010
   
 !!$  subroutine besselJYAsymptoticArg(nu,z,J,Y)
@@ -344,24 +350,24 @@ contains
 !!$
 !!$  end subroutine besselJYAsymptoticArg
 
-  subroutine besselJYAsymptoticOrder(nu,z,J,Y)
-    use constants, only : EP, PIEP, E, SQRT2
-    real(EP), dimension(2), intent(in) :: nu ! order
-    complex(EP), dimension(:), intent(in) :: z ! argument
-    complex(EP), dimension(size(z),2), intent(out) :: J, Y
-    integer :: i,k
-
-    ! evaluate the asymptotic expansion using extended range
-    ! so it can be used when the double-precision Amos routines
-    ! return overflow or underflow
-
-    ! http://dlmf.nist.gov/10.19#i
-    forall (k=1:size(z), i=1:2)
-       J(k,i) = 1.0/sqrt(2.0*PIEP*nu(i))*(E*z(k)/(2.0*nu(i)))**nu(i)
-       Y(k,i) = -SQRT2/(PIEP*nu(i))*(E*z(k)/(2.0*nu(i)))**(-nu(i))
-    end forall
-
-  end subroutine   besselJYAsymptoticOrder
+!!$  subroutine besselJYAsymptoticOrder(nu,z,J,Y)
+!!$    use constants, only : EP, PIEP, E, SQRT2
+!!$    real(EP), dimension(2), intent(in) :: nu ! order
+!!$    complex(EP), dimension(:), intent(in) :: z ! argument
+!!$    complex(EP), dimension(size(z),2), intent(out) :: J, Y
+!!$    integer :: i,k
+!!$
+!!$    ! evaluate the asymptotic expansion using extended range
+!!$    ! so it can be used when the double-precision Amos routines
+!!$    ! return overflow or underflow
+!!$
+!!$    ! http://dlmf.nist.gov/10.19#i
+!!$    forall (k=1:size(z), i=1:2)
+!!$       J(k,i) = 1.0/sqrt(2.0*PIEP*nu(i))*(E*z(k)/(2.0*nu(i)))**nu(i)
+!!$       Y(k,i) = -SQRT2/(PIEP*nu(i))*(E*z(k)/(2.0*nu(i)))**(-nu(i))
+!!$    end forall
+!!$
+!!$  end subroutine   besselJYAsymptoticOrder
 
 end module laplace_hankel_solutions
 
