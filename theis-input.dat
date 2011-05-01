@@ -14,5 +14,5 @@
 2  2  8  40                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
 timedata.dat  15.5            :: file to read time data from (and default t otherwise)
 spacedata.dat  6.5837          :: file to read space data from (and default r otherwise)
-34.564  0.0D0  3                  :: top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
+34.564  0.0D0  3  2.54D-2  20.0                :: top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer), radius of monitoring well, well bore shape factor
 theis-test.out
