@@ -192,7 +192,7 @@ contains
 
     complex(EP), dimension(size(p),size(zD)) :: sD, sU
     complex(EP), dimension(size(p),size(zD)+1) :: sH
-    integer :: i, nzero, ierr, np, nz
+    integer :: i,  np, nz
 
     ! extended precision version used in asymptotic expansion
     real(EP), dimension(size(p)) :: nuep
@@ -213,6 +213,8 @@ contains
     complex(EP), dimension(size(p)) :: eta
     complex(EP), dimension(size(p),2) :: J,Y
     
+    integer(4) :: kode = 2, num = 2, nzero, ierr
+
     np = size(p)
     nz = size(zD)
 
@@ -237,14 +239,14 @@ contains
     
     do i= 1,np
        ! kode=2 is scaled BF
-       call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),nz=nzero,ierr=ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
 !!$             stop
        else
           J(i,1:2) = tmp(1:2)
        end if
-       call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),nz=nzero,ierr=ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
 !!$             stop
@@ -266,14 +268,14 @@ contains
 
     ! kode=2 is scaled BF
     do i= 1,np
-       call cbesj(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),nz=nzero,ierr=ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
 !!$             stop
        else
           J(i,1:2) = tmp(1:2)
        end if
-       call cbesy(z=phi(i),fnu=nu,kode=2,n=2,cy=tmp(1:2),nz=nzero,ierr=ierr)
+       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),nz=nzero,ierr=ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
 !!$             stop
