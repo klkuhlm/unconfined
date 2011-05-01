@@ -48,9 +48,11 @@ params(4) = dD;
 params(5) = lD;
 params(6) = rDw;
 params(7)= rDw^2/(2*(l-d)*Ss);
-params(8) = 0.3; %\beta_D, the linearization parameter of Malama (2011)
-                 %\beta_D = 0 corresponds to Neuman (1972, 1974)
-params(9) = pi*rDw_obs^2/(sF*Ss);%Dimensionless delay time for obs well
+%\beta_D, the linearization parameter of Malama (2011)
+params(8) = 0.3; 
+%\beta_D = 0 corresponds to Neuman (1972, 1974)
+%Dimensionless delay time for obs well
+params(9) = pi*rDw_obs^2/(sF*Ss);
 params(10) = ac*Sy/Ss;
 params(11) = b*(ak-ac);
 params(12) = ak*(phi_a - phi_k);

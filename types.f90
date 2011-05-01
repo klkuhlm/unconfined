@@ -103,6 +103,7 @@ module types
      real(DP) :: Q = -999. ! volumetric pumping rate
  
      ! dimensionless parameters
+     real(DP) :: rDw = -999. ! dimensionless well radius
      real(DP) :: lD = -999.  ! dimensionless l
      real(DP) :: dD = -999.  ! dimensionless d
      real(DP) :: bD = -999.  ! dimensionless screen length
@@ -174,6 +175,10 @@ module types
 
      ! top/bot of monitoring well screen 
      real(DP) :: zTop = -999., zBot = -999. 
+     ! diameter of observation well 
+     real(DP) :: rwobs = -999., rDwobs = -999.
+     ! observation well shape factor
+     real(DP) :: sF = -999.
      ! order of quadrature at monitoring well screen
      integer :: zOrd = -999 
 

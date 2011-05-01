@@ -51,16 +51,17 @@ contains
        xi(1:np) = eta(:)*f%alphaD/lap%p(:)
        udf(1:np,1:nz) = theis(a,lap%p,nz)
 
-!!$       where(spread(abs(eta) < MAXEXP ,2,nz))
+       where(spread(abs(eta) < MAXEXP ,2,nz))
           ! naive implementation of formula
           fp(1:np,1:nz) = udf*(1.0_EP - cosh(eta .X. s%zD)/ &
-               & spread((1.0_EP + f%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz))
-!!$       elsewhere
-!!$          ! substitute cosh()&sinh() -> exp() and re-arrange 
-!!$          ! only valid when cosh(eta) = 0.5*exp(eta) numerically 
-!!$          fp(1:np,1:nz) = udf*(1.0_EP - exp(eta .X. (s%zD - 1.0))/ &
-!!$               & spread(1.0_EP + f%betaD*eta*xi + xi,2,nz))
-!!$       end where
+               & spread((1.0_EP + f%beta*eta*xi)*&
+               & cosh(eta) + xi*sinh(eta),2,nz))
+       elsewhere
+          ! substitute cosh()&sinh() -> exp() and re-arrange 
+          ! only valid when cosh(eta) = 0.5*exp(eta) numerically 
+          fp(1:np,1:nz) = udf*(1.0_EP - exp(eta .X. (s%zD - 1.0))/ &
+               & spread(1.0_EP + f%betaD*eta*xi + xi,2,nz))
+       end where
        deallocate(eta,xi)
 
     case(5)
@@ -71,13 +72,15 @@ contains
        xi(1:np) = eta(:)*f%alphaD/lap%p(:)
        udp(1:np,1:nz+1) = hantush(a,[s%zD,1.0],s,lap%p,f,w)
 
-!!$       where(spread(abs(eta)<MAXEXP,2,nz))
+       where(spread(abs(eta)<MAXEXP,2,nz))
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
-               & cosh(eta .X. s%zD)/spread((1.0_EP + f%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz)
-!!$       elsewhere
-!!$          fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
-!!$               & exp(eta .X. (s%zD-1.0))/spread(1.0_EP + f%betaD*eta*xi + xi,2,nz)
-!!$       end where
+               & cosh(eta .X. s%zD)/spread((1.0_EP + f%beta*eta*xi)*&
+               & cosh(eta) + xi*sinh(eta),2,nz)
+       elsewhere
+          fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
+               & exp(eta .X. (s%zD-1.0))/&
+               & spread(1.0_EP + f%betaD*eta*xi + xi,2,nz)
+       end where
        deallocate(eta,xi,udp)
 
     case(6)
@@ -87,7 +90,7 @@ contains
     end select
 
     ! apply common Hankel-transform and time-behavior factors
-    fp(1:np,1:nz) = a*bessel_j0(a*rD)*fp(:,:)*spread(lapTime(lap),2,nz)
+    fp(1:np,1:nz) = a*bessel_j0(a*rD)*fp*spread(lapTime(lap),2,nz)
 
   end function lap_hank_soln
   
@@ -102,9 +105,83 @@ contains
 
   end function theis
 
+  function hantushstorage(a,zD,s,p,f,w) result(u)
+    use constants, only : DP, EP, PI
+    use types, only : well, formation, invLaplace, solution
+    use time, only : lapTime
+    use utility, only : operator(.X.), cosh, sinh
+    use cbessel, only : cbesk ! Amos routine
+    implicit none
+    
+    real(EP), intent(in) :: a
+    real(DP), dimension(:), intent(in) :: zD
+    complex(EP), dimension(:), intent(in) :: p
+    type(solution), intent(in) :: s
+    type(well), intent(in) :: w
+    type(formation), intent(in) :: f
+    complex(EP), dimension(size(p),size(zd)) :: u, uDp
+
+    complex(DP), dimension(0:1,size(p)) :: K
+    complex(EP), dimension(size(p)) :: eta, xi, A0, uDf
+    complex(EP), dimension(3,size(p)) :: ff
+    complex(EP), dimension(2,size(p),size(zd)) :: g
+
+    real(DP) :: CDw, tDb
+    integer :: np,nz,i
+    integer(4) :: kode = 1, num = 2, nzero, ierr
+
+    np = size(p)
+    nz = size(zd)
+
+    ! dimensionless well storage coefficient
+    CDw = w%rDw**2/(2.0*(w%l - w%d)*f%Ss)
+    
+    ! dimensionless well delay time
+    tDb = PI*s%rDwobs**2/(s%sF*f%Ss)
+    
+    xi(1:np) = w%rDw*sqrt(p(:))
+    eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
+
+    do i=1,np
+       call cbesk(z=cmplx(xi(i),kind=DP),fnu=0.0,kode=kode,&
+            & n=num,cy=K(0:1,i),nz=nzero,ierr=ierr)
+       if (ierr > 0 .and. ierr /= 3) then
+          print *, 'ERROR: CBESK z=',xi(i),&
+               &' i,ierr,nz:',i,ierr,nzero
+       end if
+    end do
+    
+    A0(1:np) = 2.0/(p(:)*CDw*K(0,:) + xi(:)*K(1,:))
+    uDf(1:np) = A0(:)/(p*(p + a**2)*(p*tDb + 1.0_EP))
+    
+    ff(1,1:np) = sinh(eta(:)*w%dD)
+    ff(2,1:np) = sinh(eta(:)*(1.0 - w%lD))
+    ff(3,1:np) = exp(-eta(:)*(1.0 - w%lD)) - &
+         & (ff(1,:) + exp(-eta(:))*ff(2,:))/sinh(eta(:))
+
+    g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zd(:)))
+    g(2,1:np,1:nz) = (spread(ff(1,:),2,nz)*cosh(eta .X. zd) + &
+         & spread(ff(2,:),2,nz)*cosh(eta .X. (1.0 - zd)))/&
+         & spread(sinh(eta(:)),2,nz)
+
+    where (spread(zD > 1-w%dD,2,nz))
+       uDp(1:np,1:nz) = g(1,:,:) - g(2,:,:)
+    elsewhere 
+       where (spread(zD < (1.0-w%lD),2,nz))
+          uDp(1:np,1:nz) = spread(ff(3,:),2,nz)*cosh(eta .X. zd)
+       elsewhere
+          uDp(1:np,1:nz) = 1.0_EP - g(2,:,:)
+       end where
+    end where
+    
+    u(1:np,1:nz) = spread(uDf(:)/w%bD,2,nz)*uDp(:,:)
+
+  end function hantushstorage
+  
+
   function hantush(a,zD,s,p,f,w) result(udp)
     ! implemented in the form given in Malama,Kuhlman & Barrash 2008 
-    use constants, only : DP, EP, MAXEXP
+    use constants, only : DP, EP
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
     use utility, only : operator(.X.), cosh, sinh
@@ -145,12 +222,12 @@ contains
 
     where(zLay == 3)
        ! above well screen
-       g(1,1:np,1:nz) = cosh(eta(1:np) .X. (1.0 - w%dD - zD(1:nz)))
+       g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zD(:)))
     end where
 
     where(zLay == 1 .or. zLay == 2)
-       g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zD) + ff(2,:,:)*cosh(eta .X. (1.0-zD)))/&
-            & spread(sinh(eta),2,nz)
+       g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zD) + ff(2,:,:)*&
+            & cosh(eta .X. (1.0-zD)))/spread(sinh(eta),2,nz)
     end where
     
     where(zLay == 1)
@@ -213,6 +290,7 @@ contains
     complex(EP), dimension(size(p)) :: eta
     complex(EP), dimension(size(p),2) :: J,Y
     
+    !  size integer expected by BF library
     integer(4) :: kode = 2, num = 2, nzero, ierr
 
     np = size(p)
@@ -239,16 +317,20 @@ contains
     
     do i= 1,np
        ! kode=2 is scaled BF
-       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),nz=nzero,ierr=ierr)
+       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+            & nz=nzero,ierr=ierr)
        if (ierr > 0 .and. ierr /= 3) then
-          print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
+          print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
+               &' i,ierr,nz:',i,ierr,nzero
 !!$             stop
        else
           J(i,1:2) = tmp(1:2)
        end if
-       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),nz=nzero,ierr=ierr)
+       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+            &nz=nzero,ierr=ierr)
        if (ierr > 0 .and. ierr /= 3) then
-          print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
+          print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
+               &' i,ierr,nz:',i,ierr,nzero
 !!$             stop
        else
           Y(i,1:2) = tmp(1:2)
@@ -268,16 +350,20 @@ contains
 
     ! kode=2 is scaled BF
     do i= 1,np
-       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),nz=nzero,ierr=ierr)
+       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+            &nz=nzero,ierr=ierr)
        if (ierr > 0 .and. ierr /= 3) then
-          print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
+          print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
+               &' i,ierr,nz:',i,ierr,nzero
 !!$             stop
        else
           J(i,1:2) = tmp(1:2)
        end if
-       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),nz=nzero,ierr=ierr)
+       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+            &nz=nzero,ierr=ierr)
        if (ierr > 0 .and. ierr /= 3) then
-          print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,' i,ierr,nz:',i,ierr,nzero
+          print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
+               &' i,ierr,nz:',i,ierr,nzero
 !!$             stop
        else
           Y(i,1:2) = tmp(1:2)
@@ -295,12 +381,13 @@ contains
     delta1(1:np) = (aa(1,1,:)*Y(:,1) - aa(1,2,:)*J(:,1))/delta2(:)* &
          & 2.0*eta(:)*sinh(eta(:)) - cosh(eta(:))
 
-    sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(1:np),2,nz)*cosh(eta(1:np) .X. s%zD(1:nz))
+    sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(1:np),2,nz)*&
+         &cosh(eta(1:np) .X. s%zD(1:nz))
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
     if (s%quiet > 1) then
-       write(*,999) ' nu:',nu,' phi:',phiep(1:3),' sU:',su(1:3,1),' D1:',delta1(1:3),&
-            & ' D2:',delta2(1:3),' sH:',sH(1:3,1)
+       write(*,999) ' nu:',nu,' phi:',phiep(1:3),' sU:',su(1:3,1),&
+            &' D1:',delta1(1:3),' D2:',delta2(1:3),' sH:',sH(1:3,1)
     end if
 
 999 format(A,ES11.3E3,5(A,3('(',ES12.3E4,',',ES12.3E4,')')))

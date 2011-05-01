@@ -233,7 +233,7 @@ contains
     ! if computing contour or profile, these aren't used
     ! point observation depth only top used if piezometer
     ! z is positive up, with zero at bottom of aquifer
-    read(19,*) s%zTop, s%zBot, s%zOrd 
+    read(19,*) s%zTop, s%zBot, s%zOrd, s%rwobs, s%sF 
 
     if (s%zTop <= s%zBot .or. s%zTop < 0.0 .or. s%zBot > 1.0) then
        write(*,*) 'ERROR: top of monitoring well screen must be',&
@@ -403,11 +403,14 @@ contains
     ! thickness of aquifer (which may not be the characteristic length - see above)
 
     ! dimensionless lengths
-    w%l = w%l*f%b
+    ! assume dimensionless l_D and d_D were entered (with Lc = b), convert them back
+    w%l = w%l*f%b  
     w%d = w%d*f%b
     w%lD = w%l/s%Lc
     w%dD = w%d/s%Lc
     w%bD = abs(w%lD - w%dD)
+    w%rDw = w%rw/s%Lc
+    s%rDwobs = s%rwobs/s%Lc
 
     ! dimensionless sorptive numbers
     f%acD = f%ac*s%Lc
@@ -544,7 +547,7 @@ contains
          & w%Q
     write(unit,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
          & f%b
-    write(unit,'(A,2('//RFMT//',1X))') '# l/b,d/b (screen bot & top) :: ',&
+    write(unit,'(A,2('//RFMT//',1X))') '# l,d (screen bot & top) :: ',&
          & w%l, w%d  
     write(unit,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
          & w%rw, w%rc  
