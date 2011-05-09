@@ -36,8 +36,8 @@ contains
        fp(1:np,1:nz) = hantush(a,s%zD,s,lap%p,f,w)
 
     case(2)
-       ! Boulton/Herrera (uconfined, non-physical boundary condition)
-       stop 'ERROR Boulton/Herrera model not implemented yet'
+       ! Hantush-style solution with wellbore storage
+       fp(1:np,1:nz) = hantushstorage(a,s%zD,s,lap%p,f,w)
 
     case(3)
        ! Moench (unconfined w/ wellbore storage)

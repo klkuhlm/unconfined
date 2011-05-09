@@ -146,14 +146,14 @@ module types
      integer :: model = -999
      ! 0 = Theis (confined fully penetrating)
      ! 1 = Hantush (confined partially penetrating)
-     ! 2 = Boulton/Herrera 195?
+     ! 2 = Hantush-type with wellbore storage
      ! 3 = Moench 199?
      ! 4 = Malama 2011 fully penetrating 
      ! 5 = Malama 2011 partially penetrating
      ! 6 = Mishra/Neuman 2011
      
      character(15), dimension(0:6) :: modelDescrip = [ &
-          & 'Theis          ', 'Hantush        ', 'Boulton        ', &
+          & 'Theis          ', 'Hantush        ', 'Hantush w/ stor', &
           & 'Moench         ', 'Malama full pen', 'Malama part pen', &
           & 'Mishra/Neuman  ']
 

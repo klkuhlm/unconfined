@@ -14,5 +14,5 @@
 2  2  8  40                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
 timedata.dat  5.5            :: file to read time data from (and default t otherwise)
 spacedata.dat 0.25           :: file to read space data from (and default r otherwise)
-5.0D-1  0.0D0  3                  :: top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not piezo.)
+5.0D-1  0.0D0  3  0.01 20                :: top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not piezo.)
 malama-test.out
