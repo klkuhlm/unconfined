@@ -18,9 +18,9 @@
 # flags / settings for gfortran >= 4.6 compiler
 
 DEBUG = -O0 -g -Wall -Wextra -fbacktrace -fwhole-file
-DEBUG += -frange-check -fcheck=all #-finit-integer=-999 -finit-real=snan ## -ffpe-trap=invalid
+DEBUG += -frange-check -fcheck=all 
 OMP = -fopenmp
-PERF = -O3 -march=native -fwhole-file 
+PERF = -Ofast -march=native 
 #PERF += $(OMP)
 DEFAULTS = -fdefault-real-8 -fdefault-integer-8 
 F90 = gfortran-4.7

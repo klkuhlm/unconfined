@@ -9,9 +9,9 @@
 5.67D-5  3.01D-1               :: Ss,Sy
 9.0                         ::  beta Malama linearization parameter
 5.68D0  2.366D+1   34.1D-2  30.98D-2   2.75      :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L
-10  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
-8  6                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
-2  2  8  40                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
+18  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
+10  8                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
+2  2  10  40                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
 timedata.dat  5.5            :: file to read time data from (and default t otherwise)
 spacedata.dat 0.25           :: file to read space data from (and default r otherwise)
 5.0D-1  0.0D0  3  0.01 20                :: top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not piezo.)

@@ -72,15 +72,15 @@ contains
        xi(1:np) = eta(:)*f%alphaD/lap%p(:)
        udp(1:np,1:nz+1) = hantush(a,[s%zD,1.0],s,lap%p,f,w)
 
-       where(spread(abs(eta)<MAXEXP,2,nz))
+!!$       where(spread(abs(eta)<MAXEXP,2,nz))
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
                & cosh(eta .X. s%zD)/spread((1.0_EP + f%beta*eta*xi)*&
                & cosh(eta) + xi*sinh(eta),2,nz)
-       elsewhere
-          fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
-               & exp(eta .X. (s%zD-1.0))/&
-               & spread(1.0_EP + f%betaD*eta*xi + xi,2,nz)
-       end where
+!!$       elsewhere
+!!$          fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
+!!$               & exp(eta .X. (s%zD-1.0))/&
+!!$               & spread(1.0_EP + f%betaD*eta*xi + xi,2,nz)
+!!$       end where
        deallocate(eta,xi,udp)
 
     case(6)

@@ -83,6 +83,8 @@ program Driver
      ! using 'optimal' vector of p values for each time
      l%p(1:l%np) = pvalues(TEE_MULT*s%tD(i),l)
 
+     write(*,'(i0,3(3X,ES11.3,1X,ES11.3))') i,'t=',l%p(1:3)
+
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      ! finite portion of Hankel integral (Tanh-Sinh quadrature)
      ! integrate from origin (a=0) to the J0 zero identified in input
