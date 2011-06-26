@@ -217,8 +217,7 @@ program Driver
         !$OMP PARALLEL DO SHARED(totint,totintd,l,s,totlap,i,tee)
         do m = 1,s%nz
            ! dh/d(ln(t)) = t*dh/dt = t*h*p
-           totintd(m) = dehoog(s%tD(i),tee,totlap(1:l%np,m)*&
-                & spread(l%p(1:l%np),2,s%nz),l)*s%tD(i)
+           totintd(m) = dehoog(s%tD(i),tee,totlap(1:l%np,m)*l%p(1:l%np),l)*s%tD(i)
         end do
         !$OMP END PARALLEL DO
 

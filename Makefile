@@ -17,7 +17,7 @@
 ##################################################
 # flags / settings for gfortran >= 4.6 compiler
 
-DEBUG = -O0 -g -Wall -Wextra -fbacktrace -fwhole-file
+DEBUG = -O0 -g -Wall -Wextra -fwhole-file
 DEBUG += -frange-check -fcheck=all 
 OMP = -fopenmp
 PERF = -Ofast -march=native 
@@ -43,7 +43,7 @@ F90SRC=$(patsubst %.o,%.f90,$(OBJS) $(MAIN))
 OUT = unconfined
 DEBUGOUT = debug_$(OUT)
 
-LD = $(F90)
+LD = $(F90) -fbacktrace
 
 ####### default optimized (no debugging) target ##########################
 # only the driver routine has openmp directives
