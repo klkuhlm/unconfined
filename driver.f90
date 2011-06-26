@@ -214,19 +214,13 @@ program Driver
         end do
         !$OMP END PARALLEL DO
 
-        ! pre-multiply by p, to avoid doing multiplication in argument of function
-        ! and creating an array temporary.
-        totlap(1:l%np,1:s%nz) = totlap(:,:)*spread(l%p(1:l%np),2,s%nz)
-
         !$OMP PARALLEL DO SHARED(totint,totintd,l,s,totlap,i,tee)
         do m = 1,s%nz
            ! dh/d(ln(t)) = t*dh/dt = t*h*p
-           totintd(m) = dehoog(s%tD(i),tee,totlap(1:l%np,m),l)
+           totintd(m) = dehoog(s%tD(i),tee,totlap(1:l%np,m)*&
+                & spread(l%p(1:l%np),2,s%nz),l)*s%tD(i)
         end do
         !$OMP END PARALLEL DO
-
-        ! multiply by t for last part of log-derivative
-        totintd(1:s%nz) = totintd(:)*s%tD(i) 
 
         ! do trapezoid rule across monitoring well screen if necessary
         ! result is divided by length of interval to get average value
