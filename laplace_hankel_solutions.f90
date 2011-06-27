@@ -115,7 +115,7 @@ contains
     type(well), intent(in) :: w
     type(formation), intent(in) :: f
     complex(EP), dimension(size(p),size(zD)) :: udp
-    complex(EP), dimension(size(p)) :: eta, xi
+    complex(EP), dimension(size(p)) :: eta
     complex(EP), dimension(3,size(p),size(zD)) :: g
     complex(EP), dimension(2,size(p),size(zD)) :: ff
     integer, dimension(size(p),size(zD)) :: zLay
@@ -136,17 +136,15 @@ contains
     end if
 
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
-    xi(1:np) = eta(:)*f%alphaD/p(:)
-
-    ff(1,1:np,1:nz) = spread(sinh(eta*w%dD),2,nz)
-    ff(2,1:np,1:nz) = spread(sinh(eta*(1.0 - w%lD)),2,nz)
-
+    
     where(zLay == 3)
        ! above well screen
        g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zD(:)))
     end where
 
     where(zLay == 1 .or. zLay == 2)
+       ff(1,1:np,1:nz) = spread(sinh(eta*w%dD),2,nz)
+       ff(2,1:np,1:nz) = spread(sinh(eta*(1.0 - w%lD)),2,nz)
        g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zD) + ff(2,:,:)*&
             & cosh(eta .X. (1.0 - zD)))/spread(sinh(eta),2,nz)
     end where
@@ -193,7 +191,7 @@ contains
 
     complex(DP), dimension(0:1,size(p)) :: K
     complex(EP), dimension(size(p)) :: eta, xi, A0, uDf
-    complex(EP), dimension(3,size(p)) :: ff
+    complex(EP), dimension(3,size(p),size(zD)) :: ff
     complex(EP), dimension(2,size(p),size(zD)) :: g
 
     real(DP) :: CDw, tDb
@@ -231,32 +229,30 @@ contains
     
     A0(1:np) = 2.0/(p(:)*CDw*K(0,:) + xi(:)*K(1,:))
     uDf(1:np) = A0(:)/(p*(p + a**2)*(p*tDb + 1.0_EP))
-    
-    if (any(zLay(1,1:nz) == 1) .or. any(zLay(1,1:nz) == 2)) then
-       ff(1,1:np) = sinh(eta(:)*w%dD)
-       ff(2,1:np) = sinh(eta(:)*(1.0 - w%lD))
-    end if
-    
-    if (any(zLay(1,1:nz) == 1)) then
-       ff(3,1:np) = exp(-eta(:)*(1.0 - w%lD)) - &
-            & (ff(1,:) + exp(-eta(:))*ff(2,:))/sinh(eta(:))
-    end if
-    
+        
     where (zLay == 3)
        g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zd(:)))
     end where
     
     where (zLay == 1 .or. zLay == 2)
-       g(2,1:np,1:nz) = (spread(ff(1,:),2,nz)*cosh(eta .X. zd) + &
-            & spread(ff(2,:),2,nz)*cosh(eta .X. (1.0 - zd)))/&
+       ff(1,1:np,1:nz) = spread(sinh(eta(:)*w%dD),2,nz)
+       ff(2,1:np,1:nz) = spread(sinh(eta(:)*(1.0 - w%lD)),2,nz)
+
+       g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zd) + &
+            & ff(2,:,:)*cosh(eta .X. (1.0 - zd)))/&
             & spread(sinh(eta(:)),2,nz)
+    end where
+
+    where (zLay == 1)
+       ff(3,1:np,1:nz) = spread(exp(-eta(:)*(1.0 - w%lD)) - &
+            & (ff(1,:,1) + exp(-eta(:))*ff(2,:,1))/sinh(eta(:)),2,nz)
     end where
 
     where (zLay == 3) !!(spread(zD > 1-w%dD,2,nz))
        uDp(1:np,1:nz) = g(1,:,:) - g(2,:,:)
     elsewhere 
        where (zLay == 1) !!(spread(zD < (1.0-w%lD),2,nz))
-          uDp(1:np,1:nz) = spread(ff(3,:),2,nz)*cosh(eta .X. zd)
+          uDp(1:np,1:nz) = ff(3,:,:)*cosh(eta .X. zd)
        elsewhere
           ! zLay == 2
           uDp(1:np,1:nz) = 1.0_EP - g(2,:,:)

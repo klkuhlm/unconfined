@@ -236,11 +236,17 @@ contains
     read(19,*) s%zTop, s%zBot, s%zOrd, s%rwobs, s%sF 
 
     if (s%zTop <= s%zBot .or. s%zTop < 0.0 .or. s%zBot > 1.0) then
-       write(*,*) 'ERROR: top of monitoring well screen must be',&
+       write(*,*) 'ERROR: top of monitoring well screen must be ',&
             & 'above bottom and both between 0 and 1',s%zTop,s%zBot
-       stop
+       stop 666
     end if
     
+    if (s%zTop > 1.0 .or. s%zBot < 0.0) then
+       write(*,*) 'ERROR: top of monitoring well screen must be ',&
+            & 'above bottom and both between 0 and 1',s%zTop,s%zBot
+       stop 667
+    end if
+
     if (.not. s%piezometer .and. s%zOrd < 1) then
        write(*,*) 'ERROR: # of quadrature points at ',&
             & 'monitoring location must be > 0', s%zOrd
