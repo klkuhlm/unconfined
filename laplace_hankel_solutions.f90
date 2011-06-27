@@ -9,7 +9,7 @@ contains
     use constants, only : DP, EP, MAXEXP
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
-    use utility, only : operator(.X.) !!, cosh, sinh 
+    use utility, only : operator(.X.) 
 
     implicit none
     
@@ -109,7 +109,7 @@ contains
     use constants, only : DP, EP, PI
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
-    use utility, only : operator(.X.) !!, cosh, sinh
+    use utility, only : operator(.X.) 
     use cbessel, only : cbesk ! Amos routine
     implicit none
     
@@ -180,11 +180,11 @@ contains
   
 
   function hantush(a,zD,s,p,f,w) result(udp)
-    ! implemented in the form given in Malama,Kuhlman & Barrash 2008 
+    ! implemented in the form given in Malama, Kuhlman & Barrash 2008 
     use constants, only : DP, EP
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
-    use utility, only : operator(.X.) !!, cosh, sinh
+    use utility, only : operator(.X.) 
     implicit none
     
     real(EP), intent(in) :: a
@@ -256,7 +256,7 @@ contains
   function mishraNeuman2010(a,zD,s,p,f,w) result(sD)
     use constants, only : DP, EP, EYE, PIEP, E, SQRT2
     use types, only : well, formation, solution
-    use utility, only : operator(.X.) !!, cosh, sinh
+    use utility, only : operator(.X.) 
     use cbessel, only : cbesj, cbesy ! Amos routines
     implicit none
     
