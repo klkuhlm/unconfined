@@ -105,7 +105,7 @@ contains
 
   end function theis
 
-  function hantush(a,zD,s,p,f,w) result(udp)
+  function hantush(a,zD,sol,p,f,w) result(udp)
     ! implemented in the form given in Malama, Kuhlman & Barrash 2008 
     use constants, only : DP, EP
     use types, only : well, formation, invLaplace, solution
@@ -116,7 +116,7 @@ contains
     real(EP), intent(in) :: a
     real(DP), dimension(:), intent(in) :: zD
     complex(EP), dimension(:), intent(in) :: p
-    type(solution), intent(in) :: s
+    type(solution), intent(in) :: sol
     type(well), intent(in) :: w
     type(formation), intent(in) :: f
     complex(EP), dimension(size(p),size(zd)) :: udp
@@ -132,12 +132,12 @@ contains
     allocate(zLay(np,nz))
 
     ! are # zvals requested same as given in program input?
-    if(size(s%zLay) == nz) then
-       zLay(1:np,1:nz) = spread(s%zLay,1,np)
+    if(size(sol%zLay) == nz) then
+       zLay(1:np,1:nz) = spread(sol%zLay,1,np)
     else
        ! last point is at the water table for boundary conditions
        ! (top boundary condition is always layer 3)
-       zLay(1:np,1:nz) = spread([s%zLay, 3],1,np)
+       zLay(1:np,1:nz) = spread([sol%zLay, 3],1,np)
     end if
 
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
