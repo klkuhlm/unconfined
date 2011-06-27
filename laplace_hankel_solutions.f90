@@ -105,80 +105,6 @@ contains
 
   end function theis
 
-  function hantushstorage(a,zD,s,p,f,w) result(u)
-    use constants, only : DP, EP, PI
-    use types, only : well, formation, invLaplace, solution
-    use time, only : lapTime
-    use utility, only : operator(.X.) 
-    use cbessel, only : cbesk ! Amos routine
-    implicit none
-    
-    real(EP), intent(in) :: a
-    real(DP), dimension(:), intent(in) :: zD
-    complex(EP), dimension(:), intent(in) :: p
-    type(solution), intent(in) :: s
-    type(well), intent(in) :: w
-    type(formation), intent(in) :: f
-    complex(EP), dimension(size(p),size(zd)) :: u, uDp
-
-    complex(DP), dimension(0:1,size(p)) :: K
-    complex(EP), dimension(size(p)) :: eta, xi, A0, uDf
-    complex(EP), dimension(3,size(p)) :: ff
-    complex(EP), dimension(2,size(p),size(zd)) :: g
-
-    real(DP) :: CDw, tDb
-    integer :: np,nz,i
-    integer(4) :: kode = 1, num = 2, nzero, ierr
-
-    np = size(p)
-    nz = size(zd)
-
-    ! dimensionless well storage coefficient
-    CDw = w%rDw**2/(2.0*(w%l - w%d)*f%Ss)
-    
-    ! dimensionless well delay time
-    tDb = PI*s%rDwobs**2/(s%sF*f%Ss)
-    
-    xi(1:np) = w%rDw*sqrt(p(:))
-    eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
-
-    do i=1,np
-       call cbesk(z=cmplx(xi(i),kind=DP),fnu=0.0,kode=kode,&
-            & n=num,cy=K(0:1,i),nz=nzero,ierr=ierr)
-       if (ierr > 0 .and. ierr /= 3) then
-          print *, 'ERROR: CBESK z=',xi(i),&
-               &' i,ierr,nz:',i,ierr,nzero
-       end if
-    end do
-    
-    A0(1:np) = 2.0/(p(:)*CDw*K(0,:) + xi(:)*K(1,:))
-    uDf(1:np) = A0(:)/(p*(p + a**2)*(p*tDb + 1.0_EP))
-    
-    ff(1,1:np) = sinh(eta(:)*w%dD)
-    ff(2,1:np) = sinh(eta(:)*(1.0 - w%lD))
-    ff(3,1:np) = exp(-eta(:)*(1.0 - w%lD)) - &
-         & (ff(1,:) + exp(-eta(:))*ff(2,:))/sinh(eta(:))
-
-    g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zd(:)))
-    g(2,1:np,1:nz) = (spread(ff(1,:),2,nz)*cosh(eta .X. zd) + &
-         & spread(ff(2,:),2,nz)*cosh(eta .X. (1.0 - zd)))/&
-         & spread(sinh(eta(:)),2,nz)
-
-    where (spread(zD > 1-w%dD,2,nz))
-       uDp(1:np,1:nz) = g(1,:,:) - g(2,:,:)
-    elsewhere 
-       where (spread(zD < (1.0-w%lD),2,nz))
-          uDp(1:np,1:nz) = spread(ff(3,:),2,nz)*cosh(eta .X. zd)
-       elsewhere
-          uDp(1:np,1:nz) = 1.0_EP - g(2,:,:)
-       end where
-    end where
-    
-    u(1:np,1:nz) = spread(uDf(:)/w%bD,2,nz)*uDp(:,:)
-
-  end function hantushstorage
-  
-
   function hantush(a,zD,s,p,f,w) result(udp)
     ! implemented in the form given in Malama, Kuhlman & Barrash 2008 
     use constants, only : DP, EP
@@ -253,6 +179,79 @@ contains
     udp(1:np,1:nz) = udp(:,:)*theis(a,p,nz)/w%bD
   end function hantush
   
+  function hantushstorage(a,zD,s,p,f,w) result(u)
+    use constants, only : DP, EP, PI
+    use types, only : well, formation, invLaplace, solution
+    use time, only : lapTime
+    use utility, only : operator(.X.) 
+    use cbessel, only : cbesk ! Amos routine
+    implicit none
+    
+    real(EP), intent(in) :: a
+    real(DP), dimension(:), intent(in) :: zD
+    complex(EP), dimension(:), intent(in) :: p
+    type(solution), intent(in) :: s
+    type(well), intent(in) :: w
+    type(formation), intent(in) :: f
+    complex(EP), dimension(size(p),size(zd)) :: u, uDp
+
+    complex(DP), dimension(0:1,size(p)) :: K
+    complex(EP), dimension(size(p)) :: eta, xi, A0, uDf
+    complex(EP), dimension(3,size(p)) :: ff
+    complex(EP), dimension(2,size(p),size(zd)) :: g
+
+    real(DP) :: CDw, tDb
+    integer :: np,nz,i
+    integer(4) :: kode = 1, num = 2, nzero, ierr
+
+    np = size(p)
+    nz = size(zd)
+
+    ! dimensionless well storage coefficient
+    CDw = w%rDw**2/(2.0*(w%l - w%d)*f%Ss)
+    
+    ! dimensionless well delay time
+    tDb = PI*s%rDwobs**2/(s%sF*f%Ss)
+    
+    xi(1:np) = w%rDw*sqrt(p(:))
+    eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
+
+    do i=1,np
+       call cbesk(z=cmplx(xi(i),kind=DP),fnu=0.0,kode=kode,&
+            & n=num,cy=K(0:1,i),nz=nzero,ierr=ierr)
+       if (ierr > 0 .and. ierr /= 3) then
+          print *, 'ERROR: CBESK z=',xi(i),&
+               &' i,ierr,nz:',i,ierr,nzero
+       end if
+    end do
+    
+    A0(1:np) = 2.0/(p(:)*CDw*K(0,:) + xi(:)*K(1,:))
+    uDf(1:np) = A0(:)/(p*(p + a**2)*(p*tDb + 1.0_EP))
+    
+    ff(1,1:np) = sinh(eta(:)*w%dD)
+    ff(2,1:np) = sinh(eta(:)*(1.0 - w%lD))
+    ff(3,1:np) = exp(-eta(:)*(1.0 - w%lD)) - &
+         & (ff(1,:) + exp(-eta(:))*ff(2,:))/sinh(eta(:))
+
+    g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zd(:)))
+    g(2,1:np,1:nz) = (spread(ff(1,:),2,nz)*cosh(eta .X. zd) + &
+         & spread(ff(2,:),2,nz)*cosh(eta .X. (1.0 - zd)))/&
+         & spread(sinh(eta(:)),2,nz)
+
+    where (spread(zD > 1-w%dD,2,nz))
+       uDp(1:np,1:nz) = g(1,:,:) - g(2,:,:)
+    elsewhere 
+       where (spread(zD < (1.0-w%lD),2,nz))
+          uDp(1:np,1:nz) = spread(ff(3,:),2,nz)*cosh(eta .X. zd)
+       elsewhere
+          uDp(1:np,1:nz) = 1.0_EP - g(2,:,:)
+       end where
+    end where
+    
+    u(1:np,1:nz) = spread(uDf(:)/w%bD,2,nz)*uDp(:,:)
+
+  end function hantushstorage
+
   function mishraNeuman2010(a,zD,s,p,f,w) result(sD)
     use constants, only : DP, EP, EYE, PIEP, E, SQRT2
     use types, only : well, formation, solution
@@ -393,7 +392,6 @@ contains
 999 format(A,ES11.3E3,5(A,3('(',ES12.3E4,',',ES12.3E4,')')))
   end function mishraNeuman2010
   
-
 end module laplace_hankel_solutions
 
 
