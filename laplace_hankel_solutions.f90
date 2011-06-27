@@ -72,15 +72,10 @@ contains
        xi(1:np) = eta(:)*f%alphaD/lap%p(:)
        udp(1:np,1:nz+1) = hantush(a,[s%zD,1.0],s,lap%p,f,w)
 
-!!$       where(spread(abs(eta)<MAXEXP,2,nz))
-          fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
-               & cosh(eta .X. s%zD)/spread((1.0_EP + f%beta*eta*xi)*&
-               & cosh(eta) + xi*sinh(eta),2,nz)
-!!$       elsewhere
-!!$          fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
-!!$               & exp(eta .X. (s%zD-1.0))/&
-!!$               & spread(1.0_EP + f%betaD*eta*xi + xi,2,nz)
-!!$       end where
+       fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
+            & cosh(eta .X. s%zD)/spread((1.0_EP + f%beta*eta*xi)*&
+            & cosh(eta) + xi*sinh(eta),2,nz)
+
        deallocate(eta,xi,udp)
 
     case(6)
@@ -309,7 +304,7 @@ contains
     complex(EP), dimension(size(p)) :: eta
     complex(EP), dimension(size(p),2) :: J,Y
     
-    !  size integer expected by BF library
+    ! size integer expected by BF library
     integer(4) :: kode = 2, num = 2, nzero, ierr
 
     np = size(p)
