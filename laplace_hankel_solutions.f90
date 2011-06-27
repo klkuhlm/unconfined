@@ -9,7 +9,7 @@ contains
     use constants, only : DP, EP, MAXEXP
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
-    use utility, only : operator(.X.), cosh, sinh 
+    use utility, only : operator(.X.) !!, cosh, sinh 
 
     implicit none
     
@@ -109,7 +109,7 @@ contains
     use constants, only : DP, EP, PI
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
-    use utility, only : operator(.X.), cosh, sinh
+    use utility, only : operator(.X.) !!, cosh, sinh
     use cbessel, only : cbesk ! Amos routine
     implicit none
     
@@ -184,7 +184,7 @@ contains
     use constants, only : DP, EP
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
-    use utility, only : operator(.X.), cosh, sinh
+    use utility, only : operator(.X.) !!, cosh, sinh
     implicit none
     
     real(EP), intent(in) :: a
@@ -256,7 +256,7 @@ contains
   function mishraNeuman2010(a,zD,s,p,f,w) result(sD)
     use constants, only : DP, EP, EYE, PIEP, E, SQRT2
     use types, only : well, formation, solution
-    use utility, only : operator(.X.), cosh, sinh
+    use utility, only : operator(.X.) !!, cosh, sinh
     use cbessel, only : cbesj, cbesy ! Amos routines
     implicit none
     

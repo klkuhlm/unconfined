@@ -1,15 +1,15 @@
 module utility
   implicit none
   private
-  public :: logspace, linspace, is_finite, operator(.X.), cosh, sinh
+  public :: logspace, linspace, is_finite, operator(.X.) !!, cosh, sinh
 
-  interface sinh
-     module procedure  csinh
-  end interface
-  
-  interface cosh
-     module procedure ccosh
-  end interface
+!!$  interface sinh
+!!$     module procedure  csinh
+!!$  end interface
+!!$  
+!!$  interface cosh
+!!$     module procedure ccosh
+!!$  end interface
   
   interface operator(.X.)
      module procedure outerprod_zd, outerprod_dz, outerprod_dd, outerprod_zz
@@ -17,28 +17,28 @@ module utility
   
 contains
   
-  ! really only needed to make intel compiler work
-  elemental function ccosh(z) result(f)
-    use constants, only : EP
-    complex(EP), intent(in) :: z
-    complex(EP) :: f
-    real(EP) :: x,y
-    intrinsic :: cosh, sinh
-    x = real(z)
-    y = aimag(z)
-    f = cmplx(cosh(x)*cos(y), sinh(x)*sin(y),EP)
-  end function ccosh
-  
-  elemental function csinh(z) result(f)
-    use constants, only : EP
-    complex(EP), intent(in) :: z
-    complex(EP) :: f
-    real(EP) :: x,y
-    intrinsic :: cosh, sinh
-    x = real(z)
-    y = aimag(z)
-    f = cmplx(sinh(x)*cos(y), cosh(x)*sin(y),EP)
-  end function csinh
+!!$  ! really only needed to make intel compiler work
+!!$  elemental function ccosh(z) result(f)
+!!$    use constants, only : EP
+!!$    complex(EP), intent(in) :: z
+!!$    complex(EP) :: f
+!!$    real(EP) :: x,y
+!!$    intrinsic :: cosh, sinh
+!!$    x = real(z)
+!!$    y = aimag(z)
+!!$    f = cmplx(cosh(x)*cos(y), sinh(x)*sin(y),EP)
+!!$  end function ccosh
+!!$  
+!!$  elemental function csinh(z) result(f)
+!!$    use constants, only : EP
+!!$    complex(EP), intent(in) :: z
+!!$    complex(EP) :: f
+!!$    real(EP) :: x,y
+!!$    intrinsic :: cosh, sinh
+!!$    x = real(z)
+!!$    y = aimag(z)
+!!$    f = cmplx(sinh(x)*cos(y), cosh(x)*sin(y),EP)
+!!$  end function csinh
 
   function linspace(lo,hi,num) result(v)
     use constants, only : DP
