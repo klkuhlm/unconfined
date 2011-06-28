@@ -19,7 +19,7 @@ module constants
   real(EP), parameter :: SQRT2 = sqrt(2.0_EP)
 
   !! maximum argument for which sinh(x)-cosh(x) > 0
-  ! this is the point where the approximation for sinh()/cosh() -> 0.5*e
+  ! this is the point where the approximation for sinh(x) or cosh(x) -> 0.5*exp(x)
   ! for DP  ~18.123, EP ~ 20.72, QP ~ 38.96
   real(EP), parameter :: MAXEXP = -log(epsilon(1.0_EP))/3.0_EP
 
