@@ -102,7 +102,7 @@ contains
 
   function hantush(a,zD,sol,p,f,w) result(udp)
     ! implemented in the form given in Malama, Kuhlman & Barrash 2008 
-    use constants, only : DP, EP
+    use constants, only : DP, EP, SMALLZ
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
     use utility, only : operator(.X.) 
@@ -137,31 +137,22 @@ contains
 
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
     
-    where(zLay == 3)
-       ! above well screen
-       g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zD(:)))
+    ! above well screen
+    g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zD(1:nz)))
+    ff(1,1:np,1:nz) = spread(sinh(eta*w%dD),2,nz)
+    ff(2,1:np,1:nz) = spread(sinh(eta*(1.0 - w%lD)),2,nz)
+
+    where (spread((sol%zD - 1.0) < SMALLZ,1,np))
+       ! special case at top of aquifer
+       g(2,1:np,1:nz) = ff(1,:,:)/spread(tanh(eta),2,nz)
+    elsewhere
+       g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zD) + ff(2,:,:)*&
+            & cosh(eta .X. (1.0 - zD)))/spread(sinh(eta),2,nz)
     end where
 
-    where(zLay == 1 .or. zLay == 2)
-       ff(1,1:np,1:nz) = spread(sinh(eta*w%dD),2,nz)
-       ff(2,1:np,1:nz) = spread(sinh(eta*(1.0 - w%lD)),2,nz)
-    end where
-
-    where(zLay == 2 .or. zLay == 3)
-       where (spread(sol%zD - 1.0,1,np) < spacing(1.0))
-          ! special case at top of aquifer
-          g(2,1:np,1:nz) = ff(1,:,:)/spread(tanh(eta),2,nz)
-       elsewhere
-          g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zD) + ff(2,:,:)*&
-               & cosh(eta .X. (1.0 - zD)))/spread(sinh(eta),2,nz)
-       end where
-    end where
-    
-    where(zLay == 1)
-       ! below well screen
-       g(3,1:np,1:nz) = spread(exp(-eta*(1.0 - w%lD)) - &
-            & (ff(1,:,1) + exp(-eta)*ff(2,:,1))/sinh(eta),2,nz)
-    end where
+    ! below well screen
+    g(3,1:np,1:nz) = spread(exp(-eta*(1.0 - w%lD)) - &
+         & (ff(1,:,1) + exp(-eta)*ff(2,:,1))/sinh(eta),2,nz)
 
     where(zLay == 1)
        ! below well screen (0 <= zD <= 1-lD)
@@ -182,7 +173,7 @@ contains
   end function hantush
   
   function hantushstorage(a,zD,sol,p,f,w) result(u)
-    use constants, only : DP, EP, PI
+    use constants, only : DP, EP, PI, SMALLZ
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
     use utility, only : operator(.X.) 
@@ -249,7 +240,7 @@ contains
     end where
     
     where (zLay == 2 .or. zLay == 3)
-       where (spread(sol%zD - 1.0,1,np) < spacing(1.0))
+       where (spread((sol%zD - 1.0) < SMALLZ,1,np))
           ! special case at top of aquifer
           g(2,1:np,1:nz) = ff(1,:,:)/spread(tanh(eta),2,nz)
        elsewhere

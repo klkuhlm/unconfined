@@ -6,7 +6,7 @@ public :: read_input, write_timeseries_header, write_contour_header
 
 contains
   subroutine read_input(w,f,s,lap,h,gl,ts)
-    use constants, only : EP, DP, PI, PIEP, NUMCHAR, RFMT, HFMT, SFMT
+    use constants, only : EP, DP, PI, PIEP, NUMCHAR, RFMT, HFMT, SFMT, SMALLZ
     use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
     use utility, only : logspace, linspace
     
@@ -76,7 +76,8 @@ contains
     ! volumetric pumping rate [L^3/T]
     read(19,*) w%Q
 
-    ! distance from aquifer top to bottom & top of packer (l > d) [L]
+    ! __distance_from_aquifer_top__ to bottom & top of packer (l > d) [L]
+    ! NOT THE Z-COORDINATE OF THE TOP OR BOTTOM OF SCREEN!
     read(19,*) w%l, w%d
 
     ! pumping well: well and casing radii [L]
@@ -439,11 +440,13 @@ contains
     ! z is positive up, with 0 at bottom
     ! l and d are positive down, with 0 at top
     allocate(s%zLay(size(s%zD)))
-    where(s%zD(:) < spacing(1.0) .or. s%zD(:) < 1.0 - w%lD)
-       ! below well screen (or bottom of aquifer)
+    s%zLay = -999
+
+    where(s%zD(:) < SMALLZ .or. s%zD(:) < 1.0 - w%lD)
+       ! below well screen (or at bottom of aquifer zD==0)
        s%zLay = 1
     elsewhere
-       where((s%zD(:) - 1.0) < spacing(1.0) .or. s%zD(:) < 1.0 - w%dD)
+       where((s%zD(:) - 1.0) > SMALLZ .or. s%zD(:) < 1.0 - w%dD)
           ! beside/next-to well screen
           s%zLay = 2
        elsewhere

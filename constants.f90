@@ -23,6 +23,8 @@ module constants
   ! for DP  ~18.123, EP ~ 20.72, QP ~ 38.96
   real(EP), parameter :: MAXEXP = -log(epsilon(1.0_EP))/3.0_EP
 
+  real(DP), parameter :: SMALLZ = 0.001
+
   !! length of filenames
   integer, parameter :: NUMCHAR = 128
 
