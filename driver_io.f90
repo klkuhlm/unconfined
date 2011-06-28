@@ -439,15 +439,15 @@ contains
     ! z is positive up, with 0 at bottom
     ! l and d are positive down, with 0 at top
     allocate(s%zLay(size(s%zD)))
-    where(s%zD(:) <= 1.0-w%lD)
-       ! below well screen
+    where(s%zD(:) < spacing(1.0) .or. s%zD(:) < 1.0 - w%lD)
+       ! below well screen (or bottom of aquifer)
        s%zLay = 1
     elsewhere
-       where(s%zD(:) < 1.0-w%dD)
+       where((s%zD(:) - 1.0) < spacing(1.0) .or. s%zD(:) < 1.0 - w%dD)
           ! beside/next-to well screen
           s%zLay = 2
        elsewhere
-          ! above well screen
+          ! above well screen (or top of aqufier)
           s%zLay = 3
        end where
     end where
