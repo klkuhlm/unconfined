@@ -235,7 +235,7 @@ contains
     ! z is positive up, with zero at bottom of aquifer
     read(19,*) s%zTop, s%zBot, s%zOrd, s%rwobs, s%sF 
 
-    if (s%zTop <= s%zBot .or. s%zTop < 0.0 .or. s%zBot > 1.0) then
+    if (s%zTop < s%zBot .or. s%zTop < 0.0 .or. s%zBot > 1.0) then
        write(*,*) 'ERROR: top of monitoring well screen must be ',&
             & 'above bottom and both between 0 and 1',s%zTop,s%zBot
        stop 666
