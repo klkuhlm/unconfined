@@ -276,9 +276,10 @@ contains
        else
           if (s%zOrd > 1) then
              ! calc points spread out evenly along obs well screen
+             ! zBot and zTop are scaled 0.0<->1.0 already
              s%z(1:s%zOrd) = linspace(s%zBot, s%zTop, s%zOrd)*f%b
           else
-             ! one point goes to middle of interval
+             ! if only one point, it goes to middle of interval
              s%z(1) = (s%zBot + s%zTop)*f%b/2.0 
           end if
        end if
