@@ -14,5 +14,5 @@
 2  2  12  50                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
 timedata.dat  15.5            :: file to read time data from (and default t otherwise)
 spacedata.dat  5.0          :: file to read space data from (and default r otherwise)
-0.0  0.0D0  5  2.54D-2  20.0                  :: relative top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
-hantush-test-0.0.out
+%%%%z%%%%  0.0D0  5  2.54D-2  20.0                  :: relative top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
+hantush-test-%%%%z%%%%.out
