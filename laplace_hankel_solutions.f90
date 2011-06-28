@@ -55,7 +55,7 @@ contains
                & spread((1.0_EP + f%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz))
        elsewhere
           fp(1:np,1:nz) = theis(a,lap%p,nz)*(1.0_EP - exp(eta .X. (s%zD - 1.0))/ &
-               & spread((1.0_EP + f%beta*eta*xi + xi),2,nz))
+               & spread(1.0_EP + f%beta*eta*xi + xi,2,nz))
        end where
        deallocate(eta,xi)
 
