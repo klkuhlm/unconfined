@@ -145,8 +145,16 @@ contains
     where(zLay == 1 .or. zLay == 2)
        ff(1,1:np,1:nz) = spread(sinh(eta*w%dD),2,nz)
        ff(2,1:np,1:nz) = spread(sinh(eta*(1.0 - w%lD)),2,nz)
-       g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zD) + ff(2,:,:)*&
-            & cosh(eta .X. (1.0 - zD)))/spread(sinh(eta),2,nz)
+    end where
+
+    where(zLay == 2 .or. zLay == 3)
+       where (spread(sol%zD - 1.0,1,np) < spacing(1.0))
+          ! special case at top of aquifer
+          g(2,1:np,1:nz) = ff(1,:,:)/spread(tanh(eta),2,nz)
+       elsewhere
+          g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zD) + ff(2,:,:)*&
+               & cosh(eta .X. (1.0 - zD)))/spread(sinh(eta),2,nz)
+       end where
     end where
     
     where(zLay == 1)
@@ -237,10 +245,17 @@ contains
     where (zLay == 1 .or. zLay == 2)
        ff(1,1:np,1:nz) = spread(sinh(eta(:)*w%dD),2,nz)
        ff(2,1:np,1:nz) = spread(sinh(eta(:)*(1.0 - w%lD)),2,nz)
-
-       g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zd) + &
-            & ff(2,:,:)*cosh(eta .X. (1.0 - zd)))/&
-            & spread(sinh(eta(:)),2,nz)
+    end where
+    
+    where (zLay == 2 .or. zLay == 3)
+       where (spread(sol%zD - 1.0,1,np) < spacing(1.0))
+          ! special case at top of aquifer
+          g(2,1:np,1:nz) = ff(1,:,:)/spread(tanh(eta),2,nz)
+       elsewhere
+          g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zd) + &
+               & ff(2,:,:)*cosh(eta .X. (1.0 - zd)))/&
+               & spread(sinh(eta(:)),2,nz)
+       end where
     end where
 
     where (zLay == 1)
