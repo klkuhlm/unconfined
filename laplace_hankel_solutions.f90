@@ -204,7 +204,8 @@ contains
 
     real(DP) :: CDw, tDb
     integer :: np,nz,i
-    integer(4) :: kode = 1, num = 2, nzero, ierr
+    integer(4), parameter :: kode = 1, num = 2
+    integer(4) :: nzero, ierr
     integer, dimension(size(p),size(zD)) :: zLay
 
     np = size(p)
@@ -347,7 +348,6 @@ contains
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
-!!$             stop
        else
           J(i,1:2) = tmp(1:2)
        end if
@@ -356,7 +356,6 @@ contains
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
-!!$             stop
        else
           Y(i,1:2) = tmp(1:2)
        end if
@@ -380,7 +379,6 @@ contains
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
-!!$             stop
        else
           J(i,1:2) = tmp(1:2)
        end if
@@ -389,7 +387,6 @@ contains
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
-!!$             stop
        else
           Y(i,1:2) = tmp(1:2)
        end if
