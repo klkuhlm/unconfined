@@ -138,7 +138,7 @@ contains
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
     
     ! above well screen
-    g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zD(1:nz)))
+     g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zD(1:nz)))
     ff(1,1:np,1:nz) = spread(sinh(eta*w%dD),2,nz)
     ff(2,1:np,1:nz) = spread(sinh(eta*(1.0 - w%lD)),2,nz)
 

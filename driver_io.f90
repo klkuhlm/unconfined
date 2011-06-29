@@ -416,7 +416,7 @@ contains
     w%d = w%d*f%b
     w%lD = w%l/s%Lc
     w%dD = w%d/s%Lc
-    w%bD = abs(w%lD - w%dD)
+    w%bD = w%lD - w%dD
     w%rDw = w%rw/s%Lc
     s%rDwobs = s%rwobs/s%Lc
 
