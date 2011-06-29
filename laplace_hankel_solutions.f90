@@ -308,7 +308,8 @@ contains
     complex(EP), dimension(size(p),2) :: J,Y
     
     ! size integer expected by BF library
-    integer(4) :: kode = 2, num = 2, nzero, ierr
+    integer(4), parameter :: kode = 2, num = 2
+    integer(4) :: nzero, ierr
 
     np = size(p)
     nz = size(zD)
@@ -339,7 +340,10 @@ contains
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
+<<<<<<< local
+=======
           J(i,1:2) = tmp(1:2)
+>>>>>>> other
        else
           J(i,1:2) = tmp(1:2)
        end if
@@ -348,7 +352,10 @@ contains
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
+<<<<<<< local
+=======
           Y(i,1:2) = tmp(1:2)
+>>>>>>> other
        else
           Y(i,1:2) = tmp(1:2)
        end if
@@ -372,7 +379,10 @@ contains
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
+<<<<<<< local
+=======
           J(i,1:2) = tmp(1:2)
+>>>>>>> other
        else
           J(i,1:2) = tmp(1:2)
        end if
@@ -381,7 +391,10 @@ contains
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
+<<<<<<< local
+=======
           Y(i,1:2) = tmp(1:2)
+>>>>>>> other
        else
           Y(i,1:2) = tmp(1:2)
        end if
