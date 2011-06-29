@@ -340,10 +340,6 @@ contains
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
-<<<<<<< local
-=======
-          J(i,1:2) = tmp(1:2)
->>>>>>> other
        else
           J(i,1:2) = tmp(1:2)
        end if
@@ -352,10 +348,6 @@ contains
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
-<<<<<<< local
-=======
-          Y(i,1:2) = tmp(1:2)
->>>>>>> other
        else
           Y(i,1:2) = tmp(1:2)
        end if
@@ -379,10 +371,6 @@ contains
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
-<<<<<<< local
-=======
-          J(i,1:2) = tmp(1:2)
->>>>>>> other
        else
           J(i,1:2) = tmp(1:2)
        end if
@@ -391,10 +379,6 @@ contains
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
-<<<<<<< local
-=======
-          Y(i,1:2) = tmp(1:2)
->>>>>>> other
        else
           Y(i,1:2) = tmp(1:2)
        end if
