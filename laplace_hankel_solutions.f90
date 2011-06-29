@@ -22,7 +22,7 @@ contains
     type(formation), intent(in) :: f
     complex(EP), dimension(np,nz) :: fp
 
-    complex(EP), allocatable :: eta(:), xi(:), udp(:,:)
+    complex(EP), allocatable :: eta(:), xi(:), udp(:,:), udf(:,:)
 
     intrinsic :: bessel_j0
 
@@ -45,19 +45,20 @@ contains
 
     case(4)
        ! Malama 2011 fully penetrating model (Neuman 72 when beta=0)
-       allocate(eta(np),xi(np))
+       allocate(eta(np),xi(np),udf(np,nz))
 
        eta(1:np) = sqrt((lap%p(:) + a**2)/f%kappa)
        xi(1:np) = eta(:)*f%alphaD/lap%p(:)
+       udf(1:np,1:nz) = theis(a,lap%p,nz)
 
        where (spread(real(eta) < MAXEXP,2,nz))
-          fp(1:np,1:nz) = theis(a,lap%p,nz)*(1.0_EP - cosh(eta .X. s%zD)/ &
+          fp(1:np,1:nz) = udf(:,:)*(1.0_EP - cosh(eta .X. s%zD)/ &
                & spread((1.0_EP + f%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz))
        elsewhere
-          fp(1:np,1:nz) = theis(a,lap%p,nz)*(1.0_EP - exp(eta .X. (s%zD - 1.0))/ &
+          fp(1:np,1:nz) = udf(:,:)*(1.0_EP - exp(eta .X. (s%zD - 1.0))/ &
                & spread(1.0_EP + f%beta*eta*xi + xi,2,nz))
        end where
-       deallocate(eta,xi)
+       deallocate(eta,xi,udf)
 
     case(5)
        ! Malama 2011 partial penetrating model (Neuman 74 when beta=0)

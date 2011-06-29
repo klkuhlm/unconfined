@@ -83,8 +83,6 @@ program Driver
      ! using 'optimal' vector of p values for each time
      l%p(1:l%np) = pvalues(TEE_MULT*s%tD(i),l)
 
-!!     write(*,'(I0,A,3(3X,ES11.3,1X,ES11.3))') i,'t=',l%p(1:3)
-
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      ! finite portion of Hankel integral (Tanh-Sinh quadrature)
      ! integrate from origin (a=0) to the J0 zero identified in input
@@ -112,12 +110,12 @@ program Driver
         end do
         !$OMP END PARALLEL DO
 
-!!$        print *, 'fa:',fa(1:2,1:2,1:2)
+        print *, 'fa:',fa(1:2,1:2,1:2)
 
         tmp(ts%R,1:l%np,1:s%nz) = arg/2.0 * &
              & sum(spread(spread(ts%Q(ts%R)%w,2,l%np),3,s%nz)*fa(:,:,:),dim=1)
 
-!!$        print *, 'tmp:',fa(ts%R,1:2,1:2)
+        print *, 'tmp:',fa(ts%R,1:2,1:2)
 
         do j=1,ts%R-1
 
@@ -155,7 +153,7 @@ program Driver
            finint(1:l%np,1:s%nz) = tmp(1,1:l%np,1:s%nz)
         end if
 
-!!$        print *, 'finint:',finint(1:3,1:2)
+        print *, 'finint:',finint(1:3,1:2)
 
         !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         ! "infinite" portion of Hankel  integral for each time level
@@ -185,13 +183,13 @@ program Driver
            end do
            !$OMP END PARALLEL DO
           
-!!$           print *, j,'GLz:',GLz(1:2,1:2,1:2)
+           print *, j,'GLz:',GLz(1:2,1:2,1:2)
 
            GLarea(j-h%sv(i),1:l%np,1:s%nz) = width/2.0*sum(GLz(1:gl%ord-2,:,:)* &
                 & spread(spread(gl%w(1:gl%ord-2),2,l%np),3,s%nz),dim=1)
         end do
  
-!!$        print *, 'GLarea: shape',shape(GLarea),'vals',GLarea(1:2,1:2,1:2)
+        print *, 'GLarea: shape',shape(GLarea),'vals',GLarea(1:2,1:2,1:2)
 
         !$OMP PARALLEL DO SHARED(GLarea,infint)
         do j = 1,l%np
@@ -235,10 +233,7 @@ program Driver
               totObs = totint(1) ! one point, interval has no length
               totDeriv = totintd(1)
            end if
-        end if
-        
-        ! write results to file
-        if (s%timeSeries) then
+
            if (s%dimless) then
               ! dimensionless time series output
               write (UNIT,'('//RFMT//',1X,2('//HFMT//',1X))') &
@@ -248,7 +243,9 @@ program Driver
               write (UNIT,'('//RFMT//',1X,2('//HFMT//',1X))') &
                    & s%t(i), totObs*s%Hc, totDeriv*s%Hc
            end if
-        else
+
+        else ! contour output (no integration)
+
            ! not sure it makes sense to have derivative with respect
            ! to time, plotted as a contour map in space...
 

@@ -65,7 +65,7 @@ contains
     if(s%model < 0 .or. s%model > 6) then
        write(*,'(A,I0,A)') 'ERROR invalid model choice ',s%model,' valid models are:'
        do i=0,6
-          write(*,'(I0,1X,A)') i,s%modelDescrip(i)
+          write(*,'(I0,1X,A)') i,trim(s%modelDescrip(i))
        end do
        write(*,'(A)') 'Malama models with beta=0 correspond to Neuman 72/74'
        stop
@@ -210,7 +210,12 @@ contains
             &').  Increase k or decrease nst.'
        stop
     end if
-
+    if(ts%R < 1) then
+       write(*,'(A,I0)') 'ERROR: Richardson extrapolation '//&
+            &'level must be >= 1:  ',ts%R
+       stop
+    end if
+    
     if(any([h%j0s(:),gl%nacc, ts%k] < 1)) then
        write(*,*) 'ERROR max/min split, # accelerated terms, ',&
             & 'and tanh-sinh k must be >= 1:',h%j0s(:),gl%nacc, ts%k
@@ -550,7 +555,7 @@ contains
   
     ! echo input parameters at head of output file
     write(unit,'(A)') '# -*-auto-revert-*-'
-    write(unit,'(A,I0,1X,A,I0)') '# model, EP :: ',s%model,s%modelDescrip(s%model)//', ',EP
+    write(unit,'(A,I0,1X,A,I0)') '# model, EP :: ',s%model,trim(s%modelDescrip(s%model))//', ',EP
     write(unit,'(A,3(L1,1X))') '# dimensionless?, timeseries?, piezometer? :: ', &
          & s%dimless, s%timeseries, s%piezometer
     write(unit,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
@@ -575,7 +580,7 @@ contains
     write(unit,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
     if(s%piezometer) then
-       write(unit,'(A,2('//RFMT//',1X))') '# point obs well r,z :: ',s%r(1),s%z(1)
+       write(unit,'(A,4('//RFMT//',1X))') '# point obs well r,rD,z,zD :: ',s%r(1),s%rD(1),s%z(1),s%zD(1)
     else
        write(unit,'(A,3('//RFMT//',1X),I0)') '# screened obs well r,zTop,zBot,zOrd :: ',&
             & s%r(1), s%zTop, s%zBot, s%zOrd
@@ -627,7 +632,7 @@ contains
   
     ! echo input parameters at head of output file
     write(unit,'(A)') '# -*-auto-revert-*-'
-    write(unit,'(A,I0,1X,A,I0)') '# model, EP :: ',s%model,s%modelDescrip(s%model)//', ',EP
+    write(unit,'(A,I0,1X,A,I0)') '# model, EP :: ',s%model,trim(s%modelDescrip(s%model))//', ',EP
     write(unit,'(A,2(L1,1X))') '# dimensionless?, timeseries? :: ', &
          & s%dimless, s%timeseries
     write(unit,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
@@ -656,7 +661,7 @@ contains
     write(unit,fmt) '# num r locations, rlocs :: ',s%nr, s%r(:)
     write(fmt(10:13),'(I4.4)') s%nz
     write(unit,fmt) '# num z locations, zlocs :: ',s%nz, s%z(:)
-    write(unit,'(A,'//RFMT//')') '# time :: ',s%t(1)
+    write(unit,'(A,2('//RFMT//',1X))') '# time, tD :: ',s%t(1),s%tD(1)
 
     if(s%model == 4 .or. s%model == 5) then
        ! malama solutions
