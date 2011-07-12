@@ -143,13 +143,8 @@ contains
     ff(1,1:np,1:nz) = spread(sinh(eta*w%dD),2,nz)
     ff(2,1:np,1:nz) = spread(sinh(eta*(1.0 - w%lD)),2,nz)
 
-    where (spread(abs(sol%zD - 1.0) < SMALLZ,1,np))
-       ! special case at top of aquifer
-       g(2,1:np,1:nz) = ff(1,:,:)/spread(tanh(eta),2,nz)
-    elsewhere
-       g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zD) + ff(2,:,:)*&
-            & cosh(eta .X. (1.0 - zD)))/spread(sinh(eta),2,nz)
-    end where
+    g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zD) + ff(2,:,:)*&
+         & cosh(eta .X. (1.0 - zD)))/spread(sinh(eta),2,nz)
 
     ! below well screen
     g(3,1:np,1:nz) = spread(exp(-eta*(1.0 - w%lD)) - &
@@ -241,14 +236,9 @@ contains
     end where
     
     where (zLay == 2 .or. zLay == 3)
-       where (spread((sol%zD - 1.0) < SMALLZ,1,np))
-          ! special case at top of aquifer
-          g(2,1:np,1:nz) = ff(1,:,:)/spread(tanh(eta),2,nz)
-       elsewhere
-          g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zd) + &
-               & ff(2,:,:)*cosh(eta .X. (1.0 - zd)))/&
-               & spread(sinh(eta(:)),2,nz)
-       end where
+       g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zd) + &
+            & ff(2,:,:)*cosh(eta .X. (1.0 - zd)))/&
+            & spread(sinh(eta(:)),2,nz)
     end where
 
     where (zLay == 1)
