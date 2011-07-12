@@ -143,7 +143,7 @@ contains
     ff(1,1:np,1:nz) = spread(sinh(eta*w%dD),2,nz)
     ff(2,1:np,1:nz) = spread(sinh(eta*(1.0 - w%lD)),2,nz)
 
-    where (spread((sol%zD - 1.0) < SMALLZ,1,np))
+    where (spread(abs(sol%zD - 1.0) < SMALLZ,1,np))
        ! special case at top of aquifer
        g(2,1:np,1:nz) = ff(1,:,:)/spread(tanh(eta),2,nz)
     elsewhere
