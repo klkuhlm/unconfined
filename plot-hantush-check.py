@@ -15,10 +15,9 @@ l = ['dashed','dotted','dashdot']
 infn =  'hantush-test-z.in'
 outfn = 'hantush-test-z.out'
 
-fh = open(infn,'w')
-fh.write("""0  0  T  T  T                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
+inputfile = """0  %i  T  T  T                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
 2.0D-2                      :: Q (volumetric pumping rate) [L^3/T]
-1.0D0    0.0D0               :: l/b, d/b (normalized __depth__ to bottom/top of screened interval)
+%.4e    %.4e               :: l/b, d/b (normalized __depth__ to bottom/top of screened interval)
 2.54D-2   2.54D-2                       :: rw, rc (radius of well casing and tubing)
 1.0D+0                        :: gamma (dimensionless wellbore skin)
 001  0.0D+0  1.0D+0            :: pumping well time behavior and parameters 
@@ -27,45 +26,33 @@ fh.write("""0  0  T  T  T                :: quiet output?, model choice, dimensi
 1.0D-6     2.5D-1               :: Ss,Sy
 1.0D+1                        ::  beta Malama linearization parameter
 2.95D+0  3.7D-1   2.0D+0  2.2D-1   2.0D+1      :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L
-10  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
+12  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
 7  5                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
 1  1  10  50                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
 timedata.dat   15.5            :: file to read time data from (and default t otherwise)
-spacedata.dat  5.0D0          :: file to read space data from (and default r otherwise)
-5.0D-1  0.0D0  5  2.54D-2  20.0                  :: relative top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
-theis-test.out""")
+spacedata.dat  2.5D0          :: file to read space data from (and default r otherwise)
+%.4e  0.0D0  5  2.54D-2  20.0                  :: relative top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
+%s"""
+
+fh = open(infn,'w')
+outtheisfn = 'theis-test.out'
+fh.write(inputfile % (0,1.0,0.0,0.5,outtheisfn))
 fh.close()
 
 args = ['./unconfined',infn]
 print 'running theis'
 stdout,stderr = subprocess.Popen(args,stdout=PIPE,stderr=PIPE).communicate()
-tt,th,tdh = np.loadtxt('theis-test.out',skiprows=20,unpack=True)
+tt,th,tdh = np.loadtxt(outtheisfn,skiprows=20,unpack=True)
 
 fh = open(infn,'w')
-fh.write("""0  1  T  T  T                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
-2.0D-2                      :: Q (volumetric pumping rate) [L^3/T]
-1.0D0    0.0D0               :: l/b, d/b (normalized __depth__ to bottom/top of screened interval)
-2.54D-2   2.54D-2                       :: rw, rc (radius of well casing and tubing)
-1.0D+0                        :: gamma (dimensionless wellbore skin)
-001  0.0D+0  1.0D+0            :: pumping well time behavior and parameters 
-1.00D+1                        :: b (initial saturated thickness)
-1.0D-4     1.0D-1                :: Kr,kappa (radial K and ratio Kz/Kr)
-1.0D-6     2.5D-1               :: Ss,Sy
-1.0D+1                        ::  beta Malama linearization parameter
-2.95D+0  3.7D-1   2.0D+0  2.2D-1   2.0D+1      :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L
-10  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
-7  5                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
-1  1  10  50                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
-timedata.dat   15.5            :: file to read time data from (and default t otherwise)
-spacedata.dat  5.0D0          :: file to read space data from (and default r otherwise)
-5.0D-1  0.0D0  5  2.54D-2  20.0                  :: relative top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
-hantush-test-fullpen.out""")
+outfullpenfn = 'hantush-test-fullpen.out'
+fh.write(inputfile % (1,1.0,0.0,0.5,outfullpenfn))
 fh.close()
 
 args = ['./unconfined',infn]
 print 'running fully-penetrating hantush'
 stdout,stderr = subprocess.Popen(args,stdout=PIPE,stderr=PIPE).communicate()
-ht,hh,hdh = np.loadtxt('hantush-test-fullpen.out',skiprows=20,unpack=True)
+ht,hh,hdh = np.loadtxt(outfullpenfn,skiprows=20,unpack=True)
 
 for lval in ld:
     # assume screen is centered in aquifer
@@ -86,24 +73,7 @@ for lval in ld:
 
     for i,zval in enumerate(zd):
         fh = open(infn,'w')
-        fh.write("""0  1  T  T  T                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
-2.0D-2                      :: Q (volumetric pumping rate) [L^3/T]
-%.4e    %.4e               :: l/b, d/b (normalized __depth__ to bottom/top of screened interval)
-2.54D-2   2.54D-2                       :: rw, rc (radius of well casing and tubing)
-1.0D+0                        :: gamma (dimensionless wellbore skin)
-001  0.0D+0  1.0D+0            :: pumping well time behavior and parameters 
-1.00D+1                        :: b (initial saturated thickness)
-1.0D-4     1.0D-1                :: Kr,kappa (radial K and ratio Kz/Kr)
-1.0D-6     2.5D-1               :: Ss,Sy
-1.0D+1                        ::  beta Malama linearization parameter
-2.95D+0  3.7D-1   2.0D+0  2.2D-1   2.0D+1      :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L
-10  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
-7  5                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
-1  1  10  50                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
-timedata.dat   15.5            :: file to read time data from (and default t otherwise)
-spacedata.dat  5.0D0          :: file to read space data from (and default r otherwise)
-%.4e  0.0D0  5  2.54D-2  20.0                  :: relative top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
-%s""" % (ld,dd,zval,outfn))
+        fh.write(inputfile  % (1,ld,dd,zval,outfn))
         fh.close()
 
         args = ['./unconfined',infn]
