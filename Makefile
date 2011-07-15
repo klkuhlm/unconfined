@@ -21,7 +21,7 @@ DEBUG = -O0 -g -Wall -Wextra -fwhole-file
 DEBUG += -frange-check -fcheck=all 
 OMP = -fopenmp
 PERF = -Ofast -march=native 
-#PERF += $(OMP)
+PERF += $(OMP)
 DEFAULTS = -fdefault-real-8 -fdefault-integer-8 
 F90 = gfortran-4.7
 CPP = -cpp

@@ -174,7 +174,7 @@ contains
     end if
     
     if (f%beta < 0.0) then
-       write(*,*) 'ERROR: Malama beta cannot be negative',f%beta
+       write(*,*) 'ERROR: Malama linearization beta cannot be negative',f%beta
        stop
     end if
       
