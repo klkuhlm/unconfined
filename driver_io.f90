@@ -367,6 +367,10 @@ contains
       
        if (computeSpace) then
           s%r = linspace(minR,maxR,numRComp)
+          if(minZ < 0.0 .or. maxZ > f%b) then
+             write(*,*) 'ERROR z must be in range 0<=>b',minZ,maxZ
+             stop
+          end if
           s%z = linspace(minZ,maxZ,numZcomp)
        else
           ! radial distances listed on one line

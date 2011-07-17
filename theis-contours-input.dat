@@ -15,4 +15,4 @@
 timedata.dat   15.5            :: file to read time data from (and default t otherwise)
 spacedata.dat  5.0D0          :: file to read space data from (and default r otherwise)
 1.0D0  0.0D0  5  2.54D-2  20.0                  :: relative top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
-theis-test.out
+theis-contours.out
