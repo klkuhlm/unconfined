@@ -1,3 +1,10 @@
+module complex_bessel
+
+private
+public :: cjylv
+
+contains
+
 SUBROUTINE cjylv(v,z,cbjv,cdjv,cbyv,cdyv)
 
 ! Code converted using TO_F90 by Alan Miller
@@ -17,6 +24,8 @@ SUBROUTINE cjylv(v,z,cbjv,cdjv,cbyv,cdyv)
 !                CJK to compute the expansion coefficients
 !       ===================================================
 
+IMPLICIT DOUBLE PRECISION (a,b,d-h,o-y)
+IMPLICIT COMPLEX*16 (c,z)
 
 DOUBLE PRECISION, INTENT(IN)             :: v
 COMPLEX, INTENT(IN)                      :: z
@@ -24,8 +33,6 @@ COMPLEX, INTENT(OUT)                     :: cbjv
 COMPLEX, INTENT(OUT)                     :: cdjv
 COMPLEX, INTENT(OUT)                     :: cbyv
 COMPLEX, INTENT(OUT)                     :: cdyv
-IMPLICIT DOUBLE PRECISION (a,b,d-h,o-y)
-IMPLICIT COMPLEX*16 (c,z)
 DIMENSION cf(12),a(91)
 
 km=12
@@ -76,11 +83,9 @@ SUBROUTINE cjk(km,a)
 !                         by L=j+1+[k*(k+1)]/2; j,k=0,1,...,Km
 !       ========================================================
 
-
+IMPLICIT DOUBLE PRECISION (a-h,o-z)
 INTEGER, INTENT(IN)                      :: km
 DOUBLE PRECISION, INTENT(OUT)            :: a(*)
-IMPLICIT DOUBLE PRECISION (a-h,o-z)
-
 
 a(1)=1.0D0
 f0=1.0D0
@@ -107,3 +112,4 @@ RETURN
 END SUBROUTINE cjk
 
 
+end module complex_bessel
