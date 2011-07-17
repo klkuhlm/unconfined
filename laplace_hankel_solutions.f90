@@ -305,7 +305,7 @@ contains
     B2 = (a**2)/f%kappa
 
     ! compute v1
-    phiep(1:np) = EYE*sqrt(4.0*B1/(beta(1)**2))*exp(beta(1)*f%usLD/2.0_EP)
+    phiep(1:np) = EYE*sqrt(4.0*B1/(beta(1)**2))*exp(0.5_DP*beta(1)*f%usLD)
     phi(1:np) = cmplx(phiep,kind=DP) 
 
     nuep(1) = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
@@ -319,6 +319,7 @@ contains
        if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
+          J(i,1:2) = tmp(1:2)
        else
           J(i,1:2) = tmp(1:2)
        end if
@@ -327,6 +328,7 @@ contains
        if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
+          Y(i,1:2) = tmp(1:2)
        else
           Y(i,1:2) = tmp(1:2)
        end if
@@ -350,6 +352,7 @@ contains
        if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
+          J(i,1:2) = tmp(1:2)
        else
           J(i,1:2) = tmp(1:2)
        end if
@@ -358,6 +361,7 @@ contains
        if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
+          Y(i,1:2) = tmp(1:2)
        else
           Y(i,1:2) = tmp(1:2)
        end if

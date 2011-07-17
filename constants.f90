@@ -29,7 +29,7 @@ module constants
   integer, parameter :: NUMCHAR = 128
 
   !! format strings used in output
-  character(9) :: RFMT = 'ES14.07E3'    ! format for general output
+  character(9) :: RFMT = 'ES14.07E2'    ! format for general output
   character(9) :: HFMT = 'ES24.15E4'    ! format for results
   character(9) :: SFMT = 'ES09.03E2'    ! short format for long (+ only) vectors
 
