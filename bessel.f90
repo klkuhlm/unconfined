@@ -1,5 +1,8 @@
-SUBROUTINE CJYLV(V,Z,CBJV,CDJV,CBYV,CDYV)
-!
+SUBROUTINE cjylv(v,z,cbjv,cdjv,cbyv,cdyv)
+
+! Code converted using TO_F90 by Alan Miller
+! Date: 2011-07-17  Time: 15:26:34
+
 !       ===================================================
 !       Purpose: Compute Bessel functions Jv(z) and Yv(z)
 !                and their derivatives with a complex
@@ -13,56 +16,57 @@ SUBROUTINE CJYLV(V,Z,CBJV,CDJV,CBYV,CDYV)
 !       Routine called:
 !                CJK to compute the expansion coefficients
 !       ===================================================
-!
-  IMPLICIT DOUBLE PRECISION (A,B,D-H,O-Y)
-  IMPLICIT COMPLEX*16 (C,Z)
-  integer :: l,k
-  DIMENSION CF(12),A(91)
-  KM=12
-  CALL CJK(KM,A)
-  PI=3.141592653589793D0
-  DO L=1,0,-1
-     V0=V-L
-     CWS=SQRT(1.0D0-(Z/V0)*(Z/V0))
-     CETA=CWS+LOG(Z/V0/(1.0D0+CWS))
-     CT=1.0D0/CWS
-     CT2=CT*CT
-     DO K=1,KM
-        L0=K*(K+1)/2+1
-        LF=L0+K
-        CF(K)=A(LF)
-        DO I=LF-1,L0,-1
-           CF(K)=CF(K)*CT2+A(I)
-        end DO
-        
-        CF(K)=CF(K)*CT**K
-     end DO
-     VR=1.0D0/V0
-     CSJ=(1.0D0,0.0D0)
-     DO K=1,KM
-        CSJ=CSJ+CF(K)*VR**K
-     end DO
-     
-     CBJV=SQRT(CT/(2.0D0*PI*V0))*EXP(V0*CETA)*CSJ
-     IF (L.EQ.1) CFJ=CBJV
-     CSY=(1.0D0,0.0D0)
-     DO K=1,KM
-        CSY=CSY+(-1)**K*CF(K)*VR**K
-     end DO
-        
-     CBYV=-SQRT(2.0D0*CT/(PI*V0))*EXP(-V0*CETA)*CSY
-     IF (L.EQ.1) CFY=CBYV
-  end DO
-     
-  CDJV=-V/Z*CBJV+CFJ
-  CDYV=-V/Z*CBYV+CFY
-  RETURN
-END SUBROUTINE CJYLV
 
 
+DOUBLE PRECISION, INTENT(IN)             :: v
+COMPLEX, INTENT(IN)                      :: z
+COMPLEX, INTENT(OUT)                     :: cbjv
+COMPLEX, INTENT(OUT)                     :: cdjv
+COMPLEX, INTENT(OUT)                     :: cbyv
+COMPLEX, INTENT(OUT)                     :: cdyv
+IMPLICIT DOUBLE PRECISION (a,b,d-h,o-y)
+IMPLICIT COMPLEX*16 (c,z)
+DIMENSION cf(12),a(91)
 
-SUBROUTINE CJK(KM,A)
-!
+km=12
+CALL cjk(km,a)
+pi=3.141592653589793D0
+DO  l=1,0,-1
+  v0=v-l
+  cws=CDSQRT(1.0D0-(z/v0)*(z/v0))
+  ceta=cws+CDLOG(z/v0/(1.0D0+cws))
+  ct=1.0D0/cws
+  ct2=ct*ct
+  DO  k=1,km
+    l0=k*(k+1)/2+1
+    lf=l0+k
+    cf(k)=a(lf)
+    DO  i=lf-1,l0,-1
+      cf(k)=cf(k)*ct2+a(i)
+    END DO
+    cf(k)=cf(k)*ct**k
+  END DO
+  vr=1.0D0/v0
+  csj=(1.0D0,0.0D0)
+  DO  k=1,km
+    csj=csj+cf(k)*vr**k
+  END DO
+  cbjv=CDSQRT(ct/(2.0D0*pi*v0))*CDEXP(v0*ceta)*csj
+  IF (l == 1) cfj=cbjv
+  csy=(1.0D0,0.0D0)
+  DO  k=1,km
+    csy=csy+(-1)**k*cf(k)*vr**k
+  END DO
+  cbyv=-CDSQRT(2.0D0*ct/(pi*v0))*CDEXP(-v0*ceta)*csy
+  IF (l == 1) cfy=cbyv
+END DO
+cdjv=-v/z*cbjv+cfj
+cdyv=-v/z*cbyv+cfy
+RETURN
+END SUBROUTINE cjylv
+
+SUBROUTINE cjk(km,a)
+
 !       ========================================================
 !       Purpose: Compute the expansion coefficients for the
 !                asymptotic expansion of Bessel functions
@@ -71,31 +75,35 @@ SUBROUTINE CJK(KM,A)
 !       Output:  A(L) --- Cj(k) where j and k are related to L
 !                         by L=j+1+[k*(k+1)]/2; j,k=0,1,...,Km
 !       ========================================================
-!
-  IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-  DIMENSION A(*)
-  A(1)=1.0D0
-  F0=1.0D0
-  G0=1.0D0
-  DO K=0,KM-1
-     L1=(K+1)*(K+2)/2+1
-     L2=(K+1)*(K+2)/2+K+2
-     F=(0.5D0*K+0.125D0/(K+1))*F0
-     G=-(1.5D0*K+0.625D0/(3.0*(K+1.0D0)))*G0
-     A(L1)=F
-     A(L2)=G
-     F0=F
-     G0=G
-  end DO
-  
-  DO K=1,KM-1
-     DO J=1,K
-        L3=K*(K+1)/2+J+1
-        L4=(K+1)*(K+2)/2+J+1
-        A(L4)=(J+0.5D0*K+0.125D0/(2.0*J+K+1.0))*A(L3) &
-             & -(J+0.5D0*K-1.0+0.625D0/(2.0*J+K+1.0))*A(L3-1)
-     end DO
-  end DO
-  
-  RETURN
-END SUBROUTINE CJK
+
+
+INTEGER, INTENT(IN)                      :: km
+DOUBLE PRECISION, INTENT(OUT)            :: a(*)
+IMPLICIT DOUBLE PRECISION (a-h,o-z)
+
+
+a(1)=1.0D0
+f0=1.0D0
+g0=1.0D0
+DO  k=0,km-1
+  l1=(k+1)*(k+2)/2+1
+  l2=(k+1)*(k+2)/2+k+2
+  f=(0.5D0*k+0.125D0/(k+1))*f0
+  g=-(1.5D0*k+0.625D0/(3.0*(k+1.0D0)))*g0
+  a(l1)=f
+  a(l2)=g
+  f0=f
+  g0=g
+END DO
+DO  k=1,km-1
+  DO  j=1,k
+    l3=k*(k+1)/2+j+1
+    l4=(k+1)*(k+2)/2+j+1
+    a(l4)=(j+0.5D0*k+0.125D0/(2.0*j+k+1.0))*a(l3)  &
+        -(j+0.5D0*k-1.0+0.625D0/(2.0*j+k+1.0))*a(l3-1)
+  END DO
+END DO
+RETURN
+END SUBROUTINE cjk
+
+
