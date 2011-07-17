@@ -161,7 +161,7 @@ contains
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
     use utility, only : operator(.X.) 
-!!$    use cbessel, only : cbesk ! Amos routine
+    use cbessel, only : cbesk ! Amos routine
     implicit none
     
     real(EP), intent(in) :: a
@@ -179,7 +179,7 @@ contains
 
     real(DP) :: CDw, tDb
     integer :: np,nz,i
-!!$     integer(4), parameter :: kode = 1, num = 2
+    integer(4), parameter :: kode = 1, num = 2
     integer(4) :: nzero, ierr
     integer, dimension(size(p),size(zD)) :: zLay
 
@@ -203,8 +203,8 @@ contains
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
 
     do i=1,np
-!!$       call cbesk(z=cmplx(xi(i),kind=DP),fnu=0.0,kode=kode,&
-!!$            & n=num,cy=K(0:1,i),nz=nzero,ierr=ierr)
+       call cbesk(z=cmplx(xi(i),kind=DP),fnu=0.0,kode=kode,&
+            & n=num,cy=K(0:1,i),nz=nzero,ierr=ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESK z=',xi(i),&
                &' i,ierr,nz:',i,ierr,nzero
