@@ -14,7 +14,7 @@ FREE = -free
 PERFLDFLAGS = $(PERF)
 ##################################################
 
-EXTERNAL = cbessel.o
+EXTERNAL = bessel.o
 HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o
 OBJS = $(EXTERNAL) constants.o types.o invlap.o utility.o $(HILEV)
 
@@ -43,10 +43,10 @@ debug_driver: $(DEBUGOBJS)
 
 
 # always compile external libray with debugging off (and no default-real-8)
-cbessel.debug.o: cbessel.f90
-	$(F90) -c $(PERF) -o cbessel.debug.o cbessel.f90
-cbessel.opt.o: cbessel.f90
-	$(F90) -c $(PERF) -o cbessel.opt.o cbessel.f90
+bessel.debug.o: bessel.f90
+	$(F90) -c $(PERF) -o bessel.debug.o bessel.f90
+bessel.opt.o: bessel.f90
+	$(F90) -c $(PERF) -o bessel.opt.o bessel.f90
 
 
 ####### rule for making optimized object files ############
@@ -67,8 +67,8 @@ time.opt.o time.mod: time.f90 constants.mod types.mod
 laplace_hankel_solutions.opt.o laplace_hankel_solutions.mod: \
  laplace_hankel_solutions.f90 constants.mod types.mod time.mod \
  utility.mod constants.mod constants.mod types.mod time.mod utility.mod \
- constants.mod types.mod time.mod utility.mod cbessel.mod constants.mod \
- types.mod utility.mod cbessel.mod
+ constants.mod types.mod time.mod utility.mod constants.mod \
+ types.mod utility.mod complex_bessel.mod
 driver_io.opt.o driver_io.mod: driver_io.f90 constants.mod types.mod \
  utility.mod constants.mod types.mod constants.mod types.mod
 integration.opt.o integration.mod: integration.f90 constants.mod types.mod \
@@ -86,8 +86,8 @@ time.debug.o time.mod: time.f90 constants.mod types.mod
 laplace_hankel_solutions.debug.o laplace_hankel_solutions.mod: \
  laplace_hankel_solutions.f90 constants.mod types.mod time.mod \
  utility.mod constants.mod constants.mod types.mod time.mod utility.mod \
- constants.mod types.mod time.mod utility.mod cbessel.mod constants.mod \
- types.mod utility.mod cbessel.mod
+ constants.mod types.mod time.mod utility.mod constants.mod \
+ types.mod utility.mod complex_bessel.mod
 driver_io.debug.o driver_io.mod: driver_io.f90 constants.mod types.mod \
  utility.mod constants.mod types.mod constants.mod types.mod
 integration.debug.o integration.mod: integration.f90 constants.mod types.mod \

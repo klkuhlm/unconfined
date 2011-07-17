@@ -161,7 +161,7 @@ contains
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
     use utility, only : operator(.X.) 
-    use cbessel, only : cbesk ! Amos routine
+!!$    use cbessel, only : cbesk ! Amos routine
     implicit none
     
     real(EP), intent(in) :: a
@@ -203,8 +203,8 @@ contains
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
 
     do i=1,np
-       call cbesk(z=cmplx(xi(i),kind=DP),fnu=0.0,kode=kode,&
-            & n=num,cy=K(0:1,i),nz=nzero,ierr=ierr)
+!!$       call cbesk(z=cmplx(xi(i),kind=DP),fnu=0.0,kode=kode,&
+!!$            & n=num,cy=K(0:1,i),nz=nzero,ierr=ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESK z=',xi(i),&
                &' i,ierr,nz:',i,ierr,nzero
@@ -253,7 +253,8 @@ contains
     use constants, only : DP, EP, EYE, PIEP, E, SQRT2
     use types, only : well, formation, solution
     use utility, only : operator(.X.) 
-    use cbessel, only : cbesj, cbesy ! Amos routines
+!!$    use cbessel, only : cbesj, cbesy ! Amos routines
+    use complex_bessel
     implicit none
     
     real(EP), intent(in) :: a
@@ -278,7 +279,7 @@ contains
     real(EP) :: B2
 
     complex(DP), dimension(size(p)) :: phi
-    complex(DP), dimension(2) :: tmp
+    complex(DP), dimension(4) :: tmp
 
     complex(EP) :: arg1
     complex(EP), dimension(size(p)) :: arg2, B1, delta1
@@ -286,9 +287,9 @@ contains
     complex(EP), dimension(size(p)) :: eta
     complex(EP), dimension(size(p),2) :: J,Y
     
-    ! size integer expected by BF library
-    integer(4), parameter :: kode = 2, num = 2
-    integer(4) :: nzero, ierr
+!!$    ! size integer expected by BF library
+!!$    integer(4), parameter :: kode = 2, num = 2
+!!$    integer(4) :: nzero, ierr
 
     integer, parameter :: NPRINT = 2
 
@@ -316,26 +317,33 @@ contains
     J = -999.99
 
     do i= 1,np
+       call cjylv(nu,phi(i),tmp(1),tmp(2),tmp(3),tmp(4))
+       J(i,1) = tmp(1)
+       Y(i,1) = tmp(3)
+       call cjylv(nu+1.0,phi(i),tmp(1),tmp(2),tmp(3),tmp(4))
+       J(i,2) = tmp(1)
+       Y(i,2) = tmp(3)
+
        ! kode=2 is scaled BF
-       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-            & nz=nzero,ierr=ierr)
-       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
-          print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero  
-       else
-          J(i,1:2) = tmp(1:2)
-       end if
-       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-            &nz=nzero,ierr=ierr)
-       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
-          print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero
-          if (abs(phi(i)) < 1.0E-16) then
-             Y(i,1:2) = -(1/PIEP)*gamma(nuep(1:2))*(phiep(i)/2.0_EP)**nuep(1:2)
-          end if
-       else
-          Y(i,1:2) = tmp(1:2)
-       end if
+!!$       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+!!$            & nz=nzero,ierr=ierr)
+!!$       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
+!!$          print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
+!!$               &' i,ierr,nz:',i,ierr,nzero  
+!!$       else
+!!$          J(i,1:2) = tmp(1:2)
+!!$       end if
+!!$       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+!!$            &nz=nzero,ierr=ierr)
+!!$       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
+!!$          print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
+!!$               &' i,ierr,nz:',i,ierr,nzero
+!!$          if (abs(phi(i)) < 1.0E-16) then
+!!$             Y(i,1:2) = -(1/PIEP)*gamma(nuep(1:2))*(phiep(i)/2.0_EP)**nuep(1:2)
+!!$          end if
+!!$       else
+!!$          Y(i,1:2) = tmp(1:2)
+!!$       end if
     end do
     
     ! compute v3
@@ -359,22 +367,29 @@ contains
 
     ! kode=2 is scaled BF
     do i= 1,np
-       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-            &nz=nzero,ierr=ierr)
-       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
-          print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero
-       else
-          J(i,1:2) = tmp(1:2)
-       end if
-       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-            &nz=nzero,ierr=ierr)
-       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
-          print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero
-       else
-          Y(i,1:2) = tmp(1:2)
-       end if
+       call cjylv(nu,phi(i),tmp(1),tmp(2),tmp(3),tmp(4))
+       J(i,1) = tmp(1)
+       Y(i,1) = tmp(3)
+       call cjylv(nu+1.0,phi(i),tmp(1),tmp(2),tmp(3),tmp(4))
+       J(i,2) = tmp(1)
+       Y(i,2) = tmp(3)
+
+!!$       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+!!$            &nz=nzero,ierr=ierr)
+!!$       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
+!!$          print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
+!!$               &' i,ierr,nz:',i,ierr,nzero
+!!$       else
+!!$          J(i,1:2) = tmp(1:2)
+!!$       end if
+!!$       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+!!$            &nz=nzero,ierr=ierr)
+!!$       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
+!!$          print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
+!!$               &' i,ierr,nz:',i,ierr,nzero
+!!$       else
+!!$          Y(i,1:2) = tmp(1:2)
+!!$       end if
     end do
 
     arg2(1:np) = beta(1)*phiep(1:np)

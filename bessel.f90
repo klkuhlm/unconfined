@@ -28,11 +28,11 @@ IMPLICIT DOUBLE PRECISION (a,b,d-h,o-y)
 IMPLICIT COMPLEX*16 (c,z)
 
 DOUBLE PRECISION, INTENT(IN)             :: v
-COMPLEX, INTENT(IN)                      :: z
-COMPLEX, INTENT(OUT)                     :: cbjv
-COMPLEX, INTENT(OUT)                     :: cdjv
-COMPLEX, INTENT(OUT)                     :: cbyv
-COMPLEX, INTENT(OUT)                     :: cdyv
+COMPLEX*16, INTENT(IN)                      :: z
+COMPLEX*16, INTENT(OUT)                     :: cbjv
+COMPLEX*16, INTENT(OUT)                     :: cdjv
+COMPLEX*16, INTENT(OUT)                     :: cbyv
+COMPLEX*16, INTENT(OUT)                     :: cdyv
 DIMENSION cf(12),a(91)
 
 km=12
@@ -40,8 +40,8 @@ CALL cjk(km,a)
 pi=3.141592653589793D0
 DO  l=1,0,-1
   v0=v-l
-  cws=CDSQRT(1.0D0-(z/v0)*(z/v0))
-  ceta=cws+CDLOG(z/v0/(1.0D0+cws))
+  cws=SQRT(1.0D0-(z/v0)*(z/v0))
+  ceta=cws+LOG(z/v0/(1.0D0+cws))
   ct=1.0D0/cws
   ct2=ct*ct
   DO  k=1,km
@@ -58,13 +58,13 @@ DO  l=1,0,-1
   DO  k=1,km
     csj=csj+cf(k)*vr**k
   END DO
-  cbjv=CDSQRT(ct/(2.0D0*pi*v0))*CDEXP(v0*ceta)*csj
+  cbjv=SQRT(ct/(2.0D0*pi*v0))*EXP(v0*ceta)*csj
   IF (l == 1) cfj=cbjv
   csy=(1.0D0,0.0D0)
   DO  k=1,km
     csy=csy+(-1)**k*cf(k)*vr**k
   END DO
-  cbyv=-CDSQRT(2.0D0*ct/(pi*v0))*CDEXP(-v0*ceta)*csy
+  cbyv=-SQRT(2.0D0*ct/(pi*v0))*EXP(-v0*ceta)*csy
   IF (l == 1) cfy=cbyv
 END DO
 cdjv=-v/z*cbjv+cfj
