@@ -290,6 +290,8 @@ contains
     integer(4), parameter :: kode = 2, num = 2
     integer(4) :: nzero, ierr
 
+    integer, parameter :: NPRINT = 2
+
     np = size(p)
     nz = size(zD)
 
@@ -311,15 +313,15 @@ contains
     nuep(1) = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
     nuep(2) = nuep(1) + 1.0_EP
     nu = real(nuep(1),kind=DP) 
-    
+    J = -999.99
+
     do i= 1,np
        ! kode=2 is scaled BF
        call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
             & nz=nzero,ierr=ierr)
        if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero
-          J(i,1:2) = tmp(1:2)
+               &' i,ierr,nz:',i,ierr,nzero  
        else
           J(i,1:2) = tmp(1:2)
        end if
@@ -328,7 +330,9 @@ contains
        if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
-          Y(i,1:2) = tmp(1:2)
+          if (abs(phi(i)) < 1.0E-16) then
+             Y(i,1:2) = -(1/PIEP)*gamma(nuep(1:2))*(phiep(i)/2.0_EP)**nuep(1:2)
+          end if
        else
           Y(i,1:2) = tmp(1:2)
        end if
@@ -341,9 +345,17 @@ contains
     aa(1,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(1,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
+    if (s%quiet > 1) then
+       write(*,998) 'zD=LD phi:',phiep(1:NPRINT),'J:',J(1:NPRINT,1),&
+            & 'Y:',Y(1:NPRINT,1),'a(1,1)',aa(1,1,1:NPRINT),'a(1,2)',aa(1,2,1:NPRINT)
+    end if
+
+998 format(5(A,2('(',ES12.3E4,',',ES12.3E4,')')))
+
     ! compute v2
     phiep(1:np) = EYE*sqrt(4.0*B1/beta(1)**2)
     phi(1:np) = cmplx(phiep,kind=DP)
+    J = -999.99
 
     ! kode=2 is scaled BF
     do i= 1,np
@@ -352,7 +364,6 @@ contains
        if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
-          J(i,1:2) = tmp(1:2)
        else
           J(i,1:2) = tmp(1:2)
        end if
@@ -361,15 +372,19 @@ contains
        if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
-          Y(i,1:2) = tmp(1:2)
        else
           Y(i,1:2) = tmp(1:2)
        end if
     end do
-    
+
     arg2(1:np) = beta(1)*phiep(1:np)
     aa(2,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(2,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
+
+    if (s%quiet > 1) then
+       write(*,998) 'zD=0  phi:',phiep(1:NPRINT),'J:',J(1:NPRINT,1),&
+            &'Y:',Y(1:NPRINT,1),'a(2,1)',aa(2,1,1:NPRINT),'a(2,2)',aa(2,2,1:NPRINT)
+    end if
 
     ! product of phi(0) and phi(lD) normalizations
     delta2(1:np) = (aa(1,1,:)*aa(2,2,:) - aa(1,2,:)*aa(2,1,:)) 
@@ -383,11 +398,11 @@ contains
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
     if (s%quiet > 1) then
-       write(*,999) ' nu:',nu,' phi:',phiep(1:3),' sU:',su(1:3,1),&
-            &' D1:',delta1(1:3),' D2:',delta2(1:3),' sH:',sH(1:3,1)
+       write(*,999) ' nu:',nu,' sU:',su(1:NPRINT,1),&
+            &' D1:',delta1(1:NPRINT),' D2:',delta2(1:NPRINT),' sH:',sH(1:NPRINT,1)
     end if
 
-999 format(A,ES11.3E3,5(A,3('(',ES12.3E4,',',ES12.3E4,')')))
+999 format(A,ES11.3E3,4(A,2('(',ES12.3E4,',',ES12.3E4,')')))
   end function mishraNeuman2010
   
 end module laplace_hankel_solutions
