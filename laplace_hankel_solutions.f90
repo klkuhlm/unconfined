@@ -179,7 +179,7 @@ contains
 
     real(DP) :: CDw, tDb
     integer :: np,nz,i
-    integer(4), parameter :: kode = 1, num = 2
+!!$     integer(4), parameter :: kode = 1, num = 2
     integer(4) :: nzero, ierr
     integer, dimension(size(p),size(zD)) :: zLay
 
@@ -272,14 +272,14 @@ contains
     real(EP), dimension(size(p)) :: nuep
     complex(EP), dimension(size(p)) :: phiep
 
-    real(DP) :: nu
+!!$    real(DP) :: nu
     real(DP), dimension(0:3) :: beta
 
     complex(EP), dimension(size(p)) :: delta2
     real(EP) :: B2
 
-    complex(DP), dimension(size(p)) :: phi
-    complex(DP), dimension(4) :: tmp
+!!$    complex(DP), dimension(size(p)) :: phi
+    complex(EP), dimension(2) :: tmp
 
     complex(EP) :: arg1
     complex(EP), dimension(size(p)) :: arg2, B1, delta1
@@ -309,20 +309,16 @@ contains
 
     ! compute v1
     phiep(1:np) = EYE*sqrt(4.0*B1/(beta(1)**2))*exp(0.5_DP*beta(1)*f%usLD)
-    phi(1:np) = cmplx(phiep,kind=DP) 
+!!$    phi(1:np) = cmplx(phiep,kind=DP) 
 
     nuep(1) = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
     nuep(2) = nuep(1) + 1.0_EP
-    nu = real(nuep(1),kind=DP) 
-    J = -999.99
+!!$    nu = real(nuep(1),kind=DP) 
+!!$    J = -999.99
 
     do i= 1,np
-       call cjylv(nu,phi(i),tmp(1),tmp(2),tmp(3),tmp(4))
-       J(i,1) = tmp(1)
-       Y(i,1) = tmp(3)
-       call cjylv(nu+1.0,phi(i),tmp(1),tmp(2),tmp(3),tmp(4))
-       J(i,2) = tmp(1)
-       Y(i,2) = tmp(3)
+       call cjylv(nuep(1),phiep(i),J(i,1),tmp(1),Y(i,1),tmp(2))
+       call cjylv(nuep(2),phiep(i),J(i,2),tmp(2),Y(i,1),tmp(2))
 
        ! kode=2 is scaled BF
 !!$       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
@@ -362,17 +358,13 @@ contains
 
     ! compute v2
     phiep(1:np) = EYE*sqrt(4.0*B1/beta(1)**2)
-    phi(1:np) = cmplx(phiep,kind=DP)
-    J = -999.99
+!!$    phi(1:np) = cmplx(phiep,kind=DP)
+!!$    J = -999.99
 
     ! kode=2 is scaled BF
     do i= 1,np
-       call cjylv(nu,phi(i),tmp(1),tmp(2),tmp(3),tmp(4))
-       J(i,1) = tmp(1)
-       Y(i,1) = tmp(3)
-       call cjylv(nu+1.0,phi(i),tmp(1),tmp(2),tmp(3),tmp(4))
-       J(i,2) = tmp(1)
-       Y(i,2) = tmp(3)
+       call cjylv(nuep(1),phiep(i),J(i,1),tmp(1),Y(i,1),tmp(2))
+       call cjylv(nuep(2),phiep(i),J(i,2),tmp(2),Y(i,1),tmp(2))
 
 !!$       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
 !!$            &nz=nzero,ierr=ierr)
@@ -413,7 +405,7 @@ contains
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
     if (s%quiet > 1) then
-       write(*,999) ' nu:',nu,' sU:',su(1:NPRINT,1),&
+       write(*,999) ' nu:',nuep,' sU:',su(1:NPRINT,1),&
             &' D1:',delta1(1:NPRINT),' D2:',delta2(1:NPRINT),' sH:',sH(1:NPRINT,1)
     end if
 

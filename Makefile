@@ -16,7 +16,7 @@ PERFLDFLAGS = $(PERF)
 
 EXTERNAL = bessel.o
 HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o
-OBJS = $(EXTERNAL) constants.o types.o invlap.o utility.o $(HILEV)
+OBJS =  constants.o $(EXTERNAL) types.o invlap.o utility.o $(HILEV)
 
 MAIN = driver.o
 
@@ -43,9 +43,9 @@ debug_driver: $(DEBUGOBJS)
 
 
 # always compile external libray with debugging off (and no default-real-8)
-bessel.debug.o: bessel.f90
+bessel.debug.o: bessel.f90 constants.mod
 	$(F90) -c $(PERF) -o bessel.debug.o bessel.f90
-bessel.opt.o: bessel.f90
+bessel.opt.o: bessel.f90 constants.mod
 	$(F90) -c $(PERF) -o bessel.opt.o bessel.f90
 
 
