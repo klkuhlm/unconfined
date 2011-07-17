@@ -7,7 +7,7 @@ module constants
   integer, parameter :: EP = selected_real_kind(r=3000)
 
   !! full quad precision (only on gfortran >= 4.6 and ifort)
-!!  integer, parameter :: EP = selected_real_kind(p=33,r=3000)
+  !!integer, parameter :: EP = selected_real_kind(p=33,r=3000)
 
   !! 3.141592653589793238462643383279503_EP
   real(DP), parameter :: PI =    4.0_DP*atan(1.0_DP) 

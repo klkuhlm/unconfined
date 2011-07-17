@@ -285,7 +285,7 @@ contains
     complex(EP), dimension(size(p)) :: arg2, B1, delta1
     complex(EP), dimension(2,2,size(p)) :: aa
     complex(EP), dimension(size(p)) :: eta
-    complex(EP), dimension(size(p),2) :: J,Y
+    complex(EP), dimension(size(p),2,2) :: J,Y
     
 !!$    ! size integer expected by BF library
 !!$    integer(4), parameter :: kode = 2, num = 2
@@ -317,8 +317,8 @@ contains
 !!$    J = -999.99
 
     do i= 1,np
-       call cjylv(nuep(1),phiep(i),J(i,1),tmp(1),Y(i,1),tmp(2))
-       call cjylv(nuep(2),phiep(i),J(i,2),tmp(2),Y(i,1),tmp(2))
+       call cjylv(nuep(1),phiep(i),J(i,1,1),tmp(1),Y(i,1,1),tmp(2))
+       call cjylv(nuep(2),phiep(i),J(i,2,1),tmp(2),Y(i,2,1),tmp(2))
 
        ! kode=2 is scaled BF
 !!$       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
@@ -346,12 +346,14 @@ contains
     arg1 = real(beta(3),EP) + nuep(1)*beta(1)
     arg2(1:np) = beta(1)*phiep(1:np)
 
-    aa(1,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
-    aa(1,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
+!!$    aa(1,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
+!!$    aa(1,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
+    aa(1,1,1:np) = arg1*J(:,1,1)/J(:,2,1) - arg2(:)
+    aa(1,2,1:np) = arg1*Y(:,1,1)/Y(:,2,1) - arg2(:)
 
     if (s%quiet > 1) then
-       write(*,998) 'zD=LD phi:',phiep(1:NPRINT),'J:',J(1:NPRINT,1),&
-            & 'Y:',Y(1:NPRINT,1),'a(1,1)',aa(1,1,1:NPRINT),'a(1,2)',aa(1,2,1:NPRINT)
+       write(*,998) 'zD=LD phi:',phiep(1:NPRINT),'J:',J(1:NPRINT,1,1),&
+            & 'Y:',Y(1:NPRINT,1,1),'a(1,1)',aa(1,1,1:NPRINT),'a(1,2)',aa(1,2,1:NPRINT)
     end if
 
 998 format(5(A,2('(',ES12.3E4,',',ES12.3E4,')')))
@@ -363,8 +365,8 @@ contains
 
     ! kode=2 is scaled BF
     do i= 1,np
-       call cjylv(nuep(1),phiep(i),J(i,1),tmp(1),Y(i,1),tmp(2))
-       call cjylv(nuep(2),phiep(i),J(i,2),tmp(2),Y(i,1),tmp(2))
+       call cjylv(nuep(1),phiep(i),J(i,1,2),tmp(1),Y(i,1,2),tmp(2))
+       call cjylv(nuep(2),phiep(i),J(i,2,2),tmp(2),Y(i,2,2),tmp(2))
 
 !!$       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
 !!$            &nz=nzero,ierr=ierr)
@@ -385,19 +387,20 @@ contains
     end do
 
     arg2(1:np) = beta(1)*phiep(1:np)
-    aa(2,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
-    aa(2,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
+    aa(2,1,1:np) = arg1*J(:,1,2)/J(:,2,2) - arg2(:)
+    aa(2,2,1:np) = arg1*Y(:,1,2)/Y(:,2,2) - arg2(:)
 
     if (s%quiet > 1) then
-       write(*,998) 'zD=0  phi:',phiep(1:NPRINT),'J:',J(1:NPRINT,1),&
-            &'Y:',Y(1:NPRINT,1),'a(2,1)',aa(2,1,1:NPRINT),'a(2,2)',aa(2,2,1:NPRINT)
+       write(*,998) 'zD=0  phi:',phiep(1:NPRINT),'J:',J(1:NPRINT,1,2),&
+            &'Y:',Y(1:NPRINT,1,2),'a(2,1)',aa(2,1,1:NPRINT),'a(2,2)',aa(2,2,1:NPRINT)
     end if
 
     ! product of phi(0) and phi(lD) normalizations
-    delta2(1:np) = (aa(1,1,:)*aa(2,2,:) - aa(1,2,:)*aa(2,1,:)) 
+    delta2(1:np) = (aa(1,1,:)*J(:,2,1)*aa(2,2,:)*Y(:,2,2) - &
+                  & aa(1,2,:)*Y(:,2,1)*aa(2,1,:)*J(:,2,2)) 
 
     ! products of normalizations cancel
-    delta1(1:np) = (aa(1,1,:)*Y(:,1) - aa(1,2,:)*J(:,1))/delta2(:)* &
+    delta1(1:np) = (aa(1,1,:)*J(:,2,1)*Y(:,1,2) - aa(1,2,:)*Y(:,2,1)*J(:,1,2))/delta2(:)* &
          & 2.0*eta(:)*sinh(eta(:)) - cosh(eta(:))
 
     sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(1:np),2,nz)*&
@@ -405,7 +408,7 @@ contains
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
     if (s%quiet > 1) then
-       write(*,999) ' nu:',nuep,' sU:',su(1:NPRINT,1),&
+       write(*,999) ' nu:',nuep(1),' sU:',su(1:NPRINT,1),&
             &' D1:',delta1(1:NPRINT),' D2:',delta2(1:NPRINT),' sH:',sH(1:NPRINT,1)
     end if
 

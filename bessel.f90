@@ -62,21 +62,21 @@ contains
        DO k=1,km
           csj = csj+cf(k)*vr**k
        END DO
-       cbjv = SQRT(ct/(2.0_EP*PIEP*v0))*EXP(v0*ceta)*csj
-       IF (l == 1) then
-          cfj = cbjv
-       end IF
+       cbjv = SQRT(ct/(2.0_EP*PIEP*v0))*EXP(v0*ceta-abs(real(z)))*csj
+!!$       IF (l == 1) then
+!!$          cfj = cbjv
+!!$       end IF
        csy = (1.0_EP,0.0_EP)
        DO k=1,km
           csy = csy+(-1)**k*cf(k)*vr**k
        END DO
-       cbyv = -SQRT(2.0_EP*ct/(PIEP*v0))*EXP(-v0*ceta)*csy
-       IF (l == 1) then
-          cfy=cbyv
-       end IF
+       cbyv = -SQRT(2.0_EP*ct/(PIEP*v0))*EXP(-v0*ceta-abs(real(z)))*csy
+!!$       IF (l == 1) then
+!!$          cfy=cbyv
+!!$       end IF
     END DO
-    cdjv = -v/z*cbjv+cfj
-    cdyv = -v/z*cbyv+cfy
+!!$    cdjv = -v/z*cbjv+cfj
+!!$    cdyv = -v/z*cbyv+cfy
   END SUBROUTINE cjylv
 
   SUBROUTINE cjk(km,a)
