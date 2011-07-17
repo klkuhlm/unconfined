@@ -5,7 +5,7 @@ module complex_bessel
 
 contains
 
-  SUBROUTINE cjylv(v,z,cbjv,cdjv,cbyv,cdyv)
+  pure SUBROUTINE cjylv(v,z,cbjv,cbyv)
 
     ! Code converted using TO_F90 by Alan Miller
     ! Date: 2011-07-17  Time: 15:26:34
@@ -29,9 +29,7 @@ contains
     REAL(EP), INTENT(IN)  :: v
     COMPLEX(EP), INTENT(IN)   :: z
     COMPLEX(EP), INTENT(OUT)  :: cbjv
-    COMPLEX(EP), INTENT(OUT)  :: cdjv
     COMPLEX(EP), INTENT(OUT)  :: cbyv
-    COMPLEX(EP), INTENT(OUT)  :: cdyv
 
     real(EP), dimension(91) :: a
     complex(EP), dimension(12) :: cf
@@ -53,33 +51,25 @@ contains
           lf = l0+k
           cf(k) = a(lf)
           DO i=lf-1,l0,-1
-             cf(k) = cf(k)*ct2+a(i)
+             cf(k) = cf(k)*ct2 + a(i)
           END DO
           cf(k) = cf(k)*ct**k
        END DO
        vr = 1.0_EP/v0
        csj = (1.0_EP,0.0_EP)
        DO k=1,km
-          csj = csj+cf(k)*vr**k
+          csj = csj + cf(k)*vr**k
        END DO
-       cbjv = SQRT(ct/(2.0_EP*PIEP*v0))*EXP(v0*ceta-abs(real(z)))*csj
-!!$       IF (l == 1) then
-!!$          cfj = cbjv
-!!$       end IF
+       cbjv = SQRT(ct/(2.0_EP*PIEP*v0))*EXP(v0*ceta-abs(aimag(z)))*csj
        csy = (1.0_EP,0.0_EP)
        DO k=1,km
-          csy = csy+(-1)**k*cf(k)*vr**k
+          csy = csy + (-1)**k*cf(k)*vr**k
        END DO
-       cbyv = -SQRT(2.0_EP*ct/(PIEP*v0))*EXP(-v0*ceta-abs(real(z)))*csy
-!!$       IF (l == 1) then
-!!$          cfy=cbyv
-!!$       end IF
+       cbyv = -SQRT(2.0_EP*ct/(PIEP*v0))*EXP(-v0*ceta-abs(aimag(z)))*csy
     END DO
-!!$    cdjv = -v/z*cbjv+cfj
-!!$    cdyv = -v/z*cbyv+cfy
   END SUBROUTINE cjylv
 
-  SUBROUTINE cjk(km,a)
+  pure SUBROUTINE cjk(km,a)
 
     !       ========================================================
     !       Purpose: Compute the expansion coefficients for the
@@ -92,7 +82,7 @@ contains
     use constants, only : EP
     implicit none
     INTEGER, INTENT(IN) :: km
-    real(EP), INTENT(OUT) :: a(*)
+    real(EP), INTENT(OUT) :: a(:)
 
     integer :: k,j,l1,l2,l3,l4
     real(EP) :: f0,g0,f,g
@@ -114,8 +104,8 @@ contains
        DO j=1,k
           l3 = k*(k+1)/2+j+1
           l4 = (k+1)*(k+2)/2+j+1
-          a(l4) = (j+0.5_EP*k+0.125_EP/(2.0_EP*j+k+1.0_EP))*a(l3)  &
-               -(j+0.5_EP*k-1.0_EP+0.625_EP/(2.0_EP*j+k+1.0_EP))*a(l3-1)
+          a(l4) = (j+0.5_EP*k+0.125_EP/(2.0_EP*j+k+1.0_EP))*a(l3) &
+               & -(j+0.5_EP*k-1.0_EP+0.625_EP/(2.0_EP*j+k+1.0_EP))*a(l3-1)
        END DO
     END DO
   END SUBROUTINE cjk

@@ -253,7 +253,6 @@ contains
     use constants, only : DP, EP, EYE, PIEP, E, SQRT2
     use types, only : well, formation, solution
     use utility, only : operator(.X.) 
-!!$    use cbessel, only : cbesj, cbesy ! Amos routines
     use complex_bessel
     implicit none
     
@@ -268,29 +267,16 @@ contains
     complex(EP), dimension(size(p),size(zD)+1) :: sH
     integer :: i,  np, nz
 
-    ! extended precision version used in asymptotic expansion
-    real(EP), dimension(size(p)) :: nuep
+    real(EP) :: nuep, B2
     complex(EP), dimension(size(p)) :: phiep
 
-!!$    real(DP) :: nu
     real(DP), dimension(0:3) :: beta
-
-    complex(EP), dimension(size(p)) :: delta2
-    real(EP) :: B2
-
-!!$    complex(DP), dimension(size(p)) :: phi
-    complex(EP), dimension(2) :: tmp
-
     complex(EP) :: arg1
-    complex(EP), dimension(size(p)) :: arg2, B1, delta1
+    complex(EP), dimension(size(p)) :: arg2, B1, delta1, delta2
     complex(EP), dimension(2,2,size(p)) :: aa
     complex(EP), dimension(size(p)) :: eta
     complex(EP), dimension(size(p),2,2) :: J,Y
     
-!!$    ! size integer expected by BF library
-!!$    integer(4), parameter :: kode = 2, num = 2
-!!$    integer(4) :: nzero, ierr
-
     integer, parameter :: NPRINT = 2
 
     np = size(p)
@@ -309,47 +295,20 @@ contains
 
     ! compute v1
     phiep(1:np) = EYE*sqrt(4.0*B1/(beta(1)**2))*exp(0.5_DP*beta(1)*f%usLD)
-!!$    phi(1:np) = cmplx(phiep,kind=DP) 
 
-    nuep(1) = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
-    nuep(2) = nuep(1) + 1.0_EP
-!!$    nu = real(nuep(1),kind=DP) 
-!!$    J = -999.99
+    nuep = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
 
     do i= 1,np
-       call cjylv(nuep(1),phiep(i),J(i,1,1),tmp(1),Y(i,1,1),tmp(2))
-       call cjylv(nuep(2),phiep(i),J(i,2,1),tmp(2),Y(i,2,1),tmp(2))
-
-       ! kode=2 is scaled BF
-!!$       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-!!$            & nz=nzero,ierr=ierr)
-!!$       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
-!!$          print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
-!!$               &' i,ierr,nz:',i,ierr,nzero  
-!!$       else
-!!$          J(i,1:2) = tmp(1:2)
-!!$       end if
-!!$       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-!!$            &nz=nzero,ierr=ierr)
-!!$       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
-!!$          print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
-!!$               &' i,ierr,nz:',i,ierr,nzero
-!!$          if (abs(phi(i)) < 1.0E-16) then
-!!$             Y(i,1:2) = -(1/PIEP)*gamma(nuep(1:2))*(phiep(i)/2.0_EP)**nuep(1:2)
-!!$          end if
-!!$       else
-!!$          Y(i,1:2) = tmp(1:2)
-!!$       end if
+       call cjylv(nuep,    phiep(i),J(i,1,1),Y(i,1,1))
+       call cjylv(nuep+1.0,phiep(i),J(i,2,1),Y(i,2,1))
     end do
     
     ! compute v3
-    arg1 = real(beta(3),EP) + nuep(1)*beta(1)
+    arg1 = real(beta(3),EP) + nuep*beta(1)
     arg2(1:np) = beta(1)*phiep(1:np)
 
-!!$    aa(1,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
-!!$    aa(1,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
-    aa(1,1,1:np) = arg1*J(:,1,1)/J(:,2,1) - arg2(:)
-    aa(1,2,1:np) = arg1*Y(:,1,1)/Y(:,2,1) - arg2(:)
+    aa(1,1,1:np) = arg1*J(:,1,1) - arg2(:)*J(:,2,1)
+    aa(1,2,1:np) = arg1*Y(:,1,1) - arg2(:)*Y(:,2,1)
 
     if (s%quiet > 1) then
        write(*,998) 'zD=LD phi:',phiep(1:NPRINT),'J:',J(1:NPRINT,1,1),&
@@ -360,35 +319,15 @@ contains
 
     ! compute v2
     phiep(1:np) = EYE*sqrt(4.0*B1/beta(1)**2)
-!!$    phi(1:np) = cmplx(phiep,kind=DP)
-!!$    J = -999.99
 
-    ! kode=2 is scaled BF
     do i= 1,np
-       call cjylv(nuep(1),phiep(i),J(i,1,2),tmp(1),Y(i,1,2),tmp(2))
-       call cjylv(nuep(2),phiep(i),J(i,2,2),tmp(2),Y(i,2,2),tmp(2))
-
-!!$       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-!!$            &nz=nzero,ierr=ierr)
-!!$       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
-!!$          print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
-!!$               &' i,ierr,nz:',i,ierr,nzero
-!!$       else
-!!$          J(i,1:2) = tmp(1:2)
-!!$       end if
-!!$       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-!!$            &nz=nzero,ierr=ierr)
-!!$       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
-!!$          print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
-!!$               &' i,ierr,nz:',i,ierr,nzero
-!!$       else
-!!$          Y(i,1:2) = tmp(1:2)
-!!$       end if
+       call cjylv(nuep,    phiep(i),J(i,1,2),Y(i,1,2))
+       call cjylv(nuep+1.0,phiep(i),J(i,2,2),Y(i,2,2))
     end do
 
     arg2(1:np) = beta(1)*phiep(1:np)
-    aa(2,1,1:np) = arg1*J(:,1,2)/J(:,2,2) - arg2(:)
-    aa(2,2,1:np) = arg1*Y(:,1,2)/Y(:,2,2) - arg2(:)
+    aa(2,1,1:np) = arg1*J(:,1,2) - arg2(:)*J(:,2,2)
+    aa(2,2,1:np) = arg1*Y(:,1,2) - arg2(:)*Y(:,2,2)
 
     if (s%quiet > 1) then
        write(*,998) 'zD=0  phi:',phiep(1:NPRINT),'J:',J(1:NPRINT,1,2),&
@@ -396,11 +335,10 @@ contains
     end if
 
     ! product of phi(0) and phi(lD) normalizations
-    delta2(1:np) = (aa(1,1,:)*J(:,2,1)*aa(2,2,:)*Y(:,2,2) - &
-                  & aa(1,2,:)*Y(:,2,1)*aa(2,1,:)*J(:,2,2)) 
+    delta2(1:np) = (aa(1,1,:)*aa(2,2,:) - aa(1,2,:)*aa(2,1,:)) 
 
     ! products of normalizations cancel
-    delta1(1:np) = (aa(1,1,:)*J(:,2,1)*Y(:,1,2) - aa(1,2,:)*Y(:,2,1)*J(:,1,2))/delta2(:)* &
+    delta1(1:np) = (aa(1,1,:)*Y(:,1,2) - aa(1,2,:)*J(:,1,2))/delta2(:)* &
          & 2.0*eta(:)*sinh(eta(:)) - cosh(eta(:))
 
     sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(1:np),2,nz)*&
@@ -408,7 +346,7 @@ contains
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
     if (s%quiet > 1) then
-       write(*,999) ' nu:',nuep(1),' sU:',su(1:NPRINT,1),&
+       write(*,999) ' nu:',nuep,' sU:',su(1:NPRINT,1),&
             &' D1:',delta1(1:NPRINT),' D2:',delta2(1:NPRINT),' sH:',sH(1:NPRINT,1)
     end if
 
