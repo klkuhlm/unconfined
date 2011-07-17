@@ -43,31 +43,19 @@ contains
        ! Moench (unconfined w/ wellbore storage)
        stop 'ERROR Moench model not implmented yet'
 
-    case(4)
-       ! Malama 2011 fully penetrating model (Neuman 72 when beta=0)
-       allocate(eta(np),xi(np),udf(np,nz))
-
-       eta(1:np) = sqrt((lap%p(:) + a**2)/f%kappa)
-       xi(1:np) = eta(:)*f%alphaD/lap%p(:)
-       udf(1:np,1:nz) = theis(a,lap%p,nz)
-
-       where (spread(real(eta) < MAXEXP,2,nz))
-          fp(1:np,1:nz) = udf(:,:)*(1.0_EP - cosh(eta .X. s%zD)/ &
-               & spread((1.0_EP + f%beta*eta*xi)*cosh(eta) + xi*sinh(eta),2,nz))
-       elsewhere
-          fp(1:np,1:nz) = udf(:,:)*(1.0_EP - exp(eta .X. (s%zD - 1.0))/ &
-               & spread(1.0_EP + f%beta*eta*xi + xi,2,nz))
-       end where
-       deallocate(eta,xi,udf)
-
-    case(5)
+    case(4:5)
        ! Malama 2011 partial penetrating model (Neuman 74 when beta=0)
        allocate(eta(np),xi(np),udp(np,nz+1))
 
        eta(1:np) = sqrt((lap%p(:) + a**2)/f%kappa)
        xi(1:np) = eta(:)*f%alphaD/lap%p(:)
-       udp(1:np,1:nz+1) = hantush(a,[s%zD,1.0],s,lap%p,f,w)
-
+       if (s%model == 4) then
+          udf(1:np,1:nz) = theis(a,lap%p,nz)
+          udf(1:np,nz+1) = udf(1:np,nz)
+       else
+          udp(1:np,1:nz+1) = hantush(a,[s%zD,1.0],s,lap%p,f,w)
+       end if
+       
        where (spread(real(eta) < MAXEXP,2,nz))
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
                & cosh(eta .X. s%zD)/spread((1.0_EP + f%beta*eta*xi)*&
@@ -328,7 +316,7 @@ contains
        ! kode=2 is scaled BF
        call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
             & nz=nzero,ierr=ierr)
-       if (ierr > 0 .and. ierr /= 3) then
+       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
        else
@@ -336,7 +324,7 @@ contains
        end if
        call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
             &nz=nzero,ierr=ierr)
-       if (ierr > 0 .and. ierr /= 3) then
+       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
        else
@@ -359,7 +347,7 @@ contains
     do i= 1,np
        call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
             &nz=nzero,ierr=ierr)
-       if (ierr > 0 .and. ierr /= 3) then
+       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
        else
@@ -367,7 +355,7 @@ contains
        end if
        call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
             &nz=nzero,ierr=ierr)
-       if (ierr > 0 .and. ierr /= 3) then
+       if (ierr > 0 .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
        else

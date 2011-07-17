@@ -19,7 +19,7 @@ contains
     type(solution), intent(inout) :: s
 
     integer :: ioerr, terms
-    character(39) :: fmt
+    character(43) :: fmt
 
     ! intermediate steps in vsplit
     integer :: zrange, minlsp, maxlsp, spRange
@@ -470,14 +470,14 @@ contains
        write(*,'(A,2('//RFMT//',1X))') 'beta,beta_D: ',f%beta,f%betaD
        write(*,'(3(A,'//RFMT//'))') 'Tc:',s%Tc,' Lc:',s%Lc,' Hc:',s%Hc
        write(*,'(3(A,'//RFMT//'))') 'b_D:',w%bD,' l_D:',w%lD,' d_D:',w%dD
-       fmt = '(A,I0,1X,     ('//SFMT//',1X))           '
+       fmt = '(A,I0,1X,     ('//SFMT//',1X))          '
        write(fmt(10:14),'(I5.5)') s%nz
        write(*,fmt) 'z  : ',s%nz,s%z
        write(*,fmt) 'z_D: ',s%nz,s%zD
        fmt = '(A,     (I0,1X))                       '
        write(fmt(4:8),'(I5.5)') s%nz
        write(*,fmt) 'zLay: ',s%zLay
-       fmt = '(A,I0,1X,     ('//SFMT//',1X))           '
+       fmt = '(A,I0,1X,     ('//SFMT//',1X))          '
        write(fmt(10:14),'(I5.5)') s%nr
        write(*,fmt) 'r  : ',s%nr,s%r 
        write(*,fmt) 'r_D: ',s%nr,s%rD
@@ -569,7 +569,7 @@ contains
     write(unit,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
     write(unit,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
     write(unit,'(A,'//RFMT//')') '# gamma :: ',f%gamma
-    fmt = '(A,I0,A,    ('//RFMT//',1X))       '
+    fmt = '(A,I0,A,    ('//RFMT//',1X))     '
     write(fmt(9:12),'(I4.4)') size(lap%timePar)
     write(unit,fmt) '# pumping well time behavior :: ',lap%timeType, &
          & trim(lap%timeDescrip(lap%timeType)), lap%timePar
@@ -646,7 +646,7 @@ contains
     write(unit,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
     write(unit,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
     write(unit,'(A,'//RFMT//')') '# gamma :: ',f%gamma
-    fmt = '(A,I0,A,    ('//RFMT//',1X))       '
+    fmt = '(A,I0,A,    ('//RFMT//',1X))     '
     write(fmt(9:12),'(I4.4)') size(lap%timePar)
     write(unit,fmt) '# pumping well time behavior :: ',lap%timeType, &
          & trim(lap%timeDescrip(lap%timeType)), lap%timePar
@@ -656,7 +656,7 @@ contains
          & ts%k, ts%R
     write(unit,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
-    fmt = '(A,I0,1X,    ('//RFMT//',1X))     '
+    fmt = '(A,I0,1X,    ('//RFMT//',1X))    '
     write(fmt(10:13),'(I4.4)') s%nr
     write(unit,fmt) '# num r locations, rlocs :: ',s%nr, s%r(:)
     write(fmt(10:13),'(I4.4)') s%nz

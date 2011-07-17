@@ -1,18 +1,3 @@
-##################################################
-### flags / settings for intel >= 12.0 compiler
-### version 12 still doesn't seem to handle complex extended-precision
-### hyperbolic trig functions (although these are part of F2008)
-##
-##DEBUG = -O0 -g -warn all -check all -traceback
-##OMP = -openmp
-##PERF = -O3 -xHOST -ipo 
-##REAL = -real-size 64
-##F90 = ifort
-##CPP = -cpp
-##FREE = -free
-##PERFLDFLAGS = $(PERF)
-####################################################
-
 
 ##################################################
 # flags / settings for gfortran >= 4.6 compiler
@@ -72,31 +57,44 @@ cbessel.opt.o: cbessel.f90
 %.debug.o: %.f90
 	$(F90) -c $(DEBUG) $(DEFAULTS) -o $@ $<
 
-constants.opt.o constants.mod : constants.f90
-integration.opt.o integration.mod : integration.f90 constants.mod types.mod
-invlap.opt.o inverse_laplace_transform.mod: invlap.f90 constants.mod types.mod 
-utility.opt.o utilities.mod: utility.f90 constants.mod 
-laplace_hankel_solutions.opt.o laplace_hankel_solution.mod: \
- laplace_hankel_solutions.f90 constants.mod types.mod time_mod.mod
-driver.opt.o: laplace_hankel_solution.mod constants.mod utilities.mod io.mod driver.f90
-time.opt.o time_mod.mod: time.f90 constants.mod types.mod
+constants.opt.o constants.mod: constants.f90
 types.opt.o types.mod: types.f90 constants.mod
-driver_io.opt.o io.mod: driver_io.f90 constants.mod types.mod utilities.mod 
-driver.opt.o: driver.f90 types.mod constants.mod integration.mod laplace_hankel_solution.mod \
- inverse_laplace_transform.mod 
+invlap.opt.o invlap.mod: invlap.f90 constants.mod types.mod constants.mod \
+ types.mod constants.mod types.mod
+utility.opt.o utility.mod: utility.f90 constants.mod constants.mod \
+ constants.mod constants.mod constants.mod constants.mod constants.mod
+time.opt.o time.mod: time.f90 constants.mod types.mod
+laplace_hankel_solutions.opt.o laplace_hankel_solutions.mod: \
+ laplace_hankel_solutions.f90 constants.mod types.mod time.mod \
+ utility.mod constants.mod constants.mod types.mod time.mod utility.mod \
+ constants.mod types.mod time.mod utility.mod cbessel.mod constants.mod \
+ types.mod utility.mod cbessel.mod
+driver_io.opt.o driver_io.mod: driver_io.f90 constants.mod types.mod \
+ utility.mod constants.mod types.mod constants.mod types.mod
+integration.opt.o integration.mod: integration.f90 constants.mod types.mod \
+ constants.mod types.mod constants.mod utility.mod constants.mod
+driver.opt.o: driver.f90 types.mod driver_io.mod constants.mod \
+ laplace_hankel_solutions.mod invlap.mod integration.mod
 
-constants.debug.o constants.mod : constants.f90
-integration.debug.o integration.mod : integration.f90 constants.mod types.mod
-invlap.debug.o inverse_laplace_transform.mod: invlap.f90 constants.mod types.mod 
-utility.debug.o utilities.mod: utility.f90 constants.mod 
-laplace_hankel_solutions.debug.o laplace_hankel_solution.mod: \
- laplace_hankel_solutions.f90 constants.mod types.mod time_mod.mod
-driver.debug.o: laplace_hankel_solution.mod constants.mod utilities.mod io.mod driver.f90
-time.debug.o time_mod.mod: time.f90 constants.mod types.mod
+constants.debug.o constants.mod: constants.f90
 types.debug.o types.mod: types.f90 constants.mod
-driver_io.debug.o io.mod: driver_io.f90 constants.mod types.mod utilities.mod 
-driver.debug.o: driver.f90 types.mod constants.mod integration.mod laplace_hankel_solution.mod \
- inverse_laplace_transform.mod 
+invlap.debug.o invlap.mod: invlap.f90 constants.mod types.mod constants.mod \
+ types.mod constants.mod types.mod
+utility.debug.o utility.mod: utility.f90 constants.mod constants.mod \
+ constants.mod constants.mod constants.mod constants.mod constants.mod
+time.debug.o time.mod: time.f90 constants.mod types.mod
+laplace_hankel_solutions.debug.o laplace_hankel_solutions.mod: \
+ laplace_hankel_solutions.f90 constants.mod types.mod time.mod \
+ utility.mod constants.mod constants.mod types.mod time.mod utility.mod \
+ constants.mod types.mod time.mod utility.mod cbessel.mod constants.mod \
+ types.mod utility.mod cbessel.mod
+driver_io.debug.o driver_io.mod: driver_io.f90 constants.mod types.mod \
+ utility.mod constants.mod types.mod constants.mod types.mod
+integration.debug.o integration.mod: integration.f90 constants.mod types.mod \
+ constants.mod types.mod constants.mod utility.mod constants.mod
+driver.debug.o: driver.f90 types.mod driver_io.mod constants.mod \
+ laplace_hankel_solutions.mod invlap.mod integration.mod
+
 
 ###### clean up #################################
 clean:
