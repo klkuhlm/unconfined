@@ -126,9 +126,11 @@ contains
     complex(EP), dimension(size(z)) :: cws,ceta,ct,ct2,csj,csy
     real(EP) :: vr
 
+    intrinsic :: gamma
+
     forall (i=1:KM) ii(i) = i
     nz = size(z)
-
+          
     cws(1:nz) = SQRT(1.0_EP - (z(:)/v)**2)
     ceta(1:nz) = cws(:) + LOG((z(:)/v)/(1.0_EP + cws(:)))
     ct(1:nz) = 1.0_EP/cws(:)
@@ -143,21 +145,13 @@ contains
        cf(1:nz,k) = cf(:,k)*ct(:)**k
     END DO
     vr = 1.0_EP/v
+    
     csj(1:nz) = 1.0_EP + sum(cf(:,:)*spread(vr**ii(:),1,nz),dim=2)       
     csy(1:nz) = 1.0_EP + sum(cf(:,:)*spread((-vr)**ii(:),1,nz),dim=2)
-    where (abs(z(:)) < 1.0E-14)
-       cbjv(1:nz) = (z(:)/2.0)**v/gamma(v+1.0)
-       cbyv(1:nz) = -INVPIEP*gamma(v)*(z(:)/2.0)**(-v)
-    elsewhere
-       where (spread(v > 10.0,1,nz)) 
-          cbjv(1:nz) = (E*z(:)/(2.0*v))**v/sqrt(TWOPIEP*v)
-          cbyv(1:nz) = -(E*z(:)/(2.0*v))**(-v)/sqrt(PIOV2EP*v)
-       elsewhere
-          cbjv(1:nz) =  SQRT(ct(:)/(TWOPIEP*v))*EXP(v*ceta(:))*csj(:)
-          cbyv(1:nz) = -SQRT(ct(:)/(PIOV2EP*v))*EXP(-v*ceta(:))*csy(:)
-       end where
-    end where
-    
+
+    ! -|aimag(z)| is scaling term (which cancels in M-N2010 case)
+    cbjv(1:nz) =  SQRT(ct(:)/(TWOPIEP*v))*EXP(v*ceta(:)-abs(aimag(z)))*csj(:)
+    cbyv(1:nz) = -SQRT(ct(:)/(PIOV2EP*v))*EXP(-v*ceta(:)-abs(aimag(z)))*csy(:)
   END SUBROUTINE cjy
 
 end module complex_bessel
