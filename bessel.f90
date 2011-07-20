@@ -17,7 +17,7 @@ contains
     !       Output:  CBJV --- Jv(z)
     !                CBYV --- Yv(z)
     !       ===================================================
-    use constants, only : EP,INVPIEP,TWOPIEP,PIOV2EP
+    use constants, only : EP,INVPIEP,TWOPIEP,PIOV2EP,E
     implicit none
 
     REAL(EP), INTENT(IN)  :: v
@@ -145,12 +145,17 @@ contains
     vr = 1.0_EP/v
     csj(1:nz) = 1.0_EP + sum(cf(:,:)*spread(vr**ii(:),1,nz),dim=2)       
     csy(1:nz) = 1.0_EP + sum(cf(:,:)*spread((-vr)**ii(:),1,nz),dim=2)
-    where (abs(z(:)) < 1.0E-20)
+    where (abs(z(:)) < 1.0E-14)
        cbjv(1:nz) = (z(:)/2.0)**v/gamma(v+1.0)
        cbyv(1:nz) = -INVPIEP*gamma(v)*(z(:)/2.0)**(-v)
     elsewhere
-       cbjv(1:nz) =  SQRT(ct(:)/(TWOPIEP*v))*EXP(v*ceta(:))*csj(:)
-       cbyv(1:nz) = -SQRT(ct(:)/(PIOV2EP*v))*EXP(-v*ceta(:))*csy(:)
+       where (spread(v > 10.0,1,nz)) 
+          cbjv(1:nz) = (E*z(:)/(2.0*v))**v/sqrt(TWOPIEP*v)
+          cbyv(1:nz) = -(E*z(:)/(2.0*v))**(-v)/sqrt(PIOV2EP*v)
+       elsewhere
+          cbjv(1:nz) =  SQRT(ct(:)/(TWOPIEP*v))*EXP(v*ceta(:))*csj(:)
+          cbyv(1:nz) = -SQRT(ct(:)/(PIOV2EP*v))*EXP(-v*ceta(:))*csy(:)
+       end where
     end where
     
   END SUBROUTINE cjy
