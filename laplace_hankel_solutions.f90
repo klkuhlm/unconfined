@@ -265,7 +265,7 @@ contains
 
     complex(EP), dimension(size(p),size(zD)) :: sD, sU
     complex(EP), dimension(size(p),size(zD)+1) :: sH
-    integer :: i,  np, nz
+    integer ::  np, nz
 
     real(EP) :: nuep, B2
     complex(EP), dimension(size(p)) :: phiep
@@ -295,13 +295,10 @@ contains
 
     ! compute v1
     phiep(1:np) = EYE*sqrt(4.0*B1/(beta(1)**2))*exp(0.5_DP*beta(1)*f%usLD)
-
     nuep = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
 
-    do i= 1,np
-       call cjylv(nuep,    phiep(i),J(i,1,1),Y(i,1,1))
-       call cjylv(nuep+1.0,phiep(i),J(i,2,1),Y(i,2,1))
-    end do
+    call cjy(nuep,    phiep(:),J(1:np,1,1),Y(1:np,1,1))
+    call cjy(nuep+1.0,phiep(:),J(1:np,2,1),Y(1:np,2,1))
     
     ! compute v3
     arg1 = real(beta(3),EP) + nuep*beta(1)
@@ -320,10 +317,8 @@ contains
     ! compute v2
     phiep(1:np) = EYE*sqrt(4.0*B1/beta(1)**2)
 
-    do i= 1,np
-       call cjylv(nuep,    phiep(i),J(i,1,2),Y(i,1,2))
-       call cjylv(nuep+1.0,phiep(i),J(i,2,2),Y(i,2,2))
-    end do
+    call cjy(nuep,    phiep(:),J(1:np,1,2),Y(1:np,1,2))
+    call cjy(nuep+1.0,phiep(:),J(1:np,2,2),Y(1:np,2,2))
 
     arg2(1:np) = beta(1)*phiep(1:np)
     aa(2,1,1:np) = arg1*J(:,1,2) - arg2(:)*J(:,2,2)
