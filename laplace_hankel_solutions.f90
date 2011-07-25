@@ -290,6 +290,8 @@ contains
     real(DP) :: nu
     integer :: i
 
+    intrinsic :: isnan
+
     np = size(p)
     nz = size(zD)
 
@@ -308,7 +310,7 @@ contains
     phiep(1:np) = EYE*sqrt(4.0*B1/(beta(1)**2))*exp(0.5_DP*beta(1)*f%usLD)
     nuep = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
  
-    phi = cmplx(phiep,kind=DP)
+    phi(1:np) = cmplx(phiep(1:np),kind=DP)
     nu = real(nuep,kind=DP)
 
     do i= 1,np
@@ -317,23 +319,25 @@ contains
        if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero  
+       else
+          J(i,1:2) = tmp(1:2)
        end if
-       J(i,1:2) = tmp(1:2)
 
        call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
             &nz=nzero,ierr=ierr)
        if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
+       else
+          Y(i,1:2) = tmp(1:2)
        end if
-       Y(i,1:2) = tmp(1:2)
 
-       if (J(i,1) /= J(i,1) .or. Y(i,1) /= Y(i,1)) then
-          call cjy(nuep,phiep(:),J(i,1),Y(i,1))
+       if (isnan(real(J(i,1))) .or. isnan(real(Y(i,1)))) then
+          call cjy(nuep,phiep(i:i),J(i,1),Y(i,1))
        end if
-       if (J(i,2) /= J(i,2) .or. Y(i,2) /= Y(i,2)) then
-          call cjy(nuep+1.0,phiep(:),J(i,2),Y(i,2))
-       end if       
+       if (isnan(real(J(i,2))) .or. isnan(real(Y(i,2)))) then
+          call cjy(nuep+1.0,phiep(i:i),J(i,2),Y(i,2))
+       end if
     end do
 
     ! compute v3
@@ -360,22 +364,24 @@ contains
        if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
+       else
+          J(i,1:2) = tmp(1:2)
        end if
-       J(i,1:2) = tmp(1:2)
 
        call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
             &nz=nzero,ierr=ierr)
        if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
+       else
+          Y(i,1:2) = tmp(1:2)
        end if
-       Y(i,1:2) = tmp(1:2)
        
-       if (J(i,1) /= J(i,1) .or. Y(i,1) /= Y(i,1)) then
-          call cjy(nuep,phiep(:),J(i,1),Y(i,1))
+       if (isnan(real(J(i,1))) .or. isnan(real(Y(i,1)))) then
+          call cjy(nuep,phiep(i:i),J(i,1),Y(i,1))
        end if
-       if (J(i,2) /= J(i,2) .or. Y(i,2) /= Y(i,2)) then
-          call cjy(nuep+1.0,phiep(:),J(i,2),Y(i,2))
+       if (isnan(real(J(i,2))) .or. isnan(real(Y(i,2)))) then
+          call cjy(nuep+1.0,phiep(i:i),J(i,2),Y(i,2))
        end if
     end do
 

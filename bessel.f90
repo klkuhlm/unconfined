@@ -5,7 +5,7 @@ module complex_bessel
 
 contains
 
-  SUBROUTINE cjy(v,z,cbjv,cbyv)
+  pure SUBROUTINE cjy(v,z,cbjv,cbyv)
 
     ! simplified and vectorized version of Zhang and Jin's code
     !       ===================================================
@@ -153,7 +153,5 @@ contains
     cbjv(1:nz) =  SQRT(ct(:)/(TWOPIEP*v))*EXP(v*ceta(:)-abs(aimag(z)))*csj(:)
     cbyv(1:nz) = -SQRT(ct(:)/(PIOV2EP*v))*EXP(-v*ceta(:)-abs(aimag(z)))*csy(:)
   END SUBROUTINE cjy
-
-
 
 end module complex_bessel
