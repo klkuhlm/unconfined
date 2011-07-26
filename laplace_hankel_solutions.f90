@@ -256,6 +256,7 @@ contains
     use types, only : well, formation, solution
     use utility, only : operator(.X.) 
     use complex_bessel
+    use complex_bessel2
     use cbessel, only : cbesj,cbesy ! Amos routine
     implicit none
     
@@ -270,7 +271,7 @@ contains
     complex(EP), dimension(size(p),size(zD)+1) :: sH
     integer ::  np, nz
 
-    real(EP) :: nuep, B2
+    real(EP) :: nuep, B2, nv
     complex(EP), dimension(size(p)) :: phiep
 
     real(DP), dimension(0:3) :: beta
@@ -286,6 +287,7 @@ contains
     integer(4), parameter :: kode = 2, num = 2
     integer(4) :: nzero, ierr
     complex(DP), dimension(size(p)) :: phi
+    complex(EP), allocatable :: tmp2(:,:)
     complex(DP), dimension(2) :: tmp
     real(DP) :: nu
     integer :: i
@@ -327,10 +329,10 @@ contains
              if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
                 print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
                      &' i,ierr,nz:',i,ierr,nzero  
+
              else
                 J(i,1:2) = tmp(1:2)
              end if
-             
              call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
                   &nz=nzero,ierr=ierr)
              if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
@@ -338,6 +340,15 @@ contains
                      &' i,ierr,nz:',i,ierr,nzero
              else
                 Y(i,1:2) = tmp(1:2)
+             end if
+
+             if (any(isnan(abs(J(i,1:2)))) .or. any(isnan(abs(Y(i,1:2))))) then
+                allocate(tmp2(4,0:int(nu)+2))                   
+                call cjyva(nuep+1.0,phiep(i),nv,tmp2(1,:),tmp2(2,:),tmp2(3,:),tmp2(4,:))
+                J(i,1:2) = tmp2(1,int(nv)-1:int(nv))
+                Y(i,1:2) = tmp2(3,int(nv)-1:int(nv))
+                deallocate(tmp2)
+                print *, 'zD=LD',nuep+1.0,phiep(i),J(i,1),Y(i,1)
              end if
           end if
        end do
@@ -387,6 +398,14 @@ contains
              else
                 Y(i,1:2) = tmp(1:2)
              end if
+          end if
+          if (any(isnan(abs(J(i,1:2)))) .or. any(isnan(abs(Y(i,1:2))))) then
+             allocate(tmp2(4,0:int(nu)+2))
+             call cjyva(nuep+1.0,phiep(i),nv,tmp2(1,:),tmp2(2,:),tmp2(3,:),tmp2(4,:))
+             J(i,1:2) = tmp2(1,int(nv)-1:int(nv))
+             Y(i,1:2) = tmp2(3,int(nv)-1:int(nv))
+             deallocate(tmp2)
+             print *, 'zD=0 ',nuep+1.0,phiep(i),J(i,1),Y(i,1)
           end if
        end do
     end if

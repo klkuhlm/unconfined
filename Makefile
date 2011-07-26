@@ -14,7 +14,7 @@ FREE = -free
 PERFLDFLAGS = $(PERF)
 ##################################################
 
-EXTERNAL = cbessel.o bessel.o 
+EXTERNAL = cbessel.o bessel.o bessel2.o
 HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o
 OBJS =  constants.o $(EXTERNAL) types.o invlap.o utility.o $(HILEV)
 
@@ -47,6 +47,11 @@ bessel.debug.o: bessel.f90 constants.mod
 	$(F90) -c $(PERF) -o bessel.debug.o bessel.f90
 bessel.opt.o: bessel.f90 constants.mod
 	$(F90) -c $(PERF) -o bessel.opt.o bessel.f90
+
+bessel2.debug.o: bessel2.f90 constants.mod
+	$(F90) -c $(PERF) -o bessel2.debug.o bessel2.f90
+bessel2.opt.o: bessel2.f90 constants.mod
+	$(F90) -c $(PERF) -o bessel2.opt.o bessel2.f90
 
 cbessel.debug.o: cbessel.f90 
 	$(F90) -c $(PERF) -o cbessel.debug.o cbessel.f90

@@ -31,11 +31,10 @@ SUBROUTINE cjyva(v,z,vm,cbj,cdj,cby,cdy)
   real(EP), INTENT(IN) :: v
   complex(EP), INTENT(IN) :: z
   real(EP), INTENT(OUT) :: vm
-  COMPLEX(EP), INTENT(OUT) :: cbj(0:*)
-  COMPLEX(EP), INTENT(OUT) :: cdj(0:*)
-  COMPLEX(EP), INTENT(OUT) :: cby(0:*)
-  COMPLEX(EP), INTENT(OUT) :: cdy(0:*)
-
+  COMPLEX(EP), INTENT(OUT) :: cbj(0:int(v)+1)
+  COMPLEX(EP), INTENT(OUT) :: cdj(0:int(v)+1)
+  COMPLEX(EP), INTENT(OUT) :: cby(0:int(v)+1)
+  COMPLEX(EP), INTENT(OUT) :: cdy(0:int(v)+1)
 
   intrinsic :: gamma
 
@@ -347,6 +346,15 @@ INTEGER FUNCTION msta1(x,mp)
   RETURN
 END FUNCTION msta1
 
+function envj(n,x) result(evj)
+
+  use constants, only : EP
+  real(EP), intent(in) :: x
+  real(EP) :: evj
+  
+  evj = 0.5_EP*log10(6.28_EP*n)-n*log10(1.36_EP*x/n)
+  return
+end function envj
 
 INTEGER FUNCTION msta2(x,n,mp)
 
