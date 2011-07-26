@@ -313,33 +313,36 @@ contains
     phi(1:np) = cmplx(phiep(1:np),kind=DP)
     nu = real(nuep,kind=DP)
 
-    do i= 1,np
-       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-            & nz=nzero,ierr=ierr)
-       if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
-          print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero  
-       else
-          J(i,1:2) = tmp(1:2)
-       end if
-
-       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-            &nz=nzero,ierr=ierr)
-       if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
-          print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero
-       else
-          Y(i,1:2) = tmp(1:2)
-       end if
-
-       if (isnan(real(J(i,1))) .or. isnan(real(Y(i,1)))) then
-          call cjy(nuep,phiep(i:i),J(i,1),Y(i,1))
-       end if
-       if (isnan(real(J(i,2))) .or. isnan(real(Y(i,2)))) then
-          call cjy(nuep+1.0,phiep(i:i),J(i,2),Y(i,2))
-       end if
-    end do
-
+    if (all(abs(phi(:)) < 2.0*(nu+1.0))) then
+       call cjy(nuep,    phiep(:),J(:,1),Y(:,1))
+       call cjy(nuep+1.0,phiep(:),J(:,2),Y(:,2))
+    else
+       do i= 1,np
+          if (2.0*(nu+1.0) > abs(phi(i))) then
+             call cjy(nuep,    phiep(i:i),J(i,1),Y(i,1))
+             call cjy(nuep+1.0,phiep(i:i),J(i,2),Y(i,2))
+          else
+             call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+                  & nz=nzero,ierr=ierr)
+             if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
+                print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
+                     &' i,ierr,nz:',i,ierr,nzero  
+             else
+                J(i,1:2) = tmp(1:2)
+             end if
+             
+             call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+                  &nz=nzero,ierr=ierr)
+             if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
+                print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
+                     &' i,ierr,nz:',i,ierr,nzero
+             else
+                Y(i,1:2) = tmp(1:2)
+             end if
+          end if
+       end do
+    end if
+    
     ! compute v3
     arg1 = real(beta(3),EP) + nuep*beta(1)
     arg2(1:np) = beta(1)*phiep(1:np)
@@ -358,33 +361,36 @@ contains
     phiep(1:np) = EYE*sqrt(4.0*B1/beta(1)**2)
     phi(1:np) = cmplx(phiep,kind=DP)
 
-    do i= 1,np
-       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-            &nz=nzero,ierr=ierr)
-       if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
-          print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero
-       else
-          J(i,1:2) = tmp(1:2)
-       end if
-
-       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-            &nz=nzero,ierr=ierr)
-       if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
-          print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero
-       else
-          Y(i,1:2) = tmp(1:2)
-       end if
-       
-       if (isnan(real(J(i,1))) .or. isnan(real(Y(i,1)))) then
-          call cjy(nuep,phiep(i:i),J(i,1),Y(i,1))
-       end if
-       if (isnan(real(J(i,2))) .or. isnan(real(Y(i,2)))) then
-          call cjy(nuep+1.0,phiep(i:i),J(i,2),Y(i,2))
-       end if
-    end do
-
+    if (all(abs(phi(:)) < 2.0*(nu+1.0))) then
+       call cjy(nuep,    phiep(:),J(:,1),Y(:,1))
+       call cjy(nuep+1.0,phiep(:),J(:,2),Y(:,2))
+    else
+       do i= 1,np
+          if (2.0*(nu+1.0) > abs(phi(i))) then
+             call cjy(nuep,    phiep(i:i),J(i,1),Y(i,1))
+             call cjy(nuep+1.0,phiep(i:i),J(i,2),Y(i,2))
+          else
+             call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+                  &nz=nzero,ierr=ierr)
+             if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
+                print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
+                     &' i,ierr,nz:',i,ierr,nzero
+             else
+                J(i,1:2) = tmp(1:2)
+             end if
+             
+             call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+                  &nz=nzero,ierr=ierr)
+             if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
+                print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
+                     &' i,ierr,nz:',i,ierr,nzero
+             else
+                Y(i,1:2) = tmp(1:2)
+             end if
+          end if
+       end do
+    end if
+    
     arg2(1:np) = beta(1)*phiep(1:np)
     aa(2,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(2,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
