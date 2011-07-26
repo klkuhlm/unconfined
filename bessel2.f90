@@ -36,6 +36,7 @@ SUBROUTINE cjyva(v,z,vm,cbj,cdj,cby,cdy)
   COMPLEX(EP), INTENT(OUT) :: cby(0:*)
   COMPLEX(EP), INTENT(OUT) :: cdy(0:*)
 
+
   intrinsic :: gamma
 
   rp2=.63661977236758_EP
@@ -63,7 +64,7 @@ SUBROUTINE cjyva(v,z,vm,cbj,cdj,cby,cdy)
      RETURN
   END IF
   
-  lb0=0.0_EP
+  lb0=0
   IF (real(z) < 0.0) z1=-z
   ! Calculate J_{v_0} and J_{v_0+1} using eqn (5.5.1) for |z|<=12
   IF (a0 <= 12.0) THEN
@@ -332,7 +333,7 @@ INTEGER FUNCTION msta1(x,mp)
   f1=envj(n1,a0)-mp
   secant: DO  it=1,20
      ! solve eqn (5.3.4) using the secant method
-     nn=n1-(n1-n0)/(1.0_EP-f0/f1)
+     nn=int(n1-(n1-n0)/(1.0_EP-f0/f1))
      f=envj(nn,a0)-mp
      IF(ABS(nn-n1) < 1) then
         exit secant
@@ -383,7 +384,7 @@ INTEGER FUNCTION msta2(x,n,mp)
   f1=envj(n1,a0)-obj
   secant: DO  it=1,20
      ! solve eqn (5.3.4) or (5.3.5) using the secant method
-     nn=n1-(n1-n0)/(1.0_EP-f0/f1)
+     nn=int(n1-(n1-n0)/(1.0_EP-f0/f1))
      f=envj(nn,a0)-obj
      IF (ABS(nn-n1) < 1) then
         exit secant
