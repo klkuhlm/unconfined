@@ -1,3 +1,9 @@
+module complex_bessel2
+
+private
+public :: cjyva
+
+contains
 SUBROUTINE cjyva(v,z,vm,cbj,cdj,cby,cdy)
 
   !       ===========================================================
@@ -390,3 +396,4 @@ INTEGER FUNCTION msta2(x,n,mp)
   msta2=nn+10
   RETURN
 END FUNCTION msta2
+end module complex_bessel2
