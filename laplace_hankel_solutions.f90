@@ -436,7 +436,7 @@ contains
   end function mishraNeuman2010
   
   function mishraNeuman2010a(a,zD,s,p,f,w) result(sD)
-    use constants, only : DP, EP, EYE, PIEP, E, SQRT2
+    use constants, only : DP, EP
     use types, only : well, formation, solution
     use utility, only : operator(.X.) 
     implicit none
@@ -468,7 +468,7 @@ contains
 
     sU(1:np,1:nz) = spread(sH(1:np,nz+1),2,nz)*&
          & cosh(eta(1:np) .X. s%zD(1:nz))/&
-         & spread(eta(:)*omega(:)*sinh(eta*f%b) - &
+         & spread(eta(:)/omega(:)*sinh(eta(:)*f%b) - &
          & cosh(eta(:)*f%b),2,nz)
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
