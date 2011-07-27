@@ -69,7 +69,7 @@ contains
 
     case(6)
        ! Mishra/Neuman  2010 model
-       fp(1:np,1:nz) = mishraNeuman2010(a,s%zD,s,lap%p,f,w)
+       fp(1:np,1:nz) = mishraNeuman2010a(a,s%zD,s,lap%p,f,w)
        
     end select
 
@@ -435,6 +435,45 @@ contains
 999 format(A,ES11.3E3,4(A,2('(',ES12.3E4,',',ES12.3E4,')')))
   end function mishraNeuman2010
   
+  function mishraNeuman2010a(a,zD,s,p,f,w) result(sD)
+    use constants, only : DP, EP, EYE, PIEP, E, SQRT2
+    use types, only : well, formation, solution
+    use utility, only : operator(.X.) 
+    implicit none
+    
+    real(EP), intent(in) :: a
+    real(DP), dimension(:), intent(in) :: zD
+    complex(EP), dimension(:), intent(in) :: p
+    type(solution), intent(in) :: s
+    type(well), intent(in) :: w
+    type(formation), intent(in) :: f
+
+    complex(EP), dimension(size(p),size(zD)) :: sD, sU
+    complex(EP), dimension(size(p),size(zD)+1) :: sH
+    integer ::  np, nz
+
+    complex(EP), dimension(size(p)) :: eta, omega
+    real(EP) :: lambda
+
+    np = size(p)
+    nz = size(zD)
+
+    eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
+    sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
+    lambda = f%ak - f%ac
+
+    omega(1:np) = p(:)*exp(-f%ak*f%b1)* &
+         & f%Sy*f%ac/(f%Kr*lambda)*(1.0_EP - exp(lambda*f%usL)) + &
+         & a**2*f%b/f%kappa*(1.0_EP - (f%b + f%usL))
+
+    sU(1:np,1:nz) = spread(sH(1:np,nz+1),2,nz)*&
+         & cosh(eta(1:np) .X. s%zD(1:nz))/&
+         & spread(eta(:)*omega(:)*sinh(eta*f%b) - &
+         & cosh(eta(:)*f%b),2,nz)
+    sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
+
+  end function mishraNeuman2010a
+
 end module laplace_hankel_solutions
 
 
