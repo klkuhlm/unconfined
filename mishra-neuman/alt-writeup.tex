@@ -4,8 +4,6 @@
 \usepackage{graphicx}
 \usepackage[reqno,intlimits,sumlimits]{amsmath}
 
-%%\usepackage{trackchanges}
-
 \renewcommand{\baselinestretch}{1.2}
 \renewcommand{\arraystretch}{1}
 
@@ -30,7 +28,110 @@
 
 
 \begin{document}
+\title{An alternate formulation of the Mishra-Neuman (2010) solution}
+\section{Unsaturated Zone Governing Equations}
+The governing equation in the unsaturated zone, as used by \cite{mishra10} and \cite{tartakovsky07}, is
+\begin{equation}
+  \label{eq:unsatDim}
+  K_r k_o(z) \frac{1}{r} \frac{\partial}{\partial r} \left( r\frac{\partial \sigma}{\partial r} \right) + K_z \frac{\partial}{\partial z} \left( k_0(z) \frac{\partial \sigma}{\partial z}\right) = C_0(z) \frac{\partial \sigma}{\partial t}
+\end{equation}
+over the unsaturated zone, defined as $b \le z \le b+L$.  Further, the unsaturated parameters are assumed to only be functions of $z$, $k_0(z)=k_0(\theta_0)$ and $C_0(z)=C_0(\theta_0)$.  The initial and boundary conditions for the unsaturated zone are  
+$$\sigma(r,z,0) = 0$$
+$$\sigma(\infty,z,t)=0$$
+$$\frac{\partial \sigma}{\partial z}=0 \qquad z=b+L$$ and 
+$$\lim_{r \rightarrow 0} r \frac{\partial \sigma}{\partial r} = 0 \qquad b\le z \le b+L$$
 
-An alternate formulation of the mishra-neuman solution.
+Drawdown in the vadose zone is defined as $\sigma = h_0 - h=b+\psi_a - h$, $0 \le k_0 \le 1$ is the isotropic relative hydraulic conductivity, $C(\psi)=\frac{d\eta}{d \psi}$ is the specific moisture capacity and $\theta$ is volumetric water content.  Drawdown in the aquifer, $s$, and the vadose zone are connected using compatibility conditions at the water table
+$$s=\sigma \qquad z=b$$
+$$\frac{\partial s}{\partial z}=\frac{\partial \sigma}{\partial z} \qquad z=b$$ 
+
+The moisture retention curve in the vadose zone is represented as an exponential function
+$$S_e = \frac{\theta(\psi) - \theta_r}{S_y} = e^{a_c \left( \psi - \psi_a \right)} \qquad a_c \ge 0 $$
+where $S_e$ is effective saturation, $\theta_r$ is residual water content, and $S_y=\theta_s - \theta_r$ is drainable porosity (specific yield).  The Gardner model for relative hydraulic conductivity is used,
+\begin{equation}
+  \nonumber
+  k(\psi) = \left  \{ 
+    \begin{array}{c c}
+      e^{a_k \left( \psi - \psi_k\right)} & \psi \le \psi_k \\
+      1 & \psi < \psi_k\\
+    \end{array} 
+\right . \qquad a_k \ge 0.
+\end{equation}
+The 4-parameter exponential model for hydraulic conductivity used in the vadose zone is 
+\begin{equation}
+  \label{eq:Gardner}
+ k_0(z)=e^{a_k\left( b_1 + b - z\right)} \qquad b_1=\psi_a-\psi_k
+\end{equation}
+and the moisture capacity is
+\begin{equation}
+  \label{eq:mrc}
+C_0(z) = S_y a_c e^{a_c \left( b-z\right)}
+\end{equation}
+\section{Unsaturated Zone Solution}
+The Laplace transformation (overbar and $p$) of (\ref{eq:unsatDim}) results in
+\begin{equation}
+  \label{eq:unsatLap}
+   k_o(z) \frac{1}{r} \frac{\partial}{\partial r} \left( r\frac{\partial \bar{\sigma}}{\partial r} \right) +\kappa \frac{\partial}{\partial z} \left( k_0(z) \frac{\partial \bar{\sigma}}{\partial z}\right) = p \frac{C_0(z)}{K_r}  \bar{\sigma}
+\end{equation}
+where $\kappa=K_z/K_r$, with the associated transformed boundary and initial conditions of
+$$ \bar{\sigma}(\infty,z,p) = 0$$
+$$ \frac{\partial \bar{\sigma}}{\partial z}=0 \qquad z=b+L$$
+ $$\lim_{r \rightarrow 0} r \frac{\partial \bar{\sigma}}{\partial r} = 0 \qquad b\le z \le b+L$$
+The Hankel transformation (superscript $\ast$ and $a$) of (\ref{eq:unsatLap}) and substitution of the constituative models (\ref{eq:Gardner}) and (\ref{eq:mrc}) results in the ordinary differential equation
+\begin{equation}
+  \label{eq:unsatHank}
+   -a^2 \bar{\sigma}^{\ast} + \kappa a_k \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}}{\mathrm{d} z^2}  = p e^{-a_k b_1} \frac{S_y a_c} {K_r}  e^{\left(a_k -a_c \right)\left( b - z\right)} \bar{\sigma}^{\ast} 
+\end{equation}
+and the no-flow condition at the top of the vadose zone, 
+$$ \frac{\mathrm{d}\bar{\sigma}^{\ast}}{\mathrm{d}z}=0 \qquad z=b+L $$
+Equation \ref{eq:unsatHank} can be rearranged as
+\begin{equation}
+  \label{eq:mn-d5}
+  \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}}{\mathrm{d}z^2} - a_k \frac{\mathrm{d} \bar{\sigma}^{\ast}}{\mathrm{d}z} - \left( B e^{\lambda (z-b)} + C\right) \bar{\sigma}^{\ast}=0
+\end{equation}
+where $\lambda = a_k-a_c$, $C=\frac{a^2}{\kappa}$ and
+$$B = p e^{-a_k b_1} \frac{S_y a_c} {K_r} $$
+which was solved in \cite{mishra10} using a general solution from a reference book on differential equations.  The solution given in terms of two types of Bessel functions of complex argument and non-integer order is non-trivial to evaluate numerically. 
+\subsection{Modified Solution Procedure} 
+By non-dimensionalizing the $z$-coordinate and performing an exponential substitution, (\ref{eq:mn-d5}) can be simplified significantly and a solution can be found by integration.  Using the new dimensionless vertical coordinate 
+$$ \frac{\zeta}{z}=a_k $$
+the transformed differential equation representing drawdown in the vadose zone (\ref{eq:mn-d5}) becomes
+\begin{equation}
+  \label{eq:nondimODE}
+  a_k^2 \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}}{\mathrm{d}\zeta^2} - a_k^2 \frac{\mathrm{d} \bar{\sigma}^{\ast}}{\mathrm{d}\zeta} - \left( B e^{\lambda (\zeta/a_k-b)} + C\right) \bar{\sigma}^{\ast}=0
+\end{equation}
+dividing through by $a_k^2$ and performing the substitution $\bar{\sigma}^{\ast}(z)=e^{u(z)}$ (which leads to $\frac{\mathrm{d}\bar{\sigma}^{\ast}}{\mathrm{d}\zeta} = \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u$ and $\frac{\mathrm{d}^2\bar{\sigma}^{\ast}}{\mathrm{d}\zeta^2} = \frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u + \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u$) gives
+\begin{equation}
+  \label{eq:expsubODE}
+   \frac{\mathrm{d}^2 u}{\mathrm{d}\zeta^2} = \left( \frac{B}{a_k^2} e^{\lambda (\zeta/a_k-b)} + \frac{C}{a_k^2}\right) 
+\end{equation}
+
+This is an integrable equation; one indefinite integraion produces
+$$ \frac{\mathrm{d} u}{\mathrm{d}\zeta} =  \frac{B}{\lambda a_k} e^{\lambda (\zeta/a_k-b)} + \frac{C}{a_k^2}\zeta + \alpha  $$
+where $\alpha$ is a constant of integration. A second integration produces
+$$ u =  \frac{B}{\lambda^2} e^{\lambda (\zeta/a_k-b)} + \frac{C}{2a_k^2}\zeta^2 + \alpha\zeta + \beta  $$
+where $\beta$ is another constant of integration.  
+
+Applying the exponential transformation to the boundary condition at the top of the vadose zone results in
+$$\frac{\mathrm{d}u}{\mathrm{d}\zeta}=0 \qquad \zeta=ba_k + La_k$$
+which is used to determine one of the constants
+$$-\alpha= \frac{B}{\lambda a_k} e^{\lambda L} + \frac{C}{a_k} \left( b+L\right) $$
+
+The solution for the drawdown in the vadose zone is then
+\begin{equation}
+  \label{eq:sigma}
+  \bar{\sigma}^{\ast} (z) = \tilde{\beta}\exp\left\{ \frac{B}{\lambda^2} e^{\lambda (z-b)} + \frac{C}{2}z^2 -\left[\frac{B}{\lambda} e^{\lambda L} + C \left( b+L\right)\right]z  \right\}
+\end{equation}
+where $\tilde{\beta}=e^\beta$ is a different integration constant. This can be re-grouped and simplified as
+\begin{equation}
+  \label{eq:sigma}
+  \bar{\sigma}^{\ast} (z) = \tilde{\beta}\exp\left\{  \underbrace{\frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda^2} \left[ e^{\lambda (z-b)}  - \lambda e^{\lambda L} \right]}_{\rm Laplace} + \underbrace{\frac{a^2 z}{\kappa}\left[\frac{z}{2} - \left( b+L\right) \right]}_{\rm Hankel}  \right\}
+\end{equation}
+and $\tilde{\beta}$ will be determined from the matching conditions at the water table.
+\section{Saturated Zone Unconfined Solution}
+Follosing \cite{mishra10}, we decompose the saturated zone solution into two solutions: 1) the Hantush solution for a confined aquifer and a partially penetrating well; 2) an unconfined solution with no well but continuity conditions with the vadose zone solution just derived.
+
+\bibliographystyle{plain}
+\bibliography{mn}
 
 \end{document}
