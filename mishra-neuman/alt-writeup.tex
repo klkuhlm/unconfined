@@ -26,7 +26,6 @@
 %%\patchBothAmsMathEnvironmentsForLineno{equation}
 %%\patchBothAmsMathEnvironmentsForLineno{align}}
 
-
 \begin{document}
 \title{An alternate formulation of the Mishra-Neuman (2010) solution}
 \section{Unsaturated Zone Governing Equations}
@@ -119,7 +118,7 @@ $$-\alpha= \frac{B}{\lambda a_k} e^{\lambda L} + \frac{C}{a_k} \left( b+L\right)
 
 The solution for the drawdown in the vadose zone is then
 \begin{equation}
-  \label{eq:sigma}
+  \nonumber
   \bar{\sigma}^{\ast} (z) = \tilde{\beta}\exp\left\{ \frac{B}{\lambda^2} e^{\lambda (z-b)} + \frac{C}{2}z^2 -\left[\frac{B}{\lambda} e^{\lambda L} + C \left( b+L\right)\right]z  \right\}
 \end{equation}
 where $\tilde{\beta}=e^\beta$ is a different integration constant. This can be re-grouped and simplified as
@@ -129,9 +128,45 @@ where $\tilde{\beta}=e^\beta$ is a different integration constant. This can be r
 \end{equation}
 and $\tilde{\beta}$ will be determined from the matching conditions at the water table.
 \section{Saturated Zone Unconfined Solution}
-Follosing \cite{mishra10}, we decompose the saturated zone solution into two solutions: 1) the Hantush solution for a confined aquifer and a partially penetrating well; 2) an unconfined solution with no well but continuity conditions with the vadose zone solution just derived.
+Follosing \cite{mishra10}, we decompose the saturated zone solution into two solutions: 1) the Hantush solution $s_H$ for a confined aquifer and a partially penetrating well; 2) an unconfined solution $s_U$ with no well but continuity conditions with the vadose zone solution just derived.  The solution for $s_H$ is given elsewhere, either in terms of a finite cosine transform, or a multi-layer fully penetrating solution.  
 
-\bibliographystyle{plain}
+The governing equation  in Laplace-Hankel transform space for $s_U$ is
+\begin{equation}
+  \label{eq:aquifer}
+  \frac{\partial^2 \bar{s}_U^{\ast}}{\partial z^2} - \left( \frac{p}{\alpha_s \kappa} + \frac{a^2}{\kappa} \right)\bar{s}_U^{\ast} = 0 \qquad 0 \le z \le b
+\end{equation}
+with the no-flow boundary condition at the base of the aqufier
+$$ \frac{\partial \bar{s}_U^{\ast}}{\partial z} = 0 \qquad z=0 $$
+and the following continuity equations at the water table 
+$$ \bar{s}_U^{\ast} + \bar{s}_H^{\ast} = \bar{\sigma}^{\ast} \qquad z=b$$
+$$ \frac{\partial \bar{s}_U^{\ast}}{\partial z}  = \frac{\partial \bar{\sigma}^{\ast}}{\partial z} \qquad z=b $$
+where the vertical flux of $\bar{s}_H^{\ast}$ is defined as zero at the top and bottom of the aqufier, so it is not included in the continuity conditions.
+
+The general solution to \eqref{eq:aquifer} is 
+\begin{equation}
+  \label{eq:su}
+  \bar{s}_U^{\ast} = A_1 \cosh(\eta z) + A_2 \sinh(\eta z)
+\end{equation}
+where $A_i$ are constants to determine and $\eta^2 = \frac{p}{\alpha_s \kappa} + \frac{a^2}{\kappa}$.  The no-flow boundary condition at the bottom of the aquifer forces $A_2=0$.  
+
+Substituting \eqref{eq:sigma} and \eqref{eq:su} into the compatibility equations gives
+$$  A_1 \cosh(\eta b) + \bar{s}_H^{\ast}(b) = \tilde{\beta}e^{\omega_1}$$
+$$ A_1 \eta  \sinh(\eta b)  = \tilde{\beta} \omega_2 e^{\omega_1}$$
+where 
+$$ \omega_1 = \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda^2} \left[ 1  - \lambda e^{\lambda L} \right] + \frac{a^2 b}{\kappa}\left[\frac{b}{2} - \left( b+L\right) \right]$$
+\begin{equation}
+  \label{eq:omega2}
+  \omega_2 = \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda} \left[ 1  -  e^{\lambda L} \right] + \frac{a^2 b}{\kappa}\left[1 - \left( b+L\right) \right]
+\end{equation}
+Divide the second equation by $\omega_2$ and set the left-hand-sides of the two resulting equations equal to one another.  Solving for $A_1$ leads to
+$$A_1 \cosh(\eta b) + \bar{s}_H^{\ast}(b) = A_1 \frac{\eta}{\omega_2}  \sinh(\eta b) $$
+$$ A_1 = \frac{\bar{s}_H^{\ast}(b)}{\frac{\eta}{\omega_2}  \sinh(\eta b) - \cosh(\eta b)}$$
+which gives the final Laplace-Hankel form of the saturated-zone solution as
+$$ \bar{s}^{\ast}(z)  = \bar{s}_H^{\ast}(z) + \bar{s}_H^{\ast}(b) \frac{\cosh(\eta z)}{\frac{\eta}{\omega_2}  \sinh(\eta b) - \cosh(\eta b)}$$ 
+This expression is identical in form to \cite[eqn.\ C17]{mishra10}, with $\omega_2$ instead of $q$.  The expression for $q$ \cite[eqn.\ D13]{mishra10} involves ratios of Bessel functions of complex argument and non-integer order, while \eqref{eq:omega2} only involves exponentials.
+
+The final Laplace-Hankel form of the unsaturated zone solution can be found by substituting $A_1$ into one of the expressions for $\tilde\beta$ above, and substituting that into \eqref{eq:sigma}.
+\bibliographystyle{alpha}
 \bibliography{mn}
 
 \end{document}
