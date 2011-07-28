@@ -1,10 +1,10 @@
 \NeedsTeXFormat{LaTeX2e} [1994/06/01]
-\documentclass{article}
+\documentclass[11pt]{article}
 %%\usepackage [pagewise, mathlines]{lineno}
 \usepackage{graphicx}
 \usepackage[reqno,intlimits,sumlimits]{amsmath}
 
-\renewcommand{\baselinestretch}{1.2}
+\renewcommand{\baselinestretch}{1.25}
 \renewcommand{\arraystretch}{1}
 
 \setlength{\oddsidemargin}{0.0in} \setlength{\hoffset}{0in}
@@ -77,7 +77,7 @@ where $\kappa=K_z/K_r$, with the associated transformed boundary and initial con
 $$ \bar{\sigma}(\infty,z,p) = 0$$
 $$ \frac{\partial \bar{\sigma}}{\partial z}=0 \qquad z=b+L$$
  $$\lim_{r \rightarrow 0} r \frac{\partial \bar{\sigma}}{\partial r} = 0 \qquad b\le z \le b+L$$
-The Hankel transformation (superscript $\ast$ and $a$) of (\ref{eq:unsatLap}) and substitution of the constituative models (\ref{eq:Gardner}) and (\ref{eq:mrc}) results in the ordinary differential equation
+The Hankel transformation (superscript $\ast$ and $a$) of (\ref{eq:unsatLap}) and substitution of the constitutive models (\ref{eq:Gardner}) and (\ref{eq:mrc}) results in the ordinary differential equation
 \begin{equation}
   \label{eq:unsatHank}
    -a^2 \bar{\sigma}^{\ast} + \kappa a_k \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}}{\mathrm{d} z^2}  = p e^{-a_k b_1} \frac{S_y a_c} {K_r}  e^{\left(a_k -a_c \right)\left( b - z\right)} \bar{\sigma}^{\ast} 
@@ -94,27 +94,43 @@ $$B = p e^{-a_k b_1} \frac{S_y a_c} {K_r} $$
 which was solved in \cite{mishra10} using a general solution from a reference book on differential equations.  The solution given in terms of two types of Bessel functions of complex argument and non-integer order is non-trivial to evaluate numerically. 
 \subsection{Modified Solution Procedure} 
 By non-dimensionalizing the $z$-coordinate and performing an exponential substitution, (\ref{eq:mn-d5}) can be simplified significantly and a solution can be found by integration.  Using the new dimensionless vertical coordinate 
-$$ \frac{\zeta}{z}=a_k $$
+$$ \zeta=a_k z \qquad z=\frac{\zeta}{a_k} $$
 the transformed differential equation representing drawdown in the vadose zone (\ref{eq:mn-d5}) becomes
 \begin{equation}
   \label{eq:nondimODE}
   a_k^2 \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}}{\mathrm{d}\zeta^2} - a_k^2 \frac{\mathrm{d} \bar{\sigma}^{\ast}}{\mathrm{d}\zeta} - \left( B e^{\lambda (\zeta/a_k-b)} + C\right) \bar{\sigma}^{\ast}=0
 \end{equation}
-dividing through by $a_k^2$ and performing the substitution $\bar{\sigma}^{\ast}(z)=e^{u(z)}$ (which leads to $\frac{\mathrm{d}\bar{\sigma}^{\ast}}{\mathrm{d}\zeta} = \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u$ and $\frac{\mathrm{d}^2\bar{\sigma}^{\ast}}{\mathrm{d}\zeta^2} = \frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u + \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u$) gives
+dividing through by $a_k^2$ and performing the substitution
+$\bar{\sigma}^{\ast}(\zeta)=e^{u(\zeta)}$ which implies
+
+$$\frac{\mathrm{d}\bar{\sigma}^{\ast}}{\mathrm{d}\zeta} =
+\frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u$$ 
+and
+$$\frac{\mathrm{d}^2\bar{\sigma}^{\ast}}{\mathrm{d}\zeta^2} =
+\frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u +
+\frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u$$
+Performing both of these substitutions leads to
+$$ \left[ \frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u +
+  \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]-  \left[
+  \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]- \frac{1}{a_k^2}\left( B e^{\lambda (\zeta/a_k-b)} + C\right) e^{u}=0$$
+multiplying by $e^{-u}$ and simplifying leads to
 \begin{equation}
   \label{eq:expsubODE}
    \frac{\mathrm{d}^2 u}{\mathrm{d}\zeta^2} = \left( \frac{B}{a_k^2} e^{\lambda (\zeta/a_k-b)} + \frac{C}{a_k^2}\right) 
 \end{equation}
 
-This is an integrable equation; one indefinite integraion produces
-$$ \frac{\mathrm{d} u}{\mathrm{d}\zeta} =  \frac{B}{\lambda a_k} e^{\lambda (\zeta/a_k-b)} + \frac{C}{a_k^2}\zeta + \alpha  $$
-where $\alpha$ is a constant of integration. A second integration produces
+This is an integrable equation; one indefinite integration produces
+\begin{equation}
+  \label{eq:du}
+  \frac{\mathrm{d} u}{\mathrm{d}\zeta} =  \frac{B}{\lambda a_k} e^{\lambda (\zeta/a_k-b)} + \frac{C}{a_k^2}\zeta + \alpha
+\end{equation}
+where $\alpha$ is a constant of integration. A second indefinite integration produces
 $$ u =  \frac{B}{\lambda^2} e^{\lambda (\zeta/a_k-b)} + \frac{C}{2a_k^2}\zeta^2 + \alpha\zeta + \beta  $$
 where $\beta$ is another constant of integration.  
 
 Applying the exponential transformation to the boundary condition at the top of the vadose zone results in
-$$\frac{\mathrm{d}u}{\mathrm{d}\zeta}=0 \qquad \zeta=ba_k + La_k$$
-which is used to determine one of the constants
+$$\frac{\mathrm{d}u}{\mathrm{d}\zeta} e^u=0 \qquad \zeta=ba_k + La_k$$
+which is used with \eqref{eq:du} to determine one of the constants
 $$-\alpha= \frac{B}{\lambda a_k} e^{\lambda L} + \frac{C}{a_k} \left( b+L\right) $$
 
 The solution for the drawdown in the vadose zone is then
@@ -122,26 +138,36 @@ The solution for the drawdown in the vadose zone is then
   \nonumber
   \bar{\sigma}^{\ast} (z) = \tilde{\beta}\exp\left\{ \frac{B}{\lambda^2} e^{\lambda (z-b)} + \frac{C}{2}z^2 -\left[\frac{B}{\lambda} e^{\lambda L} + C \left( b+L\right)\right]z  \right\}
 \end{equation}
-where $\tilde{\beta}=e^\beta$ is a different integration constant. This can be re-grouped and simplified as
+where $\tilde{\beta}=e^\beta$ is a modified integration constant. This can be re-grouped and simplified as
 \begin{equation}
   \label{eq:sigma}
   \bar{\sigma}^{\ast} (z) = \tilde{\beta}\exp\left\{  \underbrace{\frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda^2} \left[ e^{\lambda (z-b)}  - \lambda e^{\lambda L} \right]}_{\rm Laplace} + \underbrace{\frac{a^2 z}{\kappa}\left[\frac{z}{2} - \left( b+L\right) \right]}_{\rm Hankel}  \right\}
 \end{equation}
 and $\tilde{\beta}$ will be determined from the matching conditions at the water table.
 \section{Saturated Zone Unconfined Solution}
-Follosing \cite{mishra10}, we decompose the saturated zone solution into two solutions: 1) the Hantush solution $s_H$ for a confined aquifer and a partially penetrating well; 2) an unconfined solution $s_U$ with no well but continuity conditions with the vadose zone solution just derived.  The solution for $s_H$ is given elsewhere, either in terms of a finite cosine transform, or a multi-layer fully penetrating solution.  
+Following \cite{mishra10}, we decompose the saturated zone solution into two solutions: 1) the Hantush solution $s_H$ for a confined aquifer and a partially penetrating well; 2) an unconfined solution $s_U$ with no well but continuity conditions with the vadose zone solution just derived.  The solution for $s_H$ is given elsewhere, either in terms of a finite cosine transform, or a multi-layer fully penetrating solution.  
 
 The governing equation  in Laplace-Hankel transform space for $s_U$ is
 \begin{equation}
   \label{eq:aquifer}
   \frac{\partial^2 \bar{s}_U^{\ast}}{\partial z^2} - \left( \frac{p}{\alpha_s \kappa} + \frac{a^2}{\kappa} \right)\bar{s}_U^{\ast} = 0 \qquad 0 \le z \le b
 \end{equation}
-with the no-flow boundary condition at the base of the aqufier
+with the no-flow boundary condition at the base of the aquifer
 $$ \frac{\partial \bar{s}_U^{\ast}}{\partial z} = 0 \qquad z=0 $$
-and the following continuity equations at the water table 
-$$ \bar{s}_U^{\ast} + \bar{s}_H^{\ast} = \bar{\sigma}^{\ast} \qquad z=b$$
-$$ \frac{\partial \bar{s}_U^{\ast}}{\partial z}  = \frac{\partial \bar{\sigma}^{\ast}}{\partial z} \qquad z=b $$
-where the vertical flux of $\bar{s}_H^{\ast}$ is defined as zero at the top and bottom of the aqufier, so it is not included in the continuity conditions.
+and the following continuity equations at the water table
+\begin{equation}
+  \label{eq:headCont}
+  \bar{s}_U^{\ast} + \bar{s}_H^{\ast} = \bar{\sigma}^{\ast} \qquad z=b
+\end{equation}
+\begin{equation}
+  \label{eq:fluxCont}
+  \frac{\mathrm{d} \bar{s}_U^{\ast}}{\mathrm{d} z}  = \frac{\mathrm{d}
+    \bar{\sigma}^{\ast}}{\mathrm{d} z} \qquad \rightarrow \qquad \frac{\mathrm{d} \bar{s}_U^{\ast}}{\mathrm{d} z}  = \frac{\mathrm{d}u}{\mathrm{d} \zeta} e^u \qquad z=b; \; \zeta=b a_k
+  \qquad 
+\end{equation}
+where the vertical flux of $\bar{s}_H^{\ast}$ is defined as zero at
+the top and bottom of the aquifer, so it is not included in the
+continuity condition \eqref{eq:fluxCont}.
 
 The general solution to \eqref{eq:aquifer} is 
 \begin{equation}
@@ -151,7 +177,8 @@ The general solution to \eqref{eq:aquifer} is
 where $A_i$ are constants to determine and $\eta^2 = \frac{p}{\alpha_s \kappa} + \frac{a^2}{\kappa}$.  The no-flow boundary condition at the bottom of the aquifer forces $A_2=0$.  
 
 \section{New Solution using New Results for Unsaturated Zone}
-Substituting \eqref{eq:sigma} and \eqref{eq:su} into the compatibility equations gives
+Substituting \eqref{eq:sigma} and \eqref{eq:su} into the compatibility
+equations \eqref{eq:headCont} and \eqref{eq:fluxCont} gives
 $$  A_1 \cosh(\eta b) + \bar{s}_H^{\ast}(b) = \tilde{\beta}e^{\omega_1}$$
 $$ A_1 \eta  \sinh(\eta b)  = \tilde{\beta} \omega_2 e^{\omega_1}$$
 where 
