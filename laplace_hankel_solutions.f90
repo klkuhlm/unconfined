@@ -463,7 +463,8 @@ contains
     lambda = f%ak - f%ac
 
     omega(1:np) = p(:)*exp(-f%ak*f%b1)*&
-         & f%Sy*f%ac/(f%Kr*lambda) + a**2*f%b/f%kappa
+         & f%Sy*f%ac/(f%Kr*lambda)*(1.0_EP - exp(lambda*f%usL)) + &
+         & a**2*f%b/f%kappa
 
     sU(1:np,1:nz) = spread(sH(1:np,nz+1),2,nz)*&
          & cosh(eta(1:np) .X. s%zD(1:nz))/&
