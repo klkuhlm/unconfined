@@ -141,19 +141,19 @@ The solution for the drawdown in the vadose zone is then
 where $\tilde{\beta}=e^\beta$ is a modified integration constant. This can be re-grouped and simplified as
 \begin{equation}
   \label{eq:sigma}
-  \bar{\sigma}^{\ast} (z) = \tilde{\beta}\exp\left\{  \underbrace{\frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda^2} \left[ e^{\lambda (z-b)}  - \lambda e^{\lambda L} \right]}_{\rm Laplace} + \underbrace{\frac{a^2 z}{\kappa}\left[\frac{z}{2} - \left( b+L\right) \right]}_{\rm Hankel}  \right\}
+  \bar{\sigma}^{\ast} (z) = \tilde{\beta}\exp\left\{  \underbrace{\frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda^2} \left[ e^{\lambda (z-b)}  - z\lambda e^{\lambda L} \right]}_{\rm Laplace} + \underbrace{\frac{a^2 z}{\kappa}\left[\frac{z}{2} - \left( b+L\right) \right]}_{\rm Hankel}  \right\}
 \end{equation}
 and $\tilde{\beta}$ will be determined from the matching conditions at the water table.
 \section{Saturated Zone Unconfined Solution}
 Following \cite{mishra10}, we decompose the saturated zone solution into two solutions: 1) the Hantush solution $s_H$ for a confined aquifer and a partially penetrating well; 2) an unconfined solution $s_U$ with no well but continuity conditions with the vadose zone solution just derived.  The solution for $s_H$ is given elsewhere, either in terms of a finite cosine transform, or a multi-layer fully penetrating solution.  
 
-The governing equation  in Laplace-Hankel transform space for $s_U$ is
+The governing ordinary differential equation in Laplace-Hankel transform space for $s_U$ is
 \begin{equation}
   \label{eq:aquifer}
-  \frac{\partial^2 \bar{s}_U^{\ast}}{\partial z^2} - \left( \frac{p}{\alpha_s \kappa} + \frac{a^2}{\kappa} \right)\bar{s}_U^{\ast} = 0 \qquad 0 \le z \le b
+  \frac{\mathrm{d}^2 \bar{s}_U^{\ast}}{\mathrm{d} z^2} - \left( \frac{p}{\alpha_s \kappa} + \frac{a^2}{\kappa} \right)\bar{s}_U^{\ast} = 0 \qquad 0 \le z \le b
 \end{equation}
 with the no-flow boundary condition at the base of the aquifer
-$$ \frac{\partial \bar{s}_U^{\ast}}{\partial z} = 0 \qquad z=0 $$
+$$ \frac{\mathrm{d} \bar{s}_U^{\ast}}{\mathrm{d} z} = 0 \qquad z=0 $$
 and the following continuity equations at the water table
 \begin{equation}
   \label{eq:headCont}
@@ -176,25 +176,26 @@ The general solution to \eqref{eq:aquifer} is
 \end{equation}
 where $A_i$ are constants to determine and $\eta^2 = \frac{p}{\alpha_s \kappa} + \frac{a^2}{\kappa}$.  The no-flow boundary condition at the bottom of the aquifer forces $A_2=0$.  
 
-\section{New Solution using New Results for Unsaturated Zone}
+\section{New Solution for Saturated Zone}
 Substituting \eqref{eq:sigma} and \eqref{eq:su} into the compatibility
 equations \eqref{eq:headCont} and \eqref{eq:fluxCont} gives
 $$  A_1 \cosh(\eta b) + \bar{s}_H^{\ast}(b) = \tilde{\beta}e^{\omega_1}$$
 $$ A_1 \eta  \sinh(\eta b)  = \tilde{\beta} \omega_2 e^{\omega_1}$$
 where 
-$$ \omega_1 = \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda^2} \left[ 1  - \lambda e^{\lambda L} \right] + \frac{a^2 b}{\kappa}\left[\frac{b}{2} - \left( b+L\right) \right]$$
+$$ \omega_1 = \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda^2} \left[ 1  - b\lambda e^{\lambda L} \right] + \frac{a^2 b}{\kappa}\left[\frac{b}{2} - \left( b+L\right) \right]$$
 \begin{equation}
   \label{eq:omega2}
-  \omega_2 = \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda} \left[ 1  -  e^{\lambda L} \right] + \frac{a^2 b}{\kappa}\left[1 - \left( b+L\right) \right]
+  \omega_2 = \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda}\left[ 1  - \lambda e^{\lambda L} \right] + \frac{a^2 b}{\kappa}
 \end{equation}
+are $u(z=b)$ and $\left. \frac{\mathrm{d} u}{\mathrm{d}z} \right|_{z=b}$
+respecively (without $\tilde\beta$ factor).
 Divide the second equation by $\omega_2$ and set the left-hand-sides of the two resulting equations equal to one another.  Solving for $A_1$ leads to
-$$A_1 \cosh(\eta b) + \bar{s}_H^{\ast}(b) = A_1 \frac{\eta}{\omega_2}  \sinh(\eta b) $$
+$$A_1 \cosh(\eta b) + \bar{s}_H^{\ast}(b) = \frac{A_1  \eta}{\omega_2}  \sinh(\eta b) $$
 $$ A_1 = \frac{\bar{s}_H^{\ast}(b)}{\frac{\eta}{\omega_2}  \sinh(\eta b) - \cosh(\eta b)}$$
 which gives the final Laplace-Hankel form of the saturated-zone solution as
 $$ \bar{s}^{\ast}(z)  = \bar{s}_H^{\ast}(z) + \bar{s}_H^{\ast}(b) \frac{\cosh(\eta z)}{\frac{\eta}{\omega_2}  \sinh(\eta b) - \cosh(\eta b)}$$ 
-This expression is identical in form to \cite[eqn.\ C17]{mishra10}, with $\omega_2$ instead of $q$.  The expression for $q$ \cite[eqn.\ D13]{mishra10} involves ratios of Bessel functions of complex argument and non-integer order, while \eqref{eq:omega2} only involves exponentials.
-
-The final Laplace-Hankel form of the unsaturated zone solution can be found by substituting $A_1$ into one of the expressions for $\tilde\beta$ above, and substituting that into \eqref{eq:sigma}.
+This expression is identical in form to \cite[eqn.\ C17]{mishra10},
+with $\omega_2$ instead of $q$.  The final Laplace-Hankel form of the unsaturated zone solution can be found by substituting $A_1$ into one of the expressions for $\tilde\beta$ above, and substituting that into \eqref{eq:sigma}.
 \bibliographystyle{alpha}
 \bibliography{mn}
 
