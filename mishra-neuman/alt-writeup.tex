@@ -141,7 +141,7 @@ The solution for the drawdown in the vadose zone is then
 where $\tilde{\beta}=e^\beta$ is a modified integration constant. This can be re-grouped and simplified as
 \begin{equation}
   \label{eq:sigma}
-  \bar{\sigma}^{\ast} (z) = \tilde{\beta}\exp\left\{  \underbrace{\frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda^2} \left[ e^{\lambda (z-b)}  - z\lambda e^{\lambda L} \right]}_{\rm Laplace} + \underbrace{\frac{a^2 z}{\kappa}\left[\frac{z}{2} - \left( b+L\right) \right]}_{\rm Hankel}  \right\}
+  \bar{\sigma}^{\ast} (z) = \tilde{\beta}\exp\left\{ \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda^2} \left[ e^{\lambda (z-b)}  - z\lambda e^{\lambda L} \right]+ \frac{a^2 z}{\kappa}\left[\frac{z}{2} - \left( b+L\right) \right]  \right\}
 \end{equation}
 and $\tilde{\beta}$ will be determined from the matching conditions at the water table.
 \section{Saturated Zone Unconfined Solution}
@@ -185,7 +185,7 @@ where
 $$ \omega_1 = \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda^2} \left[ 1  - b\lambda e^{\lambda L} \right] + \frac{a^2 b}{\kappa}\left[\frac{b}{2} - \left( b+L\right) \right]$$
 \begin{equation}
   \label{eq:omega2}
-  \omega_2 = \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda}\left[ 1  - \lambda e^{\lambda L} \right] + \frac{a^2 b}{\kappa}
+  \omega_2 = \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda}\left[ 1 - e^{\lambda L} \right] + \frac{a^2 b}{\kappa}
 \end{equation}
 are $u(z=b)$ and $\left. \frac{\mathrm{d} u}{\mathrm{d}z} \right|_{z=b}$
 respecively (without $\tilde\beta$ factor).
