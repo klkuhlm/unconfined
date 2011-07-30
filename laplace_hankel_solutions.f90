@@ -516,8 +516,7 @@ contains
     lambda = f%ak - f%ac
 
     omega(1:n,1:np) = spread(p(:)*exp(-f%ak*f%b1)*&
-         & f%Sy*f%ac/f%Kr,1,n)*&
-         & spread(exp(lambda*ii(1:n)*h),2,np) + &
+         & f%Sy*f%ac/f%Kr,1,n)*spread(exp(lambda*ii(1:n)*h),2,np) + &
          & a**2/f%kappa
 
     ! main diagonal (first and last entries are different)
@@ -529,28 +528,26 @@ contains
 
     ! super-diagonal (last entry (n) is undefined)
     c(1:n-1,1:np) = invhsq - f%ak/h
-    c(n,1:np) = -999999.9
+!    c(n,1:np) = -999999.9
 
     ! sub-diagonal (first entry 1 is undefined, second entry is different)
-    aa(2:n,1:np) = invhsq 
+    aa(2:n,1:np) = invhsq  ! a is already taken by Hankel parameter
     aa(2,1:np) = aa(2,1:np)*cosh(eta(:)*f%b)
-    aa(1,1:np) = 7777777.7
+!    aa(1,1:np) = 7777777.7
 
     ! right-hand side (all zero but first and second rows)
     v(3:n,1:np) = 0.0_EP
-    v(2,1:np) = -sH(1:np,nz+1)*invhsq
-    v(1,1:np) = (omega(1,1:np) + invhsq - f%ak/h)*sH(1:np,nz+1)
+    v(2,1:np) =   -invhsq*sH(1:np,nz+1)
+    v(1,1:np) = -cc(1:np)*sH(1:np,nz+1)
 
     ! sigma(1,1:np) is A1, which is constant in
     ! solution for saturated domain
     call solve_tridiag(aa,b,c,v,sigma)
 
-    sD(1:np,1:nz) = sH(1:np,1:nz) + &
-         & spread(sigma(1,:),2,nz)*&
+    sD(1:np,1:nz) = sH(1:np,1:nz) + spread(sigma(1,:),2,nz)*&
          & cosh(eta(1:np) .X. s%zD(1:nz))
 
   end function mishraNeuman2010b
-
 
 end module laplace_hankel_solutions
 
