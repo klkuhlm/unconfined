@@ -148,7 +148,8 @@ contains
        write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman ac,ak (sorptive #s), psia,psik '//&
             & '(neg air-entry & sat. pressures):: ', f%ac,f%ak,f%psia,f%psik
        write(*,'(A,'//RFMT//')') 'unsaturated zone thickness:: ',f%usL
-       write(*,'(A,I0)') 'unsaturated zone finite difference order:: ',s%order
+       write(*,'(A,I0,'//RFMT//')') 'unsaturated zone FD order, FD h:: ',&
+            & s%order,f%usL/(s%order-1)
     end if
 
     if(any([f%Sy, f%gamma, w%d, w%l] < 0.0)) then
@@ -180,7 +181,7 @@ contains
     end if
       
     if (s%order < 3) then
-       write(*,*) 'ERROR: order of Mishra/Neuman finite difference matrix must be >3',s%order
+       write(*,*) 'ERROR: order of Mishra/Neuman finite difference matrix must be >=3',s%order
        stop
     end if
 
@@ -602,6 +603,8 @@ contains
        ! mishra/neuman solution
        write(unit,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ad,psia,psik,b1 ::',&
             & f%ac,f%ak,f%psia,f%psik,f%b1
+       write(unit,'(A,I0,1X,'//RFMT//')') '# Mishra/Neuman FD order,h ::',&
+            & s%order,f%usL/(s%order-1)
     end if
     
     write(unit,'(A,I0)') '# times :: ',s%nt
@@ -680,6 +683,8 @@ contains
        ! mishra/neuman solution
        write(unit,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ad,psia,psik,b1 ::',&
             & f%ac,f%ak,f%psia,f%psik,f%b1
+       write(unit,'(A,I0,1X,'//RFMT//')') '# Mishra/Neuman FD order,h ::',&
+            & s%order,f%usL/(s%order-1)
     end if
 
     if (s%dimless) then
