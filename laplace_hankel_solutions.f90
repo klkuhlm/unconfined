@@ -508,6 +508,7 @@ contains
     np = size(p)
     nz = size(zD)
 
+    ! integers 0:n-1
     forall(j=1:n) ii(j) = j-1
 
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
@@ -516,7 +517,7 @@ contains
 
     omega(1:n,1:np) = spread(p(:)*exp(-f%ak*f%b1)*&
          & f%Sy*f%ac/f%Kr,1,n)*&
-         & spread(exp(lambda*(ii(1:n)*h - f%b)),2,np) + &
+         & spread(exp(lambda*ii(1:n)*h),2,np) + &
          & a**2/f%kappa
 
     ! main diagonal (first and last entries are different)
