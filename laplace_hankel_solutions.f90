@@ -69,7 +69,7 @@ contains
 
     case(6)
        ! Mishra/Neuman  2010 model
-       fp(1:np,1:nz) = mishraNeuman2010a(a,s%zD,s,lap%p,f,w)
+       fp(1:np,1:nz) = mishraNeuman2010b(a,s%zD,s,lap%p,f,w)
        
     end select
 
@@ -473,6 +473,83 @@ contains
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
   end function mishraNeuman2010a
+
+  function mishraNeuman2010b(a,zD,s,p,f,w) result(sD)
+    use constants, only : DP, EP
+    use types, only : well, formation, solution
+    use utility, only : operator(.X.), solve_tridiag
+    implicit none
+    
+    real(EP), intent(in) :: a
+    real(DP), dimension(:), intent(in) :: zD
+    complex(EP), dimension(:), intent(in) :: p
+    type(solution), intent(in) :: s
+    type(well), intent(in) :: w
+    type(formation), intent(in) :: f
+
+    ! finite difference matrix related 
+    ! a,b,c are sub,main,super diagonals of FD matrix
+    ! sigma is result (A1 + solution in vadose zone)
+    ! v is right-hand side
+    complex(EP), dimension(s%order,size(p)) :: aa,b,c,sigma,v
+
+    complex(EP), dimension(size(p),size(zD)) :: sD
+    complex(EP), dimension(size(p),size(zD)+1) :: sH
+    integer ::  np, nz, j, n
+    integer, dimension(s%order) :: ii
+
+    complex(EP), dimension(size(p)) :: eta, cc
+    real(EP) :: lambda, h, invhsq
+    complex(EP), dimension(s%order,size(p)) :: omega
+
+    n = s%order
+    h = f%usL/real(n-1,EP) ! F.D. grid spacing
+    invhsq = 1.0_EP/h**2
+    np = size(p)
+    nz = size(zD)
+
+    forall(j=1:n) ii(j) = j-1
+
+    eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
+    sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
+    lambda = f%ak - f%ac
+
+    omega(1:n,1:np) = spread(p(:)*exp(-f%ak*f%b1)*&
+         & f%Sy*f%ac/f%Kr,1,n)*&
+         & spread(exp(lambda*(ii(1:n)*h - f%b)),2,np) + &
+         & a**2/f%kappa
+
+    ! main diagonal (first and last entries are different)
+    cc(1:np) = f%ak/h - invhsq - omega(1,1:np)
+    b(1,1:np) = 0.5_EP*(exp( eta(:)*f%b)*(cc(:) - eta(:)/h) + &
+                      & exp(-eta(:)*f%b)*(cc(:) + eta(:)/h))
+    b(2:n,1:np) = f%ak/h - 2.0*invhsq - omega(2:n,1:np)
+    b(n,1:np) = b(n,1:np) + (invhsq - f%ak/h)
+
+    ! super-diagonal (last entry (n) is undefined)
+    c(1:n-1,1:np) = invhsq - f%ak/h
+    c(n,1:np) = -999999.9
+
+    ! sub-diagonal (first entry 1 is undefined, second entry is different)
+    aa(2:n,1:np) = invhsq 
+    aa(2,1:np) = aa(2,1:np)*cosh(eta(:)*f%b)
+    aa(1,1:np) = 7777777.7
+
+    ! right-hand side (all zero but first and second rows)
+    v(3:n,1:np) = 0.0_EP
+    v(2,1:np) = -sH(1:np,nz+1)*invhsq
+    v(1,1:np) = (omega(1,1:np) + invhsq - f%ak/h)*sH(1:np,nz+1)
+
+    ! sigma(1,1:np) is A1, which is constant in
+    ! solution for saturated domain
+    call solve_tridiag(aa,b,c,v,sigma)
+
+    sD(1:np,1:nz) = sH(1:np,1:nz) + &
+         & spread(sigma(1,:),2,nz)*&
+         & cosh(eta(1:np) .X. s%zD(1:nz))
+
+  end function mishraNeuman2010b
+
 
 end module laplace_hankel_solutions
 

@@ -1,7 +1,7 @@
 module utility
   implicit none
   private
-  public :: logspace, linspace, is_finite, operator(.X.) 
+  public :: logspace, linspace, is_finite, operator(.X.), solve_tridiag 
   
   interface operator(.X.)
      module procedure outerprod_zd, outerprod_dz, outerprod_dd, outerprod_zz
@@ -69,7 +69,46 @@ contains
     c = spread(za,dim=2,ncopies=size(zb))*spread(zb,dim=1,ncopies=size(za))    
   end function outerprod_zz
   
+  pure subroutine solve_tridiag(a,b,c,v,x)
+    use constants, only : EP
+    implicit none
+    ! modified from Wikipedia 
+    ! http://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm
 
+    !      a - sub-diagonal (means it is the diagonal below the main diagonal)
+    !      b - the main diagonal
+    !      c - sup-diagonal (means it is the diagonal above the main diagonal)
+    !      v - right part
+    !      x - the answer
+    !      n - number of equations
+ 
+    complex(EP),dimension(:,:),intent(in) :: a,b,c,v
+    complex(EP),dimension(size(a,1),size(a,2)),intent(out) :: x
+    complex(EP),dimension(size(a,1),size(a,2)) :: bp,vp
+    complex(EP),dimension(size(a,2)) :: m
+    integer :: i,np,n
+    
+    n = size(a,1)
+    np = size(a,2)
+ 
+    ! Make copies of the b and v variables so that they are unaltered by this sub
+    bp(1,1:np) = b(1,:)
+    vp(1,1:np) = v(1,:)
+ 
+    !The first pass (setting coefficients):
+    firstpass: do i = 2,n
+       m(1:np) = a(i,:)/bp(i-1,:)
+       bp(i,1:np) = b(i,:) - m(:)*c(i-1,:)
+       vp(i,1:np) = v(i,:) - m(:)*vp(i-1,:)
+    end do firstpass
+ 
+    x(n,1:np) = vp(n,:)/bp(n,:)
+    !The second pass (back-substition)
+    backsub:do i = n-1, 1, -1
+       x(i,1:np) = (vp(i,:) - c(i,:)*x(i+1,:))/bp(i,:)
+    end do backsub
+    
+  end subroutine solve_tridiag
 end module utility
 
 
