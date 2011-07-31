@@ -8,7 +8,7 @@
 1.225D-3  5.288D-1                :: Kr,kappa (radial K and ratio Kz/Kr)
 3.766D-6  2.521D-1               :: Ss,Sy
 2.0D0                        ::  beta Malama linearization parameter
-2.95D+0  3.7D-1   2.0D+0  2.2D-1   2.0D+1      :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L
+2.95D+0  3.7D-1   2.0D+0  2.2D-1   2.0D+1   5   :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L
 26  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
 6  4                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
 1  1  10  50                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero

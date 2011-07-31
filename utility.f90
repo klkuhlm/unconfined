@@ -94,7 +94,7 @@ contains
     ! Make copies of the b and v variables so that they are unaltered by this sub
     bp(1,1:np) = b(1,:)
     vp(1,1:np) = v(1,:)
- 
+
     !The first pass (setting coefficients):
     firstpass: do i = 2,n
        m(1:np) = a(i,:)/bp(i-1,:)

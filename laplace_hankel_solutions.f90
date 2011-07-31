@@ -69,7 +69,7 @@ contains
 
     case(6)
        ! Mishra/Neuman  2010 model
-       fp(1:np,1:nz) = mishraNeuman2010a(a,s%zD,s,lap%p,f,w)
+       fp(1:np,1:nz) = mishraNeuman2010FD(a,s%zD,s,lap%p,f,w)
        
     end select
 
@@ -499,8 +499,9 @@ contains
     integer, dimension(s%order) :: ii
 
     complex(EP), dimension(size(p)) :: eta, cc
-    real(EP) :: lambda, h, invhsq
+    real(EP) :: lambda, h, invhsq, norm
     complex(EP), dimension(s%order,size(p)) :: omega
+    integer, parameter :: NPRINT = 2
 
     n = s%order
     h = f%usL/real(n-1,EP) ! F.D. grid spacing
@@ -528,24 +529,52 @@ contains
 
     ! super-diagonal (last entry (n) is undefined)
     c(1:n-1,1:np) = invhsq - f%ak/h
-!    c(n,1:np) = -999999.9
+     c(n,1:np) = -999999.9
 
     ! sub-diagonal (first entry 1 is undefined, second entry is different)
     aa(2:n,1:np) = invhsq  ! a is already taken by Hankel parameter
     aa(2,1:np) = aa(2,1:np)*cosh(eta(:)*f%b)
-!    aa(1,1:np) = 7777777.7
+     aa(1,1:np) = 7777777.7
 
     ! right-hand side (all zero but first and second rows)
     v(3:n,1:np) = 0.0_EP
     v(2,1:np) =   -invhsq*sH(1:np,nz+1)
     v(1,1:np) = -cc(1:np)*sH(1:np,nz+1)
 
+    ! divide through by giant diagonal term
+    norm = abs(b(1,1))
+    b(1,:) = b(1,:)/norm
+    c(1,:) = c(1,:)/norm
+    v(1,:) = v(1,:)/norm
+    norm = abs(aa(2,1))
+    aa(2,:) = aa(2,:)/norm
+    b(2,:) = b(2,:)/norm
+    c(2,:) = c(2,:)/norm
+    v(2,:) = v(2,:)/norm
+
     ! sigma(1,1:np) is A1, which is constant in
     ! solution for saturated domain
+!!$    if(any(abs(b)<tiny(0.0_EP))) stop 1234
     call solve_tridiag(aa,b,c,v,sigma)
 
     sD(1:np,1:nz) = sH(1:np,1:nz) + spread(sigma(1,:),2,nz)*&
          & cosh(eta(1:np) .X. s%zD(1:nz))
+
+    if (s%quiet > 1) then
+       write(*,999) ' sD:',sD(1:NPRINT,1), ' A1:',sigma(1,1:NPRINT),&
+            & ' a01:',aa(1,1:NPRINT),' b01:',b(1,1:NPRINT),' c01:',c(1,1:NPRINT)&
+            & ,' v01:',v(1,1:NPRINT),' omega01:',omega(1,1:NPRINT)
+       do j=2,n
+          write(*,998) &
+               &'                                                   '//&
+               &'                                                          a',j,':'&
+               &,aa(j,1:NPRINT),' b',j,':',b(j,1:NPRINT),' c',j,':',c(j,1:NPRINT)&
+               & ,' v',j,':',v(j,1:NPRINT),' omega',j,':',omega(j,1:NPRINT)
+       end do
+    end if
+
+998 format(5(A,I2.2,A,2('(',ES11.2E4,',',ES11.2E4,')')))
+999 format(7(A,2('(',ES11.2E4,',',ES11.2E4,')')))
 
   end function mishraNeuman2010FD
 
