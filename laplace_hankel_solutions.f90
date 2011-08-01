@@ -554,11 +554,17 @@ contains
 
     ! sigma(1,1:np) is A1, which is constant in
     ! solution for saturated domain
-!!$    if(any(abs(b)<tiny(0.0_EP))) stop 1234
     call solve_tridiag(aa,b,c,v,sigma)
 
-    sD(1:np,1:nz) = sH(1:np,1:nz) + spread(sigma(1,:),2,nz)*&
-         & cosh(eta(1:np) .X. s%zD(1:nz))
+    ! sometimes sigma_1 is underflowing while cosh(eta*z) is overflowing
+    ! and this should allow the solution to proceed ( 
+    where(spread(abs(sigma(1,1:np)) > tiny(1.0_EP),2,nz))
+       sD(1:np,1:nz) = sH(1:np,1:nz) + spread(sigma(1,:),2,nz)*&
+            & cosh(eta(1:np) .X. s%zD(1:nz))
+    elsewhere
+       sD(1:np,1:nz) = sH(1:np,1:nz)
+    end where
+    
 
     if (s%quiet > 1) then
        write(*,999) ' sD:',sD(1:NPRINT,1), ' A1:',sigma(1,1:NPRINT),&
