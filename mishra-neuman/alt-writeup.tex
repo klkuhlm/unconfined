@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e} [1994/06/01]
-\documentclass[12pt]{article}
+\documentclass[12pt,letter]{article}
 %%\usepackage [pagewise, mathlines]{lineno}
 \usepackage{graphicx}
 \usepackage[reqno,intlimits,sumlimits]{amsmath}
@@ -91,109 +91,137 @@ Equation \ref{eq:unsatHank} can be rearranged as
 \end{equation}
 where $\lambda = a_k-a_c$, $C=\frac{a^2}{\kappa}$ and
 $$B = p e^{-a_k b_1} \frac{S_y a_c} {K_r} $$
-which was solved in \cite{mishra10} using a general solution from a reference book on differential equations.  The solution given in terms of two types of Bessel functions of complex argument and non-integer order is non-trivial to evaluate numerically. 
+which was solved in \cite{mishra10} using a general solution from a
+reference book on differential equations.  The solution given in terms
+of two types of Bessel functions of complex argument and non-integer
+order is non-trivial to evaluate numerically. 
+
+To combine with existing solutions, \eqref{eq:mn-d5} must be made
+non-dimensional.  One non-dimensionalization is  
+\begin{equation}
+  \label{eq:mn-d5-dimless}
+  \frac{\mathrm{d}^2 \bar{\sigma}_D^{\ast}}{\mathrm{d}z_D^2} - \beta_3 \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d}z_D} - \left( B_1 e^{\beta_1 (1-z_D)} + B_2\right) \bar{\sigma}_D^{\ast}=0
+\end{equation}
+where $\sigma_D$ and $z_D$ are dimensionless drawdown and vertical
+coordinate, while the following dimensionless quantities are defined:
+$B_1 = e^{-\beta_2}  p \beta_0/K_D $, 
+$B_2=a^2/K_D$, $\beta_0=a_c S_y/S_s$, $\beta_1=b(a_c - a_k)$,
+$\beta_2=a_k b_1$, $\beta_3 = a_k b$.
+
 \subsection{Modified Solution Procedure} 
-By non-dimensionalizing the $z$-coordinate and performing an exponential substitution, (\ref{eq:mn-d5}) can be simplified significantly and a solution can be found by integration.  Using the new dimensionless vertical coordinate 
-$$ \zeta=a_k z \qquad z=\frac{\zeta}{a_k} $$
+By further modifying the $z$-coordinate and performing an exponential substitution, (\ref{eq:mn-d5-dimless}) can be simplified significantly and a solution can be found by integration.  Using the new dimensionless vertical coordinate 
+$$ \zeta=\beta_3 z_d \qquad z_d=\frac{\zeta}{\beta_3} $$
 the transformed differential equation representing drawdown in the vadose zone (\ref{eq:mn-d5}) becomes
 \begin{equation}
   \label{eq:nondimODE}
-  a_k^2 \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}}{\mathrm{d}\zeta^2} - a_k^2 \frac{\mathrm{d} \bar{\sigma}^{\ast}}{\mathrm{d}\zeta} - \left( B e^{\lambda (\zeta/a_k-b)} + C\right) \bar{\sigma}^{\ast}=0
+  \beta_3^2 \frac{\mathrm{d}^2
+    \bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta^2} - \beta_3^2
+  \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta} - \left(
+    B_1 e^{\beta_1 (1-\zeta/\beta_3)} + B_2\right) \bar{\sigma}_D^{\ast}=0
 \end{equation}
-dividing through by $a_k^2$ and performing the substitution
-$\bar{\sigma}^{\ast}(\zeta)=e^{u(\zeta)}$ which implies
+dividing through by $\beta_3^2$ and performing the substitution
+$\bar{\sigma}_D^{\ast}(\zeta)=e^{u(\zeta)}$ which implies
 
-$$\frac{\mathrm{d}\bar{\sigma}^{\ast}}{\mathrm{d}\zeta} =
+$$\frac{\mathrm{d}\bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta} =
 \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u$$ 
 and
-$$\frac{\mathrm{d}^2\bar{\sigma}^{\ast}}{\mathrm{d}\zeta^2} =
+$$\frac{\mathrm{d}^2\bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta^2} =
 \frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u +
 \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u$$
 Performing both of these substitutions leads to
 $$ \left[ \frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u +
   \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]-  \left[
-  \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]- \frac{1}{a_k^2}\left( B e^{\lambda (\zeta/a_k-b)} + C\right) e^{u}=0$$
+  \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]- \frac{1}{\beta_3^2}\left( B_1 e^{\beta_1 (1-\zeta/\beta_3)} + B_2\right) e^{u}=0$$
 multiplying by $e^{-u}$ and simplifying leads to
 \begin{equation}
   \label{eq:expsubODE}
-   \frac{\mathrm{d}^2 u}{\mathrm{d}\zeta^2} = \left( \frac{B}{a_k^2} e^{\lambda (\zeta/a_k-b)} + \frac{C}{a_k^2}\right) 
+   \frac{\mathrm{d}^2 u}{\mathrm{d}\zeta^2} = \left( \frac{B_1}{\beta_3^2} e^{\beta_1 (1-\zeta/\beta_3)} + \frac{B_2}{\beta_3^2}\right) 
 \end{equation}
 
 This is an integrable equation; one indefinite integration produces
 \begin{equation}
   \label{eq:du}
-  \frac{\mathrm{d} u}{\mathrm{d}\zeta} =  \frac{B}{\lambda a_k} e^{\lambda (\zeta/a_k-b)} + \frac{C}{a_k^2}\zeta + \alpha
+  \frac{\mathrm{d} u}{\mathrm{d}\zeta} = - \frac{B_1}{\beta_1 \beta_3} e^{\beta_1(1-\zeta/\beta_3)} + \frac{B_2}{\beta_3^2}\zeta + \alpha
 \end{equation}
 where $\alpha$ is a constant of integration. A second indefinite integration produces
-$$ u =  \frac{B}{\lambda^2} e^{\lambda (\zeta/a_k-b)} + \frac{C}{2a_k^2}\zeta^2 + \alpha\zeta + \beta  $$
-where $\beta$ is another constant of integration.  
+$$ u =  \frac{B_1}{\beta_1^2} e^{\beta_1 (1-\zeta/\beta_3)} + \frac{B_2}{2\beta_3^2}\zeta^2 + \alpha\zeta + \gamma  $$
+where $\gamma$ is another constant of integration.  
 
 Applying the exponential transformation to the boundary condition at the top of the vadose zone results in
-$$\frac{\mathrm{d}u}{\mathrm{d}\zeta} e^u=0 \qquad \zeta=ba_k + La_k$$
+$$\frac{\mathrm{d}u}{\mathrm{d}\zeta} e^u=0 \qquad \zeta= 1+ L_D$$
 which is used with \eqref{eq:du} to determine one of the constants
-$$-\alpha= \frac{B}{\lambda a_k} e^{\lambda L} + \frac{C}{a_k} \left( b+L\right) $$
+$$\alpha= \frac{B_1}{\beta_1 \beta_3} e^{\beta_1 L_D} -
+\frac{B_2}{\beta_3} \left( 1+L_D \right) $$
 
 The solution for the drawdown in the vadose zone is then
 \begin{equation}
   \nonumber
-  \bar{\sigma}^{\ast} (z) = \tilde{\beta}\exp\left\{ \frac{B}{\lambda^2} e^{\lambda (z-b)} + \frac{C}{2}z^2 -\left[\frac{B}{\lambda} e^{\lambda L} + C \left( b+L\right)\right]z  \right\}
+  \bar{\sigma}_D^{\ast} (z_D) = \tilde{\gamma}\exp\left\{
+    \frac{B_1}{\beta_1^2} e^{\beta_1 (1-z_D)} + \frac{B_2}{2}z_D^2
+    +\left[ \frac{B_1}{\beta_1} e^{\beta_1 L_D}  - B_2 \left( 1+L_D\right) \right]z_D  \right\}
 \end{equation}
-where $\tilde{\beta}=e^\beta$ is a modified integration constant. This can be re-grouped and simplified as
+where $\tilde{\gamma}=e^\gamma$ is a modified integration constant. This can be re-grouped as
 \begin{equation}
   \label{eq:sigma}
-  \bar{\sigma}^{\ast} (z) = \tilde{\beta}\exp\left\{ \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda^2} \left[ e^{\lambda (z-b)}  - z\lambda e^{\lambda L} \right]+ \frac{a^2 z}{\kappa}\left[\frac{z}{2} - \left( b+L\right) \right]  \right\}
+  \bar{\sigma}_D^{\ast} (z_D) = \tilde{\gamma}\exp\left\{
+    \frac{B_1}{\beta_1^2} \left[ e^{\beta_1 (1-z_D)} + z_D\beta_1 e^{\beta_1
+        L_D} \right] + B_2 \left[ \frac{z_D^2}{2}
+     - \left( 1+L_D\right)z_D  \right] \right\}
 \end{equation}
-and $\tilde{\beta}$ will be determined from the matching conditions at the water table.
+and $\tilde{\gamma}$ will be determined from the matching conditions at the water table.
 \section{Saturated Zone Unconfined Solution}
 Following \cite{mishra10}, we decompose the saturated zone solution into two solutions: 1) the Hantush solution $s_H$ for a confined aquifer and a partially penetrating well; 2) an unconfined solution $s_U$ with no well but continuity conditions with the vadose zone solution just derived.  The solution for $s_H$ is given elsewhere, either in terms of a finite cosine transform, or a multi-layer fully penetrating solution.  
 
-The governing ordinary differential equation in Laplace-Hankel transform space for $s_U$ is
+The governing ordinary differential equation in Laplace-Hankel
+transform space for the saturated unconfined $s_{UD}$ is
 \begin{equation}
   \label{eq:aquifer}
-  \frac{\mathrm{d}^2 \bar{s}_U^{\ast}}{\mathrm{d} z^2} - \left( \frac{p}{\alpha_s \kappa} + \frac{a^2}{\kappa} \right)\bar{s}_U^{\ast} = 0 \qquad 0 \le z \le b
+  \frac{\mathrm{d}^2 \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D^2} - \left( \frac{p + a^2}{\kappa} \right)\bar{s}_U^{\ast} = 0 \qquad 0 \le z_D \le 1
 \end{equation}
 with the no-flow boundary condition at the base of the aquifer
-$$ \frac{\mathrm{d} \bar{s}_U^{\ast}}{\mathrm{d} z} = 0 \qquad z=0 $$
+$$ \frac{\mathrm{d} \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D} = 0 \qquad z_D=0 $$
 and the following continuity equations at the water table
 \begin{equation}
   \label{eq:headCont}
-  \bar{s}_U^{\ast} + \bar{s}_H^{\ast} = \bar{\sigma}^{\ast} \qquad z=b
+  \bar{s}_{UD}^{\ast} + \bar{s}_{HD}^{\ast} = \bar{\sigma}_D^{\ast} \qquad z_D=1
 \end{equation}
 \begin{equation}
   \label{eq:fluxCont}
-  \frac{\mathrm{d} \bar{s}_U^{\ast}}{\mathrm{d} z}  = \frac{\mathrm{d}
-    \bar{\sigma}^{\ast}}{\mathrm{d} z} \qquad \rightarrow \qquad \frac{\mathrm{d} \bar{s}_U^{\ast}}{\mathrm{d} z}  = \frac{\mathrm{d}u}{\mathrm{d} \zeta} e^u \qquad z=b; \; \zeta=b a_k
+  \frac{\mathrm{d} \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D}  = \frac{\mathrm{d}
+    \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D} \qquad \rightarrow \qquad \frac{\mathrm{d} \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D}  = \frac{\mathrm{d}u}{\mathrm{d} \zeta} e^u \qquad z_D=1; \; \zeta=\beta_3
   \qquad 
 \end{equation}
-where the vertical flux of $\bar{s}_H^{\ast}$ is defined as zero at
+note the vertical flux of $\bar{s}_{HD}^{\ast}$ is defined as zero at
 the top and bottom of the aquifer, so it is not included in the
 continuity condition \eqref{eq:fluxCont}.
 
 The general solution to \eqref{eq:aquifer} is 
 \begin{equation}
   \label{eq:su}
-  \bar{s}_U^{\ast} = A_1 \cosh(\eta z) + A_2 \sinh(\eta z)
+  \bar{s}_{UD}^{\ast} = A_1 \cosh(\eta z_D) + A_2 \sinh(\eta z_D)
 \end{equation}
-where $A_i$ are constants to determine and $\eta^2 = \frac{p}{\alpha_s \kappa} + \frac{a^2}{\kappa}$.  The no-flow boundary condition at the bottom of the aquifer forces $A_2=0$.  
+where $A_i$ are constants to determine and $\eta^2 = \frac{p + a^2}{\kappa}$.  The no-flow boundary condition at the bottom of the aquifer forces $A_2=0$.  
 
 \section{New Solution for Saturated Zone}
 Substituting \eqref{eq:sigma} and \eqref{eq:su} into the compatibility
 equations \eqref{eq:headCont} and \eqref{eq:fluxCont} gives
-$$  A_1 \cosh(\eta b) + \bar{s}_H^{\ast}(b) = \tilde{\beta}e^{\omega_1}$$
-$$ A_1 \eta  \sinh(\eta b)  = \tilde{\beta} \omega_2 e^{\omega_1}$$
+$$  A_1 \cosh(\eta) + \bar{s}_{HD}^{\ast}(z_D=1) = \tilde{\gamma}e^{\omega_1}$$
+$$ A_1 \eta  \sinh(\eta)  = \tilde{\gamma} \omega_2 e^{\omega_1}$$
 where 
-$$ \omega_1 = \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda^2} \left[ 1  - b\lambda e^{\lambda L} \right] + \frac{a^2 b}{\kappa}\left[\frac{b}{2} - \left( b+L\right) \right]$$
+$$ \omega_1 = \frac{B_1}{\beta_1^2} \left( 1 + \beta_1 e^{\beta_1
+        L_D} \right) - B_2 \left( \frac{1}{2}
+     +L_D  \right) $$
 \begin{equation}
   \label{eq:omega2}
-  \omega_2 = \frac{p e^{-a_k b_1} S_y a_c} {K_r \lambda}\left[ 1 - e^{\lambda L} \right] + \frac{a^2 b}{\kappa}
+  \omega_2 = \frac{B_1}{\beta_1} \left( e^{\beta_1 L_D} -1 \right) - B_2 L_D 
 \end{equation}
-are $u(z=b)$ and $\left. \frac{\mathrm{d} u}{\mathrm{d}z} \right|_{z=b}$
-respecively (without $\tilde\beta$ factor).
+are $u(z_D=1)$ and $\left. \frac{\mathrm{d} u}{\mathrm{d}z_D} \right|_{z_D=1}$
+respecively (without the $\tilde\gamma$ factor).
 Divide the second equation by $\omega_2$ and set the left-hand-sides of the two resulting equations equal to one another.  Solving for $A_1$ leads to
-$$A_1 \cosh(\eta b) + \bar{s}_H^{\ast}(b) = \frac{A_1  \eta}{\omega_2}  \sinh(\eta b) $$
-$$ A_1 = \frac{\bar{s}_H^{\ast}(b)}{\frac{\eta}{\omega_2}  \sinh(\eta b) - \cosh(\eta b)}$$
-which gives the final Laplace-Hankel form of the saturated-zone solution as
-$$ \bar{s}^{\ast}(z)  = \bar{s}_H^{\ast}(z) + \bar{s}_H^{\ast}(b) \frac{\cosh(\eta z)}{\frac{\eta}{\omega_2}  \sinh(\eta b) - \cosh(\eta b)}$$ 
+$$A_1 \cosh(\eta) + \bar{s}_{HD}^{\ast}(z_D=1) = \frac{A_1  \eta}{\omega_2}  \sinh(\eta) $$
+$$ A_1 = \frac{\bar{s}_{HD}^{\ast}(z_D=1)}{\frac{\eta}{\omega_2}  \sinh(\eta) - \cosh(\eta)}$$
+which gives the final dimensionless Laplace-Hankel form of the saturated-zone solution as
+$$ \bar{s}_D^{\ast}(z_D)  = \bar{s}_{HD}^{\ast}(z_D) + \bar{s}_{HD}^{\ast}(z_D=1) \frac{\cosh(\eta z_D)}{\frac{\eta}{\omega_2}  \sinh(\eta) - \cosh(\eta)}$$ 
 This expression is identical in form to \cite[eqn.\ C17]{mishra10},
 with $\omega_2$ instead of $q$.  The final Laplace-Hankel form of the unsaturated zone solution can be found by substituting $A_1$ into one of the expressions for $\tilde\beta$ above, and substituting that into \eqref{eq:sigma}.
 \bibliographystyle{alpha}
