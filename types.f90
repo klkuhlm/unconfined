@@ -142,6 +142,8 @@ module types
      real(DP) :: Tc = -999.  ! time
      real(DP) :: Hc = -999.  ! head
 
+     integer :: order = -999 ! order of FD matrix
+
      ! which unconfined model to use?
      integer :: model = -999
      ! 0 = Theis (confined fully penetrating)
