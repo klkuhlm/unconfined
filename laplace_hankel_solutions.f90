@@ -451,25 +451,32 @@ contains
     complex(EP), dimension(size(p),size(zD)) :: sD, sU
     complex(EP), dimension(size(p),size(zD)+1) :: sH
     integer ::  np, nz
-
-    complex(EP), dimension(size(p)) :: eta, omega
-    real(EP) :: lambda
-
+    real(EP), dimension(0:3) :: beta
+    real(EP) :: B2
+    complex(EP), dimension(size(p)) :: eta, omega, B1
+    
     np = size(p)
     nz = size(zD)
 
+    beta(0) = f%ac*f%Sy/f%Ss
+    beta(1) = f%lambdaD  ! b*(ak-ac) << is this off by (-1)?
+    beta(2) = f%ak*f%b1  ! ak*(psi_a - psi_k);
+    beta(3) = f%akD
+
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
-    lambda = f%ak - f%ac
+    
+    B1(1:np) = p(:)*beta(0)*exp(-beta(2))/f%kappa
+    B2 = (a**2)/f%kappa
 
-    omega(1:np) = p(:)*exp(-f%ak*f%b1)*&
-         & f%Sy*f%ac/(f%Ss*f%kappa*lambda)*(1.0_EP - exp(lambda*f%usL)) + &
-         & a**2*f%b/f%kappa
+    omega(1:np) = B1(:)/beta(1)*(exp(beta(1)*f%usLD) - 1.0_EP) - B2*f%usLD
 
-    sU(1:np,1:nz) = spread(sH(1:np,nz+1),2,nz)*&
-         & cosh(eta(1:np) .X. s%zD(1:nz))/&
-         & spread(eta(:)/omega(:)*sinh(eta(:)*f%b) - &
-         & cosh(eta(:)*f%b),2,nz)
+    if (s%quiet > 1) then
+       print *, 'B1(1:2)',B1(1:2),'B2',B2,'omgega(1:2)',omega(1:2)
+    end if
+    
+    sU(1:np,1:nz) = spread(sH(1:np,nz+1),2,nz)* cosh(eta(1:np) .X. s%zD(1:nz))/ &
+         & spread(eta(:)/omega(:)*sinh(eta(:)) - cosh(eta(:)),2,nz)
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
   end function mishraNeuman2010a
@@ -499,12 +506,13 @@ contains
     integer, dimension(s%order) :: ii
 
     complex(EP), dimension(size(p)) :: eta, cc
-    real(EP) :: lambda, h, invhsq, norm
-    complex(EP), dimension(s%order,size(p)) :: omega
+    real(EP) :: h, invhsq, B2
+    real(EP), dimension(0:3) :: beta
+    complex(EP), dimension(s%order,size(p)) :: omega, B1
     integer, parameter :: NPRINT = 2
 
     n = s%order
-    h = f%usL/real(n-1,EP) ! F.D. grid spacing
+    h = f%usLD/real(n-1,EP) ! F.D. grid spacing
     invhsq = 1.0_EP/h**2
     np = size(p)
     nz = size(zD)
@@ -512,45 +520,39 @@ contains
     ! integers 0:n-1
     forall(j=1:n) ii(j) = j-1
 
+    beta(0) = f%ac*f%Sy/f%Ss
+    beta(1) = f%lambdaD  ! b*(ak-ac) << is this off by (-1)?
+    beta(2) = f%ak*f%b1  ! ak*(psi_a - psi_k);
+    beta(3) = f%akD
+
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
-    lambda = f%ak - f%ac
 
-    omega(1:n,1:np) = spread(p(:)*exp(-f%ak*f%b1)*&
-         & f%Sy*f%ac/(f%Ss*f%kappa),1,n)*spread(exp(lambda*ii(1:n)*h),2,np) + &
-         & a**2/f%kappa
+    B1(1:n,1:np) = spread(p(:)*beta(0)*exp(-beta(2))/f%kappa,1,n)
+    B2 = (a**2)/f%kappa
+
+    omega(1:n,1:np) = B1(:,:)*spread(exp(beta(1)*(-ii(:)*h)),2,np) + B2
 
     ! main diagonal (first and last entries are different)
-    cc(1:np) = f%ak/h - invhsq - omega(1,1:np)
-    b(1,1:np) = 0.5_EP*(exp( eta(:)*f%b)*(cc(:) - eta(:)/h) + &
-                      & exp(-eta(:)*f%b)*(cc(:) + eta(:)/h))
-    b(2:n,1:np) = f%ak/h - 2.0*invhsq - omega(2:n,1:np)
-    b(n,1:np) = b(n,1:np) + (invhsq - f%ak/h)
+    cc(1:np) = beta(3)/h - invhsq - omega(1,1:np)
+    b(1,1:np) = 0.5_EP*(exp( eta(:))*(cc(:) - eta(:)/h) + &
+                      & exp(-eta(:))*(cc(:) + eta(:)/h))
+    b(2:n,1:np) = beta(3)/h - 2.0*invhsq - omega(2:n,1:np)
+    b(n,1:np) = b(n,1:np) + (invhsq - beta(3)/h)
 
     ! super-diagonal (last entry (n) is undefined)
-    c(1:n-1,1:np) = invhsq - f%ak/h
+    c(1:n-1,1:np) = invhsq - beta(3)/h
      c(n,1:np) = -999999.9
 
     ! sub-diagonal (first entry 1 is undefined, second entry is different)
     aa(2:n,1:np) = invhsq  ! a is already taken by Hankel parameter
-    aa(2,1:np) = aa(2,1:np)*cosh(eta(:)*f%b)
+    aa(2,1:np) = aa(2,1:np)*cosh(eta(:))
      aa(1,1:np) = 7777777.7
 
     ! right-hand side (all zero but first and second rows)
     v(3:n,1:np) = 0.0_EP
     v(2,1:np) =   -invhsq*sH(1:np,nz+1)
     v(1,1:np) = -cc(1:np)*sH(1:np,nz+1)
-
-    ! divide through by giant diagonal term
-    norm = abs(b(1,1))
-    b(1,:) = b(1,:)/norm
-    c(1,:) = c(1,:)/norm
-    v(1,:) = v(1,:)/norm
-    norm = abs(aa(2,1))
-    aa(2,:) = aa(2,:)/norm
-    b(2,:) = b(2,:)/norm
-    c(2,:) = c(2,:)/norm
-    v(2,:) = v(2,:)/norm
 
     ! sigma(1,1:np) is A1, which is constant in
     ! solution for saturated domain
@@ -564,7 +566,6 @@ contains
     elsewhere
        sD(1:np,1:nz) = sH(1:np,1:nz)
     end where
-    
 
     if (s%quiet > 1) then
        write(*,999) ' sD:',sD(1:NPRINT,1), ' A1:',sigma(1,1:NPRINT),&
