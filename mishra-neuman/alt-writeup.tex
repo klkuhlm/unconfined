@@ -104,13 +104,13 @@ non-dimensional.  One non-dimensionalization is
 \end{equation}
 where $\sigma_D$ and $z_D$ are dimensionless drawdown and vertical
 coordinate, while the following dimensionless quantities are defined:
-$B_1 = e^{-\beta_2}  p \beta_0/K_D $, 
-$B_2=a^2/K_D$, $\beta_0=a_c S_y/S_s$, $\beta_1=b(a_c - a_k)$,
+$B_1 = e^{-\beta_2}  p \beta_0/\kappa $, 
+$B_2=a^2/\kappa$, $\beta_0=a_c S_y/S_s$, $\beta_1=b(a_c - a_k)$,
 $\beta_2=a_k b_1$, $\beta_3 = a_k b$.
 
 \subsection{Modified Solution Procedure} 
-By further modifying the $z$-coordinate and performing an exponential substitution, (\ref{eq:mn-d5-dimless}) can be simplified significantly and a solution can be found by integration.  Using the new dimensionless vertical coordinate 
-$$ \zeta=\beta_3 z_d \qquad z_d=\frac{\zeta}{\beta_3} $$
+By further modifying the $z_D$-coordinate and performing an exponential substitution, (\ref{eq:mn-d5-dimless}) can be simplified significantly and a solution can be found by integration.  Using the new dimensionless vertical coordinate 
+$$ \zeta=\beta_3 z_D \qquad z_D=\frac{\zeta}{\beta_3} $$
 the transformed differential equation representing drawdown in the vadose zone (\ref{eq:mn-d5}) becomes
 \begin{equation}
   \label{eq:nondimODE}
@@ -128,7 +128,7 @@ and
 $$\frac{\mathrm{d}^2\bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta^2} =
 \frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u +
 \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u$$
-Performing both of these substitutions leads to
+leads to
 $$ \left[ \frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u +
   \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]-  \left[
   \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]- \frac{1}{\beta_3^2}\left( B_1 e^{\beta_1 (1-\zeta/\beta_3)} + B_2\right) e^{u}=0$$
@@ -148,7 +148,7 @@ $$ u =  \frac{B_1}{\beta_1^2} e^{\beta_1 (1-\zeta/\beta_3)} + \frac{B_2}{2\beta_
 where $\gamma$ is another constant of integration.  
 
 Applying the exponential transformation to the boundary condition at the top of the vadose zone results in
-$$\frac{\mathrm{d}u}{\mathrm{d}\zeta} e^u=0 \qquad \zeta= 1+ L_D$$
+$$\frac{\mathrm{d}u}{\mathrm{d}\zeta} e^u=0 \qquad \zeta= \left(1+ L_D \right) \beta_3$$
 which is used with \eqref{eq:du} to determine one of the constants
 $$\alpha= \frac{B_1}{\beta_1 \beta_3} e^{\beta_1 L_D} -
 \frac{B_2}{\beta_3} \left( 1+L_D \right) $$
@@ -168,7 +168,7 @@ where $\tilde{\gamma}=e^\gamma$ is a modified integration constant. This can be 
         L_D} \right] + B_2 \left[ \frac{z_D^2}{2}
      - \left( 1+L_D\right)z_D  \right] \right\}
 \end{equation}
-and $\tilde{\gamma}$ will be determined from the matching conditions at the water table.
+while $\tilde{\gamma}$ will be determined from the matching conditions at the water table.
 \section{Saturated Zone Unconfined Solution}
 Following \cite{mishra10}, we decompose the saturated zone solution into two solutions: 1) the Hantush solution $s_H$ for a confined aquifer and a partially penetrating well; 2) an unconfined solution $s_U$ with no well but continuity conditions with the vadose zone solution just derived.  The solution for $s_H$ is given elsewhere, either in terms of a finite cosine transform, or a multi-layer fully penetrating solution.  
 
@@ -188,7 +188,7 @@ and the following continuity equations at the water table
 \begin{equation}
   \label{eq:fluxCont}
   \frac{\mathrm{d} \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D}  = \frac{\mathrm{d}
-    \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D} \qquad \rightarrow \qquad \frac{\mathrm{d} \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D}  = \frac{\mathrm{d}u}{\mathrm{d} \zeta} e^u \qquad z_D=1; \; \zeta=\beta_3
+    \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D} \qquad \rightarrow \qquad \frac{\mathrm{d} \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D}  = \frac{\mathrm{d}u}{\mathrm{d} \zeta} e^u \qquad z_D=1
   \qquad 
 \end{equation}
 note the vertical flux of $\bar{s}_{HD}^{\ast}$ is defined as zero at

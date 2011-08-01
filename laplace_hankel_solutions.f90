@@ -69,7 +69,7 @@ contains
 
     case(6)
        ! Mishra/Neuman  2010 model
-       fp(1:np,1:nz) = mishraNeuman2010FD(a,s%zD,s,lap%p,f,w)
+       fp(1:np,1:nz) = mishraNeuman2010a(a,s%zD,s,lap%p,f,w)
        
     end select
 
@@ -469,7 +469,8 @@ contains
     B1(1:np) = p(:)*beta(0)*exp(-beta(2))/f%kappa
     B2 = (a**2)/f%kappa
 
-    omega(1:np) = B1(:)/beta(1)*(exp(beta(1)*f%usLD) - 1.0_EP) - B2*f%usLD
+    ! moved -B2*f%usLD to LHS and into sU calc below
+    omega(1:np) = B1(:)/beta(1)*(exp(beta(1)*f%usLD) - 1.0_EP) -B2*f%usLD
 
     if (s%quiet > 1) then
        print *, 'B1(1:2)',B1(1:2),'B2',B2,'omgega(1:2)',omega(1:2)
@@ -531,23 +532,23 @@ contains
     B1(1:n,1:np) = spread(p(:)*beta(0)*exp(-beta(2))/f%kappa,1,n)
     B2 = (a**2)/f%kappa
 
-    omega(1:n,1:np) = B1(:,:)*spread(exp(beta(1)*(-ii(:)*h)),2,np) + B2
+    omega(1:n,1:np) = B1(:,:)*spread(exp(-beta(1)*ii(:)*h),2,np) + B2
 
     ! main diagonal (first and last entries are different)
     cc(1:np) = beta(3)/h - invhsq - omega(1,1:np)
     b(1,1:np) = 0.5_EP*(exp( eta(:))*(cc(:) - eta(:)/h) + &
                       & exp(-eta(:))*(cc(:) + eta(:)/h))
     b(2:n,1:np) = beta(3)/h - 2.0*invhsq - omega(2:n,1:np)
-    b(n,1:np) = b(n,1:np) + (invhsq - beta(3)/h)
+    b(n,1:np) = b(n,1:np) + invhsq - beta(3)/h
 
     ! super-diagonal (last entry (n) is undefined)
     c(1:n-1,1:np) = invhsq - beta(3)/h
-     c(n,1:np) = -999999.9
+!!$    c(n,1:np) = -999999.9
 
     ! sub-diagonal (first entry 1 is undefined, second entry is different)
     aa(2:n,1:np) = invhsq  ! a is already taken by Hankel parameter
     aa(2,1:np) = aa(2,1:np)*cosh(eta(:))
-     aa(1,1:np) = 7777777.7
+!!$    aa(1,1:np) = 7777777.7
 
     ! right-hand side (all zero but first and second rows)
     v(3:n,1:np) = 0.0_EP

@@ -6,7 +6,7 @@
 001  0.0D+0  1.0D+0            :: pumping well time behavior and parameters 
 1.0D+1                        :: b (initial saturated thickness)
 1.0D-4  1.0D-2                :: Kr,kappa (radial K and ratio Kz/Kr)
-1.0D-6  2.5D-1               :: Ss,Sy
+1.0D-7  2.5D-1                :: Ss,Sy
 0.0D0                        ::  beta Malama linearization parameter
 3.0D+0 3.0D-1   2.0D+0 2.0D-1  5.0D+1   19   :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L, FD order
 10  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
