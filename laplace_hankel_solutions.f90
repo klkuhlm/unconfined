@@ -469,7 +469,6 @@ contains
     B1(1:np) = p(:)*beta(0)*exp(-beta(2))/f%kappa
     B2 = (a**2)/f%kappa
 
-    ! moved -B2*f%usLD to LHS and into sU calc below
     omega(1:np) = B1(:)/beta(1)*(exp(beta(1)*f%usLD) - 1.0_EP) -B2*f%usLD
 
     if (s%quiet > 1) then
