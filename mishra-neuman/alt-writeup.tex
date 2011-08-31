@@ -1,8 +1,8 @@
 \NeedsTeXFormat{LaTeX2e} [1994/06/01]
-\documentclass[12pt,letter]{article}
-%%\usepackage [pagewise, mathlines]{lineno}
+\documentclass[12pt,letterpaper]{article}
+\usepackage[mathlines,pagewise]{lineno}
 \usepackage{graphicx}
-\usepackage[reqno,intlimits,sumlimits]{amsmath}
+\usepackage{amsmath}
 
 \renewcommand{\baselinestretch}{1.25}
 \renewcommand{\arraystretch}{1}
@@ -10,25 +10,26 @@
 \setlength{\oddsidemargin}{0.0in} \setlength{\hoffset}{0in}
 \setlength{\textwidth}{6.5in}
 \setlength{\topmargin}{0cm} \setlength{\voffset}{0.0in}
-\setlength{\textheight}{9in}
+\setlength{\textheight}{8.25in}
 
-%%% Needed to get lineno to work nicely with amsmath
-%%\newcommand*\patchAmsMathEnvironmentForLineno[1]{
-%% \expandafter\let\csname old#1\expandafter\endcsname\csname #1\endcsname
-%% \expandafter\let\csname oldend#1\expandafter\endcsname\csname end#1\endcsname
-%% \renewenvironment{#1}
-%% {\linenomath\csname old#1\endcsname}
-%% {\csname oldend#1\endcsname\endlinenomath}}
-%%\newcommand*\patchBothAmsMathEnvironmentsForLineno[1]{
-%% \patchAmsMathEnvironmentForLineno{#1}
-%% \patchAmsMathEnvironmentForLineno{#1*}}
-%%\AtBeginDocument{
-%%\patchBothAmsMathEnvironmentsForLineno{equation}
-%%\patchBothAmsMathEnvironmentsForLineno{align}}
+% Needed to get lineno to work nicely with amsmath
+\newcommand*\patchAmsMathEnvironmentForLineno[1]{
+ \expandafter\let\csname old#1\expandafter\endcsname\csname #1\endcsname
+ \expandafter\let\csname oldend#1\expandafter\endcsname\csname end#1\endcsname
+ \renewenvironment{#1}
+ {\linenomath\csname old#1\endcsname}
+ {\csname oldend#1\endcsname\endlinenomath}}
+\newcommand*\patchBothAmsMathEnvironmentsForLineno[1]{
+ \patchAmsMathEnvironmentForLineno{#1}
+ \patchAmsMathEnvironmentForLineno{#1*}}
+\AtBeginDocument{
+\patchBothAmsMathEnvironmentsForLineno{equation}
+\patchBothAmsMathEnvironmentsForLineno{align}}
 
 \title{An alternate formulation of the unsaturated zone solution given in Mishra-Neuman (2010)}
 \begin{document}
 \maketitle
+\linenumbers
 \section{Unsaturated Zone Governing Equations}
 The governing equation in the unsaturated zone, as used by \cite{mishra10} and \cite{tartakovsky07}, is
 \begin{equation}
@@ -36,17 +37,31 @@ The governing equation in the unsaturated zone, as used by \cite{mishra10} and \
   K_r k_o(z) \frac{1}{r} \frac{\partial}{\partial r} \left( r\frac{\partial \sigma}{\partial r} \right) + K_z \frac{\partial}{\partial z} \left( k_0(z) \frac{\partial \sigma}{\partial z}\right) = C_0(z) \frac{\partial \sigma}{\partial t}
 \end{equation}
 over the unsaturated zone, defined as $b \le z \le b+L$.  Further, the unsaturated parameters are assumed to only be functions of $z$, $k_0(z)=k_0(\theta_0)$ and $C_0(z)=C_0(\theta_0)$.  The initial and boundary conditions for the unsaturated zone are  
-$$\sigma(r,z,0) = 0$$
-$$\sigma(\infty,z,t)=0$$
-$$\frac{\partial \sigma}{\partial z}=0 \qquad z=b+L$$ and 
-$$\lim_{r \rightarrow 0} r \frac{\partial \sigma}{\partial r} = 0 \qquad b\le z \le b+L$$
+\begin{equation}\nonumber
+\sigma(r,z,0) = 0
+\end{equation}
+\begin{equation}\nonumber
+\sigma(\infty,z,t)=0
+\end{equation}
+\begin{equation}\nonumber
+\frac{\partial \sigma}{\partial z}=0 \qquad z=b+L
+\end{equation} and 
+\begin{equation}\nonumber
+\lim_{r \rightarrow 0} r \frac{\partial \sigma}{\partial r} = 0 \qquad b\le z \le b+L
+\end{equation}
 
 Drawdown in the vadose zone is defined as $\sigma = h_0 - h=b+\psi_a - h$, $0 \le k_0 \le 1$ is the isotropic relative hydraulic conductivity, $C(\psi)=\frac{d\eta}{d \psi}$ is the specific moisture capacity and $\theta$ is volumetric water content.  Drawdown in the aquifer, $s$, and the vadose zone are connected using compatibility conditions at the water table
-$$s=\sigma \qquad z=b$$
-$$\frac{\partial s}{\partial z}=\frac{\partial \sigma}{\partial z} \qquad z=b$$ 
+\begin{equation}\nonumber
+s=\sigma \qquad z=b
+\end{equation}
+\begin{equation}\nonumber
+\frac{\partial s}{\partial z}=\frac{\partial \sigma}{\partial z} \qquad z=b
+\end{equation} 
 
 The moisture retention curve in the vadose zone is represented as an exponential function
-$$S_e = \frac{\theta(\psi) - \theta_r}{S_y} = e^{a_c \left( \psi - \psi_a \right)} \qquad a_c \ge 0 $$
+\begin{equation}\nonumber
+S_e = \frac{\theta(\psi) - \theta_r}{S_y} = e^{a_c \left( \psi - \psi_a \right)} \qquad a_c \ge 0 
+\end{equation}
 where $S_e$ is effective saturation, $\theta_r$ is residual water content, and $S_y=\theta_s - \theta_r$ is drainable porosity (specific yield).  The Gardner model for relative hydraulic conductivity is used,
 \begin{equation}
   \nonumber
@@ -74,23 +89,33 @@ The Laplace transformation (overbar and $p$) of (\ref{eq:unsatDim}) results in
    k_o(z) \frac{1}{r} \frac{\partial}{\partial r} \left( r\frac{\partial \bar{\sigma}}{\partial r} \right) +\kappa \frac{\partial}{\partial z} \left( k_0(z) \frac{\partial \bar{\sigma}}{\partial z}\right) = p \frac{C_0(z)}{K_r}  \bar{\sigma}
 \end{equation}
 where $\kappa=K_z/K_r$, with the associated transformed boundary and initial conditions of
-$$ \bar{\sigma}(\infty,z,p) = 0$$
-$$ \frac{\partial \bar{\sigma}}{\partial z}=0 \qquad z=b+L$$
- $$\lim_{r \rightarrow 0} r \frac{\partial \bar{\sigma}}{\partial r} = 0 \qquad b\le z \le b+L$$
+\begin{equation}\nonumber
+ \bar{\sigma}(\infty,z,p) = 0
+\end{equation}
+\begin{equation}\nonumber
+ \frac{\partial \bar{\sigma}}{\partial z}=0 \qquad z=b+L
+\end{equation}
+ \begin{equation}\nonumber
+\lim_{r \rightarrow 0} r \frac{\partial \bar{\sigma}}{\partial r} = 0 \qquad b\le z \le b+L
+\end{equation}
 The Hankel transformation (superscript $\ast$ and $a$) of (\ref{eq:unsatLap}) and substitution of the constitutive models (\ref{eq:Gardner}) and (\ref{eq:mrc}) results in the ordinary differential equation
 \begin{equation}
   \label{eq:unsatHank}
    -a^2 \bar{\sigma}^{\ast} + \kappa a_k \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}}{\mathrm{d} z^2}  = p e^{-a_k b_1} \frac{S_y a_c} {K_r}  e^{\left(a_k -a_c \right)\left( b - z\right)} \bar{\sigma}^{\ast} 
 \end{equation}
 and the no-flow condition at the top of the vadose zone, 
-$$ \frac{\mathrm{d}\bar{\sigma}^{\ast}}{\mathrm{d}z}=0 \qquad z=b+L $$
+\begin{equation}\nonumber
+ \frac{\mathrm{d}\bar{\sigma}^{\ast}}{\mathrm{d}z}=0 \qquad z=b+L 
+\end{equation}
 Equation \ref{eq:unsatHank} can be rearranged as
 \begin{equation}
   \label{eq:mn-d5}
   \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}}{\mathrm{d}z^2} - a_k \frac{\mathrm{d} \bar{\sigma}^{\ast}}{\mathrm{d}z} - \left( B e^{\lambda (z-b)} + C\right) \bar{\sigma}^{\ast}=0
 \end{equation}
 where $\lambda = a_k-a_c$, $C=\frac{a^2}{\kappa}$ and
-$$B = p e^{-a_k b_1} \frac{S_y a_c} {K_r} $$
+\begin{equation}\nonumber
+B = p e^{-a_k b_1} \frac{S_y a_c} {K_r} 
+\end{equation}
 which was solved in \cite{mishra10} using a general solution from a
 reference book on differential equations.  The solution given in terms
 of two types of Bessel functions of complex argument and non-integer
@@ -110,7 +135,9 @@ $\beta_2=a_k b_1$, $\beta_3 = a_k b$.
 
 \subsection{Modified Solution Procedure} 
 By further modifying the $z_D$-coordinate and performing an exponential substitution, (\ref{eq:mn-d5-dimless}) can be simplified significantly and a solution can be found by integration.  Using the new dimensionless vertical coordinate 
-$$ \zeta=\beta_3 z_D \qquad z_D=\frac{\zeta}{\beta_3} $$
+\begin{equation}\nonumber
+ \zeta=\beta_3 z_D \qquad z_D=\frac{\zeta}{\beta_3} 
+\end{equation}
 the transformed differential equation representing drawdown in the vadose zone (\ref{eq:mn-d5}) becomes
 \begin{equation}
   \label{eq:nondimODE}
@@ -122,16 +149,22 @@ the transformed differential equation representing drawdown in the vadose zone (
 dividing through by $\beta_3^2$ and performing the substitution
 $\bar{\sigma}_D^{\ast}(\zeta)=e^{u(\zeta)}$ which implies
 
-$$\frac{\mathrm{d}\bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta} =
-\frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u$$ 
+\begin{equation}\nonumber
+\frac{\mathrm{d}\bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta} =
+\frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u
+\end{equation} 
 and
-$$\frac{\mathrm{d}^2\bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta^2} =
+\begin{equation}\nonumber
+\frac{\mathrm{d}^2\bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta^2} =
 \frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u +
-\frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u$$
+\frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u
+\end{equation}
 leads to
-$$ \left[ \frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u +
+\begin{equation}\nonumber
+ \left[ \frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u +
   \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]-  \left[
-  \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]- \frac{1}{\beta_3^2}\left( B_1 e^{\beta_1 (1-\zeta/\beta_3)} + B_2\right) e^{u}=0$$
+  \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]- \frac{1}{\beta_3^2}\left( B_1 e^{\beta_1 (1-\zeta/\beta_3)} + B_2\right) e^{u}=0
+\end{equation}
 multiplying by $e^{-u}$ and simplifying leads to
 \begin{equation}
   \label{eq:expsubODE}
@@ -144,14 +177,20 @@ This is an integrable equation; one indefinite integration produces
   \frac{\mathrm{d} u}{\mathrm{d}\zeta} = - \frac{B_1}{\beta_1 \beta_3} e^{\beta_1(1-\zeta/\beta_3)} + \frac{B_2}{\beta_3^2}\zeta + \alpha
 \end{equation}
 where $\alpha$ is a constant of integration. A second indefinite integration produces
-$$ u =  \frac{B_1}{\beta_1^2} e^{\beta_1 (1-\zeta/\beta_3)} + \frac{B_2}{2\beta_3^2}\zeta^2 + \alpha\zeta + \gamma  $$
+\begin{equation}\nonumber
+ u =  \frac{B_1}{\beta_1^2} e^{\beta_1 (1-\zeta/\beta_3)} + \frac{B_2}{2\beta_3^2}\zeta^2 + \alpha\zeta + \gamma  
+\end{equation}
 where $\gamma$ is another constant of integration.  
 
 Applying the exponential transformation to the boundary condition at the top of the vadose zone results in
-$$\frac{\mathrm{d}u}{\mathrm{d}\zeta} e^u=0 \qquad \zeta= \left(1+ L_D \right) \beta_3$$
+\begin{equation}\nonumber
+\frac{\mathrm{d}u}{\mathrm{d}\zeta} e^u=0 \qquad \zeta= \left(1+ L_D \right) \beta_3
+\end{equation}
 which is used with \eqref{eq:du} to determine one of the constants
-$$\alpha= \frac{B_1}{\beta_1 \beta_3} e^{\beta_1 L_D} -
-\frac{B_2}{\beta_3} \left( 1+L_D \right) $$
+\begin{equation}\nonumber
+\alpha= \frac{B_1}{\beta_1 \beta_3} e^{\beta_1 L_D} -
+\frac{B_2}{\beta_3} \left( 1+L_D \right) 
+\end{equation}
 
 The solution for the drawdown in the vadose zone is then
 \begin{equation}
@@ -179,7 +218,9 @@ transform space for the saturated unconfined $s_{UD}$ is
   \frac{\mathrm{d}^2 \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D^2} - \left( \frac{p + a^2}{\kappa} \right)\bar{s}_U^{\ast} = 0 \qquad 0 \le z_D \le 1
 \end{equation}
 with the no-flow boundary condition at the base of the aquifer
-$$ \frac{\mathrm{d} \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D} = 0 \qquad z_D=0 $$
+\begin{equation}\nonumber
+ \frac{\mathrm{d} \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D} = 0 \qquad z_D=0 
+\end{equation}
 and the following continuity equations at the water table
 \begin{equation}
   \label{eq:headCont}
@@ -205,12 +246,18 @@ where $A_i$ are constants to determine and $\eta^2 = \frac{p + a^2}{\kappa}$.  T
 \section{New Solution for Saturated Zone}
 Substituting \eqref{eq:sigma} and \eqref{eq:su} into the compatibility
 equations \eqref{eq:headCont} and \eqref{eq:fluxCont} gives
-$$  A_1 \cosh(\eta) + \bar{s}_{HD}^{\ast}(z_D=1) = \tilde{\gamma}e^{\omega_1}$$
-$$ A_1 \eta  \sinh(\eta)  = \tilde{\gamma} \omega_2 e^{\omega_1}$$
+\begin{equation}\nonumber
+  A_1 \cosh(\eta) + \bar{s}_{HD}^{\ast}(z_D=1) = \tilde{\gamma}e^{\omega_1}
+\end{equation}
+\begin{equation}\nonumber
+ A_1 \eta  \sinh(\eta)  = \tilde{\gamma} \omega_2 e^{\omega_1}
+\end{equation}
 where 
-$$ \omega_1 = \frac{B_1}{\beta_1^2} \left( 1 + \beta_1 e^{\beta_1
+\begin{equation}\nonumber
+ \omega_1 = \frac{B_1}{\beta_1^2} \left( 1 + \beta_1 e^{\beta_1
         L_D} \right) - B_2 \left( \frac{1}{2}
-     +L_D  \right) $$
+     +L_D  \right) 
+\end{equation}
 \begin{equation}
   \label{eq:omega2}
   \omega_2 = \frac{B_1}{\beta_1} \left( e^{\beta_1 L_D} -1 \right) - B_2 L_D 
@@ -218,12 +265,29 @@ $$ \omega_1 = \frac{B_1}{\beta_1^2} \left( 1 + \beta_1 e^{\beta_1
 are $u(z_D=1)$ and $\left. \frac{\mathrm{d} u}{\mathrm{d}z_D} \right|_{z_D=1}$
 respecively (without the $\tilde\gamma$ factor).
 Divide the second equation by $\omega_2$ and set the left-hand-sides of the two resulting equations equal to one another.  Solving for $A_1$ leads to
-$$A_1 \cosh(\eta) + \bar{s}_{HD}^{\ast}(z_D=1) = \frac{A_1  \eta}{\omega_2}  \sinh(\eta) $$
-$$ A_1 = \frac{\bar{s}_{HD}^{\ast}(z_D=1)}{\frac{\eta}{\omega_2}  \sinh(\eta) - \cosh(\eta)}$$
+\begin{equation}\nonumber
+A_1 \cosh(\eta) + \bar{s}_{HD}^{\ast}(z_D=1) = \frac{A_1  \eta}{\omega_2}  \sinh(\eta) 
+\end{equation}
+\begin{equation}\nonumber
+ A_1 = \frac{\bar{s}_{HD}^{\ast}(z_D=1)}{\frac{\eta}{\omega_2}  \sinh(\eta) - \cosh(\eta)}
+\end{equation}
 which gives the final dimensionless Laplace-Hankel form of the saturated-zone solution as
-$$ \bar{s}_D^{\ast}(z_D)  = \bar{s}_{HD}^{\ast}(z_D) + \bar{s}_{HD}^{\ast}(z_D=1) \frac{\cosh(\eta z_D)}{\frac{\eta}{\omega_2}  \sinh(\eta) - \cosh(\eta)}$$ 
+\begin{equation}\nonumber
+ \bar{s}_D^{\ast}(z_D)  = \bar{s}_{HD}^{\ast}(z_D) + \bar{s}_{HD}^{\ast}(z_D=1) \frac{\cosh(\eta z_D)}{\frac{\eta}{\omega_2}  \sinh(\eta) - \cosh(\eta)}
+\end{equation} 
 This expression is identical in form to \cite[eqn.\ C17]{mishra10},
-with $\omega_2$ instead of $q$.  The final Laplace-Hankel form of the unsaturated zone solution can be found by substituting $A_1$ into one of the expressions for $\tilde\beta$ above, and substituting that into \eqref{eq:sigma}.
+with $\omega_2$ instead of $q$.  The final Laplace-Hankel form of the
+unsaturated zone solution can be found by substituting $A_1$ into one
+of the expressions for $\tilde\beta$ above, and substituting that into
+\eqref{eq:sigma}.
+
+\section{Formulation of Finite Difference Solution}
+The ordinary differential equation in the vadose zone can be solved
+via finite differences in space, while still within Laplace-Hankel
+space.  This is done mostly as a check of the other derivation, and
+partly was done on a dare by a co-worker.
+
+
 \bibliographystyle{alpha}
 \bibliography{mn}
 
