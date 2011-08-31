@@ -116,7 +116,7 @@ contains
     ! capacity & conductivity sorptive numbers (1/length)
     ! negative air-entry & saturation pressures (>0)
     ! unsaturated zone thickness (length)
-    read(19,*) f%ac, f%ak, f%psia, f%psik, f%usL, s%order
+    read(19,*) f%ac, f%ak, f%psia, f%psik, f%usL, s%MNtype, s%order
     
     ! ## echo check parameters #####
 
@@ -147,6 +147,7 @@ contains
        write(*,'(A,'//RFMT//')') 'beta (Malama linearization factor):: ',f%beta
        write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman ac,ak (sorptive #s), psia,psik '//&
             & '(neg air-entry & sat. pressures):: ', f%ac,f%ak,f%psia,f%psik
+       write(*,'(A,I0)') 'Mishra&Neuman type of solution (0=naive,1=simple,2=FD)::'
        write(*,'(A,'//RFMT//')') 'unsaturated zone thickness:: ',f%usL
        write(*,'(A,I0,'//RFMT//')') 'unsaturated zone FD order, FD h:: ',&
             & s%order,f%usL/(s%order-1)
@@ -182,6 +183,12 @@ contains
       
     if (s%order < 3) then
        write(*,*) 'ERROR: order of Mishra/Neuman finite difference matrix must be >=3',s%order
+       stop
+    end if
+
+    if (s%MNtype <0 .or. s%MNtype > 2) then
+       write(*,*) 'ERROR: invalid choice for Mishra/Neuman solution type '&
+            & //'(naive=0,simple=1,finite difference=2)',s%MNtype
        stop
     end if
 

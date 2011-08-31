@@ -142,6 +142,7 @@ module types
      real(DP) :: Tc = -999.  ! time
      real(DP) :: Hc = -999.  ! head
 
+     integer :: MNtype = -999  ! switch to pick method of solving Mishra/Neuman2010
      integer :: order = -999 ! order of FD matrix
 
      ! which unconfined model to use?

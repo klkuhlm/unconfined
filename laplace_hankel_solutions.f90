@@ -69,7 +69,17 @@ contains
 
     case(6)
        ! Mishra/Neuman  2010 model
-       fp(1:np,1:nz) = mishraNeuman2010a(a,s%zD,s,lap%p,f,w)
+       select case(s%MNtype)
+       case(0)
+          ! naive implementation of paper
+          fp(1:np,1:nz) = mishraNeuman2010(a,s%zD,s,lap%p,f,w)
+       case(1)
+          ! simple solving of problem using transformation
+          fp(1:np,1:nz) = mishraNeuman2010simple(a,s%zD,s,lap%p,f,w)
+       case(2)
+          ! finite difference solution of ODE in vadose zone
+          fp(1:np,1:nz) = mishraNeuman2010FD(a,s%zD,s,lap%p,f,w)
+       end select
        
     end select
 
@@ -435,7 +445,7 @@ contains
 999 format(A,ES11.3E3,4(A,2('(',ES12.3E4,',',ES12.3E4,')')))
   end function mishraNeuman2010
   
-  function mishraNeuman2010a(a,zD,s,p,f,w) result(sD)
+  function mishraNeuman2010simple(a,zD,s,p,f,w) result(sD)
     use constants, only : DP, EP
     use types, only : well, formation, solution
     use utility, only : operator(.X.) 
@@ -479,7 +489,7 @@ contains
          & spread(eta(:)/omega(:)*sinh(eta(:)) - cosh(eta(:)),2,nz)
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
-  end function mishraNeuman2010a
+  end function mishraNeuman2010simple
 
   function mishraNeuman2010FD(a,zD,s,p,f,w) result(sD)
     use constants, only : DP, EP
