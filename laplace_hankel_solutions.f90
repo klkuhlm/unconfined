@@ -265,8 +265,8 @@ contains
     use constants, only : DP, EP, EYE
     use types, only : well, formation, solution
     use utility, only : operator(.X.) 
-    use complex_bessel
-    use complex_bessel2
+!!$    use complex_bessel
+!!$    use complex_bessel2
     use cbessel, only : cbesj,cbesy ! Amos routine
     implicit none
     
@@ -281,7 +281,7 @@ contains
     complex(EP), dimension(size(p),size(zD)+1) :: sH
     integer ::  np, nz
 
-    real(EP) :: nuep, B2, nv
+    real(EP) :: nuep, B2 !, nv
     complex(EP), dimension(size(p)) :: phiep
 
     real(DP), dimension(0:3) :: beta
@@ -297,7 +297,7 @@ contains
     integer(4), parameter :: kode = 2, num = 2
     integer(4) :: nzero, ierr
     complex(DP), dimension(size(p)) :: phi
-    complex(EP), allocatable :: tmp2(:,:)
+!!$    complex(EP), allocatable :: tmp2(:,:)
     complex(DP), dimension(2) :: tmp
     real(DP) :: nu
     integer :: i
@@ -325,15 +325,15 @@ contains
     phi(1:np) = cmplx(phiep(1:np),kind=DP)
     nu = real(nuep,kind=DP)
 
-    if (all(abs(phi(:)) < 2.0*(nu+1.0))) then
-       call cjy(nuep,    phiep(:),J(:,1),Y(:,1))
-       call cjy(nuep+1.0,phiep(:),J(:,2),Y(:,2))
-    else
+!!$    if (all(abs(phi(:)) < 2.0*(nu+1.0))) then
+!!$       call cjy(nuep,    phiep(:),J(:,1),Y(:,1))
+!!$       call cjy(nuep+1.0,phiep(:),J(:,2),Y(:,2))
+!!$    else
        do i= 1,np
-          if (2.0*(nu+1.0) > abs(phi(i))) then
-             call cjy(nuep,    phiep(i:i),J(i,1),Y(i,1))
-             call cjy(nuep+1.0,phiep(i:i),J(i,2),Y(i,2))
-          else
+!!$          if (2.0*(nu+1.0) > abs(phi(i))) then
+!!$             call cjy(nuep,    phiep(i:i),J(i,1),Y(i,1))
+!!$             call cjy(nuep+1.0,phiep(i:i),J(i,2),Y(i,2))
+!!$          else
              call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
                   & nz=nzero,ierr=ierr)
              if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
@@ -352,17 +352,17 @@ contains
                 Y(i,1:2) = tmp(1:2)
              end if
 
-             if (any(isnan(abs(J(i,1:2)))) .or. any(isnan(abs(Y(i,1:2))))) then
-                allocate(tmp2(4,0:int(nu)+2))                   
-                call cjyva(nuep+1.0,phiep(i),nv,tmp2(1,:),tmp2(2,:),tmp2(3,:),tmp2(4,:))
-                J(i,1:2) = tmp2(1,int(nv)-1:int(nv))
-                Y(i,1:2) = tmp2(3,int(nv)-1:int(nv))
-                deallocate(tmp2)
-                print *, 'zD=LD',nuep+1.0,phiep(i),J(i,1),Y(i,1)
-             end if
-          end if
+!!$             if (any(isnan(abs(J(i,1:2)))) .or. any(isnan(abs(Y(i,1:2))))) then
+!!$                allocate(tmp2(4,0:int(nu)+2))                   
+!!$                call cjyva(nuep+1.0,phiep(i),nv,tmp2(1,:),tmp2(2,:),tmp2(3,:),tmp2(4,:))
+!!$                J(i,1:2) = tmp2(1,int(nv)-1:int(nv))
+!!$                Y(i,1:2) = tmp2(3,int(nv)-1:int(nv))
+!!$                deallocate(tmp2)
+!!$                print *, 'zD=LD',nuep+1.0,phiep(i),J(i,1),Y(i,1)
+!!$             end if
+!!$          end if
        end do
-    end if
+!!$    end if
     
     ! compute v3
     arg1 = real(beta(3),EP) + nuep*beta(1)
@@ -382,15 +382,15 @@ contains
     phiep(1:np) = EYE*sqrt(4.0*B1/beta(1)**2)
     phi(1:np) = cmplx(phiep,kind=DP)
 
-    if (all(abs(phi(:)) < 2.0*(nu+1.0))) then
-       call cjy(nuep,    phiep(:),J(:,1),Y(:,1))
-       call cjy(nuep+1.0,phiep(:),J(:,2),Y(:,2))
-    else
+!!$    if (all(abs(phi(:)) < 2.0*(nu+1.0))) then
+!!$       call cjy(nuep,    phiep(:),J(:,1),Y(:,1))
+!!$       call cjy(nuep+1.0,phiep(:),J(:,2),Y(:,2))
+!!$    else
        do i= 1,np
-          if (2.0*(nu+1.0) > abs(phi(i))) then
-             call cjy(nuep,    phiep(i:i),J(i,1),Y(i,1))
-             call cjy(nuep+1.0,phiep(i:i),J(i,2),Y(i,2))
-          else
+!!$          if (2.0*(nu+1.0) > abs(phi(i))) then
+!!$             call cjy(nuep,    phiep(i:i),J(i,1),Y(i,1))
+!!$             call cjy(nuep+1.0,phiep(i:i),J(i,2),Y(i,2))
+!!$          else
              call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
                   &nz=nzero,ierr=ierr)
              if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
@@ -408,17 +408,17 @@ contains
              else
                 Y(i,1:2) = tmp(1:2)
              end if
-          end if
-          if (any(isnan(abs(J(i,1:2)))) .or. any(isnan(abs(Y(i,1:2))))) then
-             allocate(tmp2(4,0:int(nu)+2))
-             call cjyva(nuep+1.0,phiep(i),nv,tmp2(1,:),tmp2(2,:),tmp2(3,:),tmp2(4,:))
-             J(i,1:2) = tmp2(1,int(nv)-1:int(nv))
-             Y(i,1:2) = tmp2(3,int(nv)-1:int(nv))
-             deallocate(tmp2)
-             print *, 'zD=0 ',nuep+1.0,phiep(i),J(i,1),Y(i,1)
-          end if
+!!$          end if
+!!$          if (any(isnan(abs(J(i,1:2)))) .or. any(isnan(abs(Y(i,1:2))))) then
+!!$             allocate(tmp2(4,0:int(nu)+2))
+!!$             call cjyva(nuep+1.0,phiep(i),nv,tmp2(1,:),tmp2(2,:),tmp2(3,:),tmp2(4,:))
+!!$             J(i,1:2) = tmp2(1,int(nv)-1:int(nv))
+!!$             Y(i,1:2) = tmp2(3,int(nv)-1:int(nv))
+!!$             deallocate(tmp2)
+!!$             print *, 'zD=0 ',nuep+1.0,phiep(i),J(i,1),Y(i,1)
+!!$          end if
        end do
-    end if
+!!$    end if
     
     arg2(1:np) = beta(1)*phiep(1:np)
     aa(2,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)

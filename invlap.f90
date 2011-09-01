@@ -29,6 +29,7 @@ contains
     real(DP), intent(in), dimension(:) :: t   ! vector of times
     type(invLaplace), intent(in) :: lap            ! structure of inputs
     complex(EP), intent(in), dimension(0:2*lap%M) :: fp
+    complex(EP), dimension(0:2*lap%M) :: ffpp
     real(EP), dimension(size(t)) :: ft        ! output
 
     complex(EP), dimension(0:2*lap%M,0:lap%M) :: e
@@ -42,16 +43,21 @@ contains
     M = lap%M
     nt = size(t)
 
-    ! there will be problems is fp(:)==0, or any values are NaN
-    if(maxval(abs(fp)) > tiny(1.0_EP) .and. .not. any(isnan(abs(fp)))) then
+    ! there will be problems if fp(:)==0, or any values are NaN
+    if(maxval(abs(fp)) > tiny(1.0_EP)) then
+
+       ffpp = fp
+       where(isnan(real(fp)) .or. isnan(aimag(fp)))
+          ffpp = (0.0_EP,0.0_EP)
+       end where
 
        ! Re(p) -- this is the de Hoog parameter c
        gamma = lap%alpha - log(lap%tol)/(2.0*tee)
 
        ! initialize Q-D table 
        e(0:2*M,0) = cmplx(0.0,0.0,EP)
-       q(0,1) = fp(1)/(fp(0)/2.0) ! half first term
-       q(1:2*M-1,1) = fp(2:2*M)/fp(1:2*M-1)
+       q(0,1) = ffpp(1)/(ffpp(0)/2.0) ! half first term
+       q(1:2*M-1,1) = ffpp(2:2*M)/ffpp(1:2*M-1)
 
        ! rhombus rule for filling in triangular Q-D table
        do r = 1,M
@@ -67,7 +73,7 @@ contains
        end do
 
        ! build up continued fraction coefficients
-       d(0) = fp(0)/2.0 ! half first term
+       d(0) = ffpp(0)/2.0 ! half first term
        forall(r = 1:M)
           d(2*r-1) = -q(0,r) ! even terms
           d(2*r)   = -e(0,r) ! odd terms
@@ -101,6 +107,13 @@ contains
        ft(1:nt) =  exp(gamma*t(:))/tee * real(A(2*M,:)/B(2*M,:))
 
     else  !! entire f(p) vector is zero
+!!$       n = -999
+!!$       do r=0,2*M
+!!$          if (isnan(abs(ffpp(r)))) then
+!!$             n = r
+!!$          end if
+!!$       end do
+!!$       write(*,'(2(A,I0))') 'NaN in f(p), beginning ',n,' out of ',2*M+1
        ft = 0.0
     end if
   end function deHoog_invLap_vect

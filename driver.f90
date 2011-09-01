@@ -6,7 +6,7 @@ program Driver
   use driver_io, only : read_input, write_timeseries_header, write_contour_header
   
   ! constants and coefficients
-  use constants, only : DP, PI, EP, RFMT, HFMT
+  use constants, only : DP, EP, RFMT, HFMT
  
   ! function to be evaluated in Laplace/Hankel space
   use laplace_hankel_solutions, only : soln => lap_hank_soln
