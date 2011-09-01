@@ -302,19 +302,19 @@ the subscript indicates the current node $j$ and the node one above
 $j+1$ and below $j-1$.  The node indices run $0 \le j \le N-1$, where
  there are $N$ nodes and $h = L_D / (N - 1)$.
 
-In the following $\omega_i = B_1 e^{\beta_1 \left( 1 - z_D\right)} + B_2$;
+In the following $\omega_j = B_1 e^{-\beta_1 jh} + B_2$;
 explicitly writing out the finite-difference matrix for a 3-node
 problem with node 1 at $z_D=1$ and node 3 at $z_D=1+L/b$, without
 explicitly handling the boundary conditions, is
 \begin{equation}
   \label{eq:fd-01}
   \left[ \begin{matrix}
-    \frac{1}{h^2} & \left(\frac{\beta_3}{h} - \frac{2}{h^2} - \omega_i\right) &
+    \frac{1}{h^2} & \left(\frac{\beta_3}{h} - \frac{2}{h^2} - \omega_0\right) &
     \frac{1}{h^2} - \frac{\beta_3}{h} & 0 & 0 \\ 
-    0 & \frac{1}{h^2} & \left(\frac{\beta_3}{h} - \frac{2}{h^2} - \omega_i \right)&
+    0 & \frac{1}{h^2} & \left(\frac{\beta_3}{h} - \frac{2}{h^2} - \omega_1 \right)&
     \frac{1}{h^2} - \frac{\beta_3}{h} & 0  \\ 
     0 & 0 & \frac{1}{h^2} & \left(\frac{\beta_3}{h} - \frac{2}{h^2}  -
-      \omega_i \right) &
+      \omega_2 \right) &
     \frac{1}{h^2} - \frac{\beta_3}{h} \\ 
   \end{matrix}\right] 
 \left[\begin{matrix}
@@ -347,7 +347,7 @@ $\mathbf{A}$
 \begin{equation}
   \nonumber
   \frac{1}{h^2} \left[ \sigma_0 - hA_1 \eta \sinh(\eta)\right] +
-  \left(\frac{\beta_3}{h} - \frac{2}{h^2}  - \omega_i\right) \sigma_0
+  \left(\frac{\beta_3}{h} - \frac{2}{h^2}  - \omega_0\right) \sigma_0
   + \left(\frac{1}{h^2} - \frac{\beta_3}{h}\right) \sigma_1 = 0
 \end{equation}
 Further using head continuity equation $\sigma_0 = A_1 \cosh(\eta) +
@@ -355,7 +355,7 @@ s_{H}(z_D=1)$ to eliminate $\sigma_0$ from this first row leads to
 \begin{equation}
  \nonumber
     \frac{A_1}{h}  \eta \sinh(\eta) +
-  \left( \frac{\beta_3}{h} - \frac{1}{h^2} + - \omega_i\right) \left[
+  \left( \frac{\beta_3}{h} - \frac{1}{h^2} + - \omega_0\right) \left[
     A_1 \cosh(\eta) + s_{H}(1)\right] + \left(\frac{1}{h^2} -
     \frac{\beta_3}{h}\right) \sigma_1 = 0.
 \end{equation}
@@ -381,8 +381,8 @@ A_1 \\ \sigma_1 \\ \sigma_2
 -\frac{1}{h^2}s_H(1) \\ 0 
 \end{matrix}\right]
 \end{equation}
-where $c_1 = \frac{\beta_3}{h} - \frac{1}{h^2} - \omega_i$ and $c_2 =
-\frac{\beta_3}{h} - \frac{2}{h^2} - \omega_i $.  This 
+where $c_1 = \frac{\beta_3}{h} - \frac{1}{h^2} - \omega_j$ and $c_2 =
+\frac{\beta_3}{h} - \frac{2}{h^2} - \omega_j $.  This 
 $3\times 3$ case illustrates all the entries in a general $n\times
 n$ problem; including boundary nodes and an interior node.  
 
