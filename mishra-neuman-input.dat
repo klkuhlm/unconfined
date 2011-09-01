@@ -8,11 +8,11 @@
 1.21D-3  5.3D-1                :: Kr,kappa (radial K and ratio Kz/Kr)
 1.05D-4  2.8D-1                :: Ss,Sy
 0.0D0                        ::  beta Malama linearization parameter
-2.95D+0 3.7D-1   2.0D-2 2.0D-3  5.8D+0   19   :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L, FD order
-10  1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
+2.95D+0 3.7D-1   2.0D-2 2.0D-3  5.8D+0 2  19   :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L, FD order
+20 1.0D-8  1.0D-9           :: deHoog invlap;  M,alpha,tol
 7  5                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
-1  1  10  30                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
+2  2  20  20                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
 timedata.dat  15.5            :: file to read time data from (and default t otherwise)
 spacedata.dat  2.5D0          :: file to read space data from (and default r otherwise)
 0.5  0.0D0  3  2.54D-2  20.0                  :: top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
-mishra-neuman-test-simple.out
+mishra-neuman-test-fd.out

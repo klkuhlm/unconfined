@@ -147,7 +147,7 @@ contains
        write(*,'(A,'//RFMT//')') 'beta (Malama linearization factor):: ',f%beta
        write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman ac,ak (sorptive #s), psia,psik '//&
             & '(neg air-entry & sat. pressures):: ', f%ac,f%ak,f%psia,f%psik
-       write(*,'(A,I0)') 'Mishra&Neuman type of solution (0=naive,1=simple,2=FD)::'
+       write(*,'(A,I0)') 'Mishra&Neuman type of solution (0=naive,1=simple,2=FD)::',s%MNtype
        write(*,'(A,'//RFMT//')') 'unsaturated zone thickness:: ',f%usL
        write(*,'(A,I0,'//RFMT//')') 'unsaturated zone FD order, FD h:: ',&
             & s%order,f%usL/(s%order-1)

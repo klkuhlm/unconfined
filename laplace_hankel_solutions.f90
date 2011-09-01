@@ -485,7 +485,8 @@ contains
        print *, 'B1(1:2)',B1(1:2),'B2',B2,'omgega(1:2)',omega(1:2)
     end if
     
-    sU(1:np,1:nz) = spread(sH(1:np,nz+1),2,nz)* cosh(eta(1:np) .X. s%zD(1:nz))/ &
+    sU(1:np,1:nz) = spread(sH(1:np,nz+1),2,nz)* &
+         & cosh(eta(1:np) .X. s%zD(1:nz))/ &
          & spread(eta(:)/omega(:)*sinh(eta(:)) - cosh(eta(:)),2,nz)
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
@@ -552,24 +553,24 @@ contains
 
     ! super-diagonal (last entry (n) is undefined)
     c(1:n-1,1:np) = invhsq - beta(3)/h
-!!$    c(n,1:np) = -999999.9
+    c(n,1:np) = -999999.9
 
     ! sub-diagonal (first entry 1 is undefined, second entry is different)
     aa(2:n,1:np) = invhsq  ! a is already taken by Hankel parameter
     aa(2,1:np) = aa(2,1:np)*cosh(eta(:))
-!!$    aa(1,1:np) = 7777777.7
+    aa(1,1:np) = 7777777.7
 
     ! right-hand side (all zero but first and second rows)
     v(3:n,1:np) = 0.0_EP
     v(2,1:np) =   -invhsq*sH(1:np,nz+1)
     v(1,1:np) = -cc(1:np)*sH(1:np,nz+1)
 
-    ! sigma(1,1:np) is A1, which is constant in
+    ! sigma(1,1:np) is A1, the constant needed in
     ! solution for saturated domain
     call solve_tridiag(aa,b,c,v,sigma)
 
-    ! sometimes sigma_1 is underflowing while cosh(eta*z) is overflowing
-    ! and this should allow the solution to proceed ( 
+    ! @ early times sigma_1 is underflowing while cosh(eta*z) is overflowing;
+    ! this should allow the solution to proceed (~Hantush)
     where(spread(abs(sigma(1,1:np)) > tiny(1.0_EP),2,nz))
        sD(1:np,1:nz) = sH(1:np,1:nz) + spread(sigma(1,:),2,nz)*&
             & cosh(eta(1:np) .X. s%zD(1:nz))
