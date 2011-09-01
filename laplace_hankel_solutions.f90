@@ -469,7 +469,7 @@ contains
     nz = size(zD)
 
     beta(0) = f%ac*f%Sy/f%Ss
-    beta(1) = f%lambdaD  ! b*(ak-ac) << is this off by (-1)?
+    beta(1) = -f%lambdaD  ! b*(ak-ac) << is this off by (-1)?
     beta(2) = f%ak*f%b1  ! ak*(psi_a - psi_k);
     beta(3) = f%akD
 
@@ -532,9 +532,9 @@ contains
     forall(j=1:n) ii(j) = j-1
 
     beta(0) = f%ac*f%Sy/f%Ss
-    beta(1) = f%lambdaD  ! b*(ak-ac) << is this off by (-1)?
-    beta(2) = f%ak*f%b1  ! ak*(psi_a - psi_k);
-    beta(3) = f%akD
+    beta(1) = -f%lambdaD  ! b*(ac-ak)  (-1* definition in driver_io.f90)
+    beta(2) = f%ak*f%b1   ! ak*(psi_a - psi_k)
+    beta(3) = f%akD       ! ak*b
 
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
@@ -556,7 +556,7 @@ contains
     c(n,1:np) = -999999.9
 
     ! sub-diagonal (first entry 1 is undefined, second entry is different)
-    aa(2:n,1:np) = invhsq  ! a is already taken by Hankel parameter
+    aa(2:n,1:np) = invhsq  
     aa(2,1:np) = aa(2,1:np)*cosh(eta(:))
     aa(1,1:np) = 7777777.7
 
