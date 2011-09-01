@@ -101,7 +101,7 @@ contains
 
   function hantush(a,zD,sol,p,f,w) result(udp)
     ! implemented in the form given in Malama, Kuhlman & Barrash 2008 
-    use constants, only : DP, EP, SMALLZ
+    use constants, only : DP, EP
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
     use utility, only : operator(.X.) 
@@ -167,7 +167,7 @@ contains
   end function hantush
   
   function hantushstorage(a,zD,sol,p,f,w) result(u)
-    use constants, only : DP, EP, PI, SMALLZ
+    use constants, only : DP, EP, PI
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
     use utility, only : operator(.X.) 
@@ -262,7 +262,7 @@ contains
   end function hantushstorage
 
   function mishraNeuman2010(a,zD,s,p,f,w) result(sD)
-    use constants, only : DP, EP, EYE, PIEP, E, SQRT2
+    use constants, only : DP, EP, EYE
     use types, only : well, formation, solution
     use utility, only : operator(.X.) 
     use complex_bessel
