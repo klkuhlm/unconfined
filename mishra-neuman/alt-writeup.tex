@@ -26,7 +26,7 @@
 \patchBothAmsMathEnvironmentsForLineno{equation}
 \patchBothAmsMathEnvironmentsForLineno{align}}
 
-\title{Alternate unsaturated zone form forMishra-Neuman}
+\title{Alternate Formulation for Mishra-Neuman Solution}
 \begin{document}
 \maketitle
 \linenumbers
@@ -34,9 +34,9 @@
 The governing equation in the unsaturated zone, as used by \cite{mishra10} and \cite{tartakovsky07}, is
 \begin{equation}
   \label{eq:unsatDim}
-  K_r k_o(z) \frac{1}{r} \frac{\partial}{\partial r} \left( r\frac{\partial \sigma}{\partial r} \right) + K_z \frac{\partial}{\partial z} \left( k_0(z) \frac{\partial \sigma}{\partial z}\right) = C_0(z) \frac{\partial \sigma}{\partial t}
+  K_r k_0(\psi) \frac{1}{r} \frac{\partial}{\partial r} \left( r\frac{\partial \sigma}{\partial r} \right) + K_z \frac{\partial}{\partial z} \left( k_0(z) \frac{\partial \sigma}{\partial z}\right) = C(\psi) \frac{\partial \sigma}{\partial t}
 \end{equation}
-over the unsaturated zone, defined as $b \le z \le b+L$.  Further, the unsaturated parameters are assumed to only be functions of $z$, $k_0(z)=k_0(\theta_0)$ and $C_0(z)=C_0(\theta_0)$.  The initial and boundary conditions for the unsaturated zone are  
+where $K_r$ and $K_z$ are the radial and vertical saturated hydraulic conductivities [L T$^{-1}$], $k_0$ is the dimensionless isotropic relative hydraulic conductivity ($0 < k_0 \le 1$), $\sigma = h_0 - h = b +\psi_a - h$ is drawdown in the vadose zone [L], $C(\psi)=\frac{d\eta}{d \psi}$ is the dimensionless specific moisture capacity, and $\theta$ is dimensionless volumetric water content.  The unsaturated zone begins at the top of the aquifer, and is defined as $b \le z \le b+L$.  Further, the unsaturated parameters are assumed to only be functions of $z$, $k_0(z)=k_0(\theta_0)$ and $C_0(z)=C_0(\theta_0)$.  The initial and boundary conditions for the unsaturated zone are  
 \begin{equation}\nonumber
 \sigma(r,z,0) = 0
 \end{equation}
@@ -47,22 +47,22 @@ over the unsaturated zone, defined as $b \le z \le b+L$.  Further, the unsaturat
 \frac{\partial \sigma}{\partial z}=0 \qquad z=b+L
 \end{equation} and 
 \begin{equation}\nonumber
-\lim_{r \rightarrow 0} r \frac{\partial \sigma}{\partial r} = 0 \qquad b\le z \le b+L
+\lim_{r \rightarrow 0} r \frac{\partial \sigma}{\partial r} = 0 \qquad b\le z \le b+L.
 \end{equation}
 
-Drawdown in the vadose zone is defined as $\sigma = h_0 - h=b+\psi_a - h$, $0 \le k_0 \le 1$ is the isotropic relative hydraulic conductivity, $C(\psi)=\frac{d\eta}{d \psi}$ is the specific moisture capacity and $\theta$ is volumetric water content.  Drawdown in the aquifer, $s$, and the vadose zone are connected using compatibility conditions at the water table
+Drawdown in the aquifer, $s$, and the vadose zone $\sigma$ are connected using compatibility conditions at the water table ($z=b$);
 \begin{equation}\nonumber
 s=\sigma \qquad z=b
 \end{equation}
 \begin{equation}\nonumber
-\frac{\partial s}{\partial z}=\frac{\partial \sigma}{\partial z} \qquad z=b
+\frac{\partial s}{\partial z}=\frac{\partial \sigma}{\partial z} \qquad z=b.
 \end{equation} 
 
 The moisture retention curve in the vadose zone is represented as an exponential function
 \begin{equation}\nonumber
 S_e = \frac{\theta(\psi) - \theta_r}{S_y} = e^{a_c \left( \psi - \psi_a \right)} \qquad a_c \ge 0 
 \end{equation}
-where $S_e$ is effective saturation, $\theta_r$ is residual water content, and $S_y=\theta_s - \theta_r$ is drainable porosity (specific yield).  The Gardner model for relative hydraulic conductivity is used,
+where $S_e$ is dimensionless effective saturation, $\theta_r$ is dimensionless residual water content, and $S_y=\theta_s - \theta_r$ is dimensionless drainable porosity (specific yield).  The Gardner model for relative hydraulic conductivity is used; the relative hydraulic conductivity is
 \begin{equation}
   \nonumber
   k(\psi) = \left  \{ 
@@ -72,7 +72,7 @@ where $S_e$ is effective saturation, $\theta_r$ is residual water content, and $
     \end{array} 
 \right . \qquad a_k \ge 0.
 \end{equation}
-The 4-parameter exponential model for hydraulic conductivity used in the vadose zone is 
+The four-parameter exponential model for hydraulic conductivity used in the vadose zone is 
 \begin{equation}
   \label{eq:Gardner}
  k_0(z)=e^{a_k\left( b_1 + b - z\right)} \qquad b_1=\psi_a-\psi_k
@@ -80,25 +80,43 @@ The 4-parameter exponential model for hydraulic conductivity used in the vadose 
 and the moisture capacity is
 \begin{equation}
   \label{eq:mrc}
-C_0(z) = S_y a_c e^{a_c \left( b-z\right)}
+C_0(z) = S_y a_c e^{a_c \left( b-z\right)}.
 \end{equation}
+
+The governing equation  must be non-dimensionalized first; \eqref{eq:unsatDim} can be written in dimensionless form as
+\begin{equation}
+  \label{eq:unsatDimless}
+  k_0(\psi_D) \frac{1}{r_D} \frac{\partial}{\partial r_D} \left( r_D\frac{\partial \sigma_D}{\partial r_D} \right) + \kappa \frac{\partial}{\partial z_D} \left( k_0(z_D) \frac{\partial \sigma_D}{\partial z_D}\right) = \gamma C_0(z_D) \frac{\partial \sigma_D}{\partial t_D}
+\end{equation}
+where $r_D=r/b$ is the dimensionless radial coordinate, $z_D=z/b$ is the dimensionless vertical coordinate, $\kappa=K_z/K_r$ is the anisotropy ratio, $\sigma_D = \sigma/H_c$ is dimensionless vadose zone drawdown, $H_C$ is a characteristic head, $t_D = t K_r / (b^2 S_S)$ is dimensionless time, and $\gamma = S_y a_c/S_S$ is the dimensionless storage ratio.  The hydraulic conductivity constituative model is non-dimensionalized as
+\begin{equation}
+  \label{eq:GardnerDimless}
+ k_0(z_D)=e^{a_{kD} \left( b_{1D} + 1 - z_D \right)},
+\end{equation}
+where $a_{kD} = a_k b$ and $b_{1D}=b_1/b$, and the moisture capacity model is non-dimensionalized as
+\begin{equation}
+  \label{eq:mrcDimless}
+C_0(z_D) = e^{a_{cD} \left( 1-z_D\right)},
+\end{equation}
+where $a_{cD} = a_c b$.
+
 \section{Unsaturated Zone Solution}
-The Laplace transformation (overbar and $p$) of (\ref{eq:unsatDim}) results in
+The dimensionless Laplace transformation (overbar and $p$) of (\ref{eq:unsatDimless}) results in
 \begin{equation}
   \label{eq:unsatLap}
-   k_o(z) \frac{1}{r} \frac{\partial}{\partial r} \left( r\frac{\partial \bar{\sigma}}{\partial r} \right) +\kappa \frac{\partial}{\partial z} \left( k_0(z) \frac{\partial \bar{\sigma}}{\partial z}\right) = p \frac{C_0(z)}{K_r}  \bar{\sigma}
+   k_0(z_D) \frac{1}{r_D} \frac{\partial}{\partial r_D} \left( r_D\frac{\partial \bar{\sigma}_D}{\partial r_D} \right) +\kappa \frac{\partial}{\partial z_D} \left( k_0(z_D) \frac{\partial \bar{\sigma}_D}{\partial z_D}\right) = p \gamma C_0(z_D)  \bar{\sigma}_D
 \end{equation}
-where $\kappa=K_z/K_r$, with the associated transformed boundary and initial conditions of
+where , with the associated transformed dimensionless boundary and initial conditions of
 \begin{equation}\nonumber
- \bar{\sigma}(\infty,z,p) = 0
+ \bar{\sigma}_D(\infty,z_D,p) = 0
 \end{equation}
 \begin{equation}\nonumber
- \frac{\partial \bar{\sigma}}{\partial z}=0 \qquad z=b+L
+ \frac{\partial \bar{\sigma}_D}{\partial z_D}=0 \qquad z_D=1+L_D
 \end{equation}
  \begin{equation}\nonumber
-\lim_{r \rightarrow 0} r \frac{\partial \bar{\sigma}}{\partial r} = 0 \qquad b\le z \le b+L
+\lim_{r_D \rightarrow 0} r_D \frac{\partial \bar{\sigma}_D}{\partial r_D} = 0 \qquad 1\le z_D \le 1+L_D
 \end{equation}
-The Hankel transformation (superscript $\ast$ and $a$) of (\ref{eq:unsatLap}) and substitution of the constitutive models (\ref{eq:Gardner}) and (\ref{eq:mrc}) results in the ordinary differential equation
+The dimensionless Hankel transformation (superscript $\ast$ and $a$) of (\ref{eq:unsatLap}) and substitution of the constitutive models (\ref{eq:Gardner}) and (\ref{eq:mrc}) results in the ordinary differential equation
 \begin{equation}
   \label{eq:unsatHank}
    -a^2 \bar{\sigma}^{\ast} + \kappa a_k \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}}{\mathrm{d} z^2}  = p e^{-a_k b_1} \frac{S_y a_c} {K_r}  e^{\left(a_k -a_c \right)\left( b - z\right)} \bar{\sigma}^{\ast} 
