@@ -83,12 +83,12 @@ and the moisture capacity is
 C_0(z) = S_y a_c e^{a_c \left( b-z\right)}.
 \end{equation}
 
-The governing equation  must be non-dimensionalized first; \eqref{eq:unsatDim} can be written in dimensionless form as
+The governing equation  must be non-dimensionalized before proceeding further with the solution. Equation \eqref{eq:unsatDim} can be written in dimensionless form as
 \begin{equation}
   \label{eq:unsatDimless}
   k_0(\psi_D) \frac{1}{r_D} \frac{\partial}{\partial r_D} \left( r_D\frac{\partial \sigma_D}{\partial r_D} \right) + \kappa \frac{\partial}{\partial z_D} \left( k_0(z_D) \frac{\partial \sigma_D}{\partial z_D}\right) = \gamma C_0(z_D) \frac{\partial \sigma_D}{\partial t_D}
 \end{equation}
-where $r_D=r/b$ is the dimensionless radial coordinate, $z_D=z/b$ is the dimensionless vertical coordinate, $\kappa=K_z/K_r$ is the anisotropy ratio, $\sigma_D = \sigma/H_c$ is dimensionless vadose zone drawdown, $H_C$ is a characteristic head, $t_D = t K_r / (b^2 S_S)$ is dimensionless time, and $\gamma = S_y a_c/S_S$ is the dimensionless storage ratio.  The hydraulic conductivity constituative model is non-dimensionalized as
+where $r_D=r/b$ is the dimensionless radial coordinate, $z_D=z/b$ is the dimensionless vertical coordinate, $\kappa=K_z/K_r$ is the anisotropy ratio, $\sigma_D = \sigma/H_c$ is dimensionless vadose zone drawdown, $H_C$ is a characteristic head, $t_D = t K_r / (b^2 S_S)$ is dimensionless time, and $\gamma = S_y a_c/S_S$ is the dimensionless storage ratio.  The hydraulic conductivity constitutive model is non-dimensionalized as
 \begin{equation}
   \label{eq:GardnerDimless}
  k_0(z_D)=e^{a_{kD} \left( b_{1D} + 1 - z_D \right)},
@@ -101,7 +101,7 @@ C_0(z_D) = e^{a_{cD} \left( 1-z_D\right)},
 where $a_{cD} = a_c b$.
 
 \section{Unsaturated Zone Solution}
-The dimensionless Laplace transformation (overbar and $p$) of (\ref{eq:unsatDimless}) results in
+The dimensionless Laplace transformation (over-bar and $p$) of (\ref{eq:unsatDimless}) results in
 \begin{equation}
   \label{eq:unsatLap}
    k_0(z_D) \frac{1}{r_D} \frac{\partial}{\partial r_D} \left( r_D\frac{\partial \bar{\sigma}_D}{\partial r_D} \right) +\kappa \frac{\partial}{\partial z_D} \left( k_0(z_D) \frac{\partial \bar{\sigma}_D}{\partial z_D}\right) = p \gamma C_0(z_D)  \bar{\sigma}_D
@@ -114,123 +114,111 @@ where , with the associated transformed dimensionless boundary and initial condi
  \frac{\partial \bar{\sigma}_D}{\partial z_D}=0 \qquad z_D=1+L_D
 \end{equation}
  \begin{equation}\nonumber
-\lim_{r_D \rightarrow 0} r_D \frac{\partial \bar{\sigma}_D}{\partial r_D} = 0 \qquad 1\le z_D \le 1+L_D
+\lim_{r_D \rightarrow 0} r_D \frac{\partial \bar{\sigma}_D}{\partial r_D} = 0 \qquad 1\le z_D \le 1+L_D,
 \end{equation}
-The dimensionless Hankel transformation (superscript $\ast$ and $a$) of (\ref{eq:unsatLap}) and substitution of the constitutive models (\ref{eq:Gardner}) and (\ref{eq:mrc}) results in the ordinary differential equation
+where $L_D = L/b$ is the dimensionless vadose zone thickness.
+
+Further applying the dimensionless Hankel transformation (superscript $\ast$ and $a$) of (\ref{eq:unsatLap}), followed by substitution of the constitutive models (\ref{eq:Gardner}) and (\ref{eq:mrc}) results in the ordinary differential equation
 \begin{equation}
   \label{eq:unsatHank}
-   -a^2 \bar{\sigma}^{\ast} + \kappa a_k \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}}{\mathrm{d} z^2}  = p e^{-a_k b_1} \frac{S_y a_c} {K_r}  e^{\left(a_k -a_c \right)\left( b - z\right)} \bar{\sigma}^{\ast} 
+   -a^2 \bar{\sigma}^{\ast} - \kappa a_{kD} \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D} + \kappa \frac{\mathrm{d}^2 \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D^2}  = p \gamma \bar{\sigma}_D^{\ast}  e^{-a_{kD} b_{1D}}  e^{\left(a_{kD} -a_{cD} \right)\left( 1 - z_D\right)}  
 \end{equation}
 and the no-flow condition at the top of the vadose zone, 
 \begin{equation}\nonumber
- \frac{\mathrm{d}\bar{\sigma}^{\ast}}{\mathrm{d}z}=0 \qquad z=b+L 
+ \frac{\mathrm{d}\bar{\sigma}_D^{\ast}}{\mathrm{d}z_D}=0 \qquad z_D=1+L_D 
 \end{equation}
-Equation \ref{eq:unsatHank} can be rearranged as
+Equation \ref{eq:unsatHank} can be rearranged and regrouped as
 \begin{equation}
   \label{eq:mn-d5}
-  \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}}{\mathrm{d}z^2} - a_k \frac{\mathrm{d} \bar{\sigma}^{\ast}}{\mathrm{d}z} - \left( B e^{\lambda (z-b)} + C\right) \bar{\sigma}^{\ast}=0
+  \frac{\mathrm{d}^2 \bar{\sigma}_D^{\ast}}{\mathrm{d}z_D^2} - a_{kD} \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d}z_D} - \left[ B e^{\lambda_D (1-z_D)} + C\right] \bar{\sigma}^{\ast}=0
 \end{equation}
-where $\lambda = a_k-a_c$, $C=\frac{a^2}{\kappa}$ and
-\begin{equation}\nonumber
-B = p e^{-a_k b_1} \frac{S_y a_c} {K_r} 
-\end{equation}
-which was solved in \cite{mishra10} using a general solution from a
+where $\lambda_D = a_{kD} - a_{cD}$, $B = p\gamma e^{-a_{kD} b_{1D}}$, and $C=\frac{a^2}{\kappa}$.
+
+The dimensional form of \eqref{eq:mn-d5} was solved in \cite{mishra10} using a general solution from a
 reference book on differential equations.  The solution given in terms
 of two types of Bessel functions of complex argument and non-integer
 order is non-trivial to evaluate numerically. 
 
-To combine with existing solutions, \eqref{eq:mn-d5} must be made
-non-dimensional.  One non-dimensionalization is  
-\begin{equation}
-  \label{eq:mn-d5-dimless}
-  \frac{\mathrm{d}^2 \bar{\sigma}_D^{\ast}}{\mathrm{d}z_D^2} - \beta_3 \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d}z_D} - \left( B_1 e^{\beta_1 (1-z_D)} + B_2\right) \bar{\sigma}_D^{\ast}=0
-\end{equation}
-where $\sigma_D$ and $z_D$ are dimensionless drawdown and vertical
-coordinate, while the following dimensionless quantities are defined:
-$B_1 = e^{-\beta_2}  p \beta_0/\kappa $, 
-$B_2=a^2/\kappa$, $\beta_0=a_c S_y/S_s$, $\beta_1=b(a_c - a_k)$,
-$\beta_2=a_k b_1$, $\beta_3 = a_k b$.
-
 \subsection{Modified Solution Procedure} 
-By further modifying the $z_D$-coordinate and performing an exponential substitution, (\ref{eq:mn-d5-dimless}) can be simplified significantly and a solution can be found by integration.  Using the new dimensionless vertical coordinate 
+By further modifying the $z_D$-coordinate and performing an exponential substitution, (\ref{eq:mn-d5}) can be simplified significantly and a solution can be found by integration.  Using a scaled dimensionless vertical coordinate 
 \begin{equation}\nonumber
- \zeta=\beta_3 z_D \qquad z_D=\frac{\zeta}{\beta_3} 
+ \zeta= a_{kD} z_D \qquad z_D=\frac{\zeta}{a_{kD}} 
 \end{equation}
 the transformed differential equation representing drawdown in the vadose zone (\ref{eq:mn-d5}) becomes
 \begin{equation}
   \label{eq:nondimODE}
-  \beta_3^2 \frac{\mathrm{d}^2
-    \bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta^2} - \beta_3^2
-  \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta} - \left(
-    B_1 e^{\beta_1 (1-\zeta/\beta_3)} + B_2\right) \bar{\sigma}_D^{\ast}=0
+  a_{kD}^2 \frac{\mathrm{d}^2
+    \bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta^2} - a_{kD}^2
+  \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta} - \left[
+    B e^{\lambda_D (1-\zeta/a_{kD})} + C\right] \bar{\sigma}_D^{\ast}=0
 \end{equation}
-dividing through by $\beta_3^2$ and performing the substitution
-$\bar{\sigma}_D^{\ast}(\zeta)=e^{u(\zeta)}$ which implies
-
+we divide through by $a_{kD}^2$ and performing the substitution
+$\bar{\sigma}_D^{\ast}(\zeta)=e^{u(\zeta)}$.  This exponential change of variables implies
 \begin{equation}\nonumber
 \frac{\mathrm{d}\bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta} =
 \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u
 \end{equation} 
-and
+and therefore
 \begin{equation}\nonumber
 \frac{\mathrm{d}^2\bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta^2} =
 \frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u +
 \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u
 \end{equation}
-leads to
+which changes \eqref{eq:nondimODE} to
 \begin{equation}\nonumber
  \left[ \frac{\mathrm{d}^2u}{\mathrm{d}\zeta^2}e^u +
   \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]-  \left[
-  \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]- \frac{1}{\beta_3^2}\left( B_1 e^{\beta_1 (1-\zeta/\beta_3)} + B_2\right) e^{u}=0
+  \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u \right]- \left[ B e^{\lambda_D (1-\zeta/a_{kD})} + C\right] \frac{e^{u}}{a_{kD}^2} =0.
 \end{equation}
-multiplying by $e^{-u}$ and simplifying leads to
+Multiplying this by $e^{-u}$ and simplifying results in
 \begin{equation}
   \label{eq:expsubODE}
-   \frac{\mathrm{d}^2 u}{\mathrm{d}\zeta^2} = \left( \frac{B_1}{\beta_3^2} e^{\beta_1 (1-\zeta/\beta_3)} + \frac{B_2}{\beta_3^2}\right) 
+   \frac{\mathrm{d}^2 u}{\mathrm{d}\zeta^2} = \left[ \frac{B}{a_{kD}^2} e^{\lambda_D (1-\zeta/a_{kD})} + \frac{C}{a_{kD}^2}\right].
 \end{equation}
 
 This is an integrable equation; one indefinite integration produces
 \begin{equation}
   \label{eq:du}
-  \frac{\mathrm{d} u}{\mathrm{d}\zeta} = - \frac{B_1}{\beta_1 \beta_3} e^{\beta_1(1-\zeta/\beta_3)} + \frac{B_2}{\beta_3^2}\zeta + \alpha
+  \frac{\mathrm{d} u}{\mathrm{d}\zeta} = - \frac{B}{\lambda_D a_{kD}} e^{\lambda_D (1-\zeta/a_{kD})} + \frac{C}{a_{kD}^2}\zeta + \alpha
 \end{equation}
 where $\alpha$ is a constant of integration. A second indefinite integration produces
 \begin{equation}\nonumber
- u =  \frac{B_1}{\beta_1^2} e^{\beta_1 (1-\zeta/\beta_3)} + \frac{B_2}{2\beta_3^2}\zeta^2 + \alpha\zeta + \gamma  
+ u =  \frac{B}{\lambda_D^2} e^{\lambda_D (1-\zeta/a_{kD})} + \frac{C}{2a_{kD}^2}\zeta^2 + \alpha\zeta + \beta
 \end{equation}
-where $\gamma$ is another constant of integration.  
+where $\beta$ is another constant of integration.  
 
-Applying the exponential transformation to the boundary condition at the top of the vadose zone results in
+Also applying the exponential transformation to the boundary condition at the top of the vadose zone results in
 \begin{equation}\nonumber
-\frac{\mathrm{d}u}{\mathrm{d}\zeta} e^u=0 \qquad \zeta= \left(1+ L_D \right) \beta_3
+\frac{\mathrm{d}u}{\mathrm{d}\zeta} e^u=0 \qquad \zeta= \left(1+ L_D \right) a_{kD}
 \end{equation}
-which is used with \eqref{eq:du} to determine one of the constants
+which is used with \eqref{eq:du} to determine one of the integration constants
 \begin{equation}\nonumber
-\alpha= \frac{B_1}{\beta_1 \beta_3} e^{\beta_1 L_D} -
-\frac{B_2}{\beta_3} \left( 1+L_D \right) 
+\alpha= \frac{B}{\lambda_D a_{kD}} e^{\lambda_D L_D} -
+\frac{C}{a_{kD}} \left( 1+L_D \right) 
 \end{equation}
 
 The solution for the drawdown in the vadose zone is then
 \begin{equation}
   \nonumber
-  \bar{\sigma}_D^{\ast} (z_D) = \tilde{\gamma}\exp\left\{
-    \frac{B_1}{\beta_1^2} e^{\beta_1 (1-z_D)} + \frac{B_2}{2}z_D^2
-    +\left[ \frac{B_1}{\beta_1} e^{\beta_1 L_D}  - B_2 \left( 1+L_D\right) \right]z_D  \right\}
+  \bar{\sigma}_D^{\ast} (z_D) = \tilde{\beta}\exp\left\{
+    \frac{B}{\lambda_D^2} e^{\lambda_D (1-z_D)} + \frac{C}{2}z_D^2
+    +\left[ \frac{B}{\lambda_D} e^{\lambda_D L_D}  - C \left( 1+L_D\right) \right]z_D  \right\}
 \end{equation}
-where $\tilde{\gamma}=e^\gamma$ is a modified integration constant. This can be re-grouped as
+where $\tilde{\beta}=e^\beta$ is a modified integration constant. This can be re-grouped as
 \begin{equation}
   \label{eq:sigma}
-  \bar{\sigma}_D^{\ast} (z_D) = \tilde{\gamma}\exp\left\{
-    \frac{B_1}{\beta_1^2} \left[ e^{\beta_1 (1-z_D)} + z_D\beta_1 e^{\beta_1
-        L_D} \right] + B_2 \left[ \frac{z_D^2}{2}
+  \bar{\sigma}_D^{\ast} (z_D) = \tilde{\beta}\exp\left\{
+    \frac{B}{\lambda_D^2} \left[ e^{\lambda_D (1-z_D)} + z_D\lambda_D e^{\lambda_D
+        L_D} \right] + C \left[ \frac{z_D^2}{2}
      - \left( 1+L_D\right)z_D  \right] \right\}
 \end{equation}
-while $\tilde{\gamma}$ will be determined from the matching conditions at the water table.
+where $\tilde{\beta}$ will be determined from the matching conditions at the water table.
+
 \section{Saturated Zone Unconfined Solution}
 Following \cite{mishra10}, we decompose the saturated zone solution into two solutions: 1) the Hantush solution $s_H$ for a confined aquifer and a partially penetrating well; 2) an unconfined solution $s_U$ with no well but continuity conditions with the vadose zone solution just derived.  The solution for $s_H$ is given elsewhere, either in terms of a finite cosine transform, or a multi-layer fully penetrating solution.  
 
 The governing ordinary differential equation in Laplace-Hankel
-transform space for the saturated unconfined $s_{UD}$ is
+transform space for the saturated unconfined $\bar{s}^{\ast}_{UD}$ is
 \begin{equation}
   \label{eq:aquifer}
   \frac{\mathrm{d}^2 \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D^2} - \left( \frac{p + a^2}{\kappa} \right)\bar{s}_U^{\ast} = 0 \qquad 0 \le z_D \le 1
@@ -259,29 +247,28 @@ The general solution to \eqref{eq:aquifer} is
   \label{eq:su}
   \bar{s}_{UD}^{\ast} = A_1 \cosh(\eta z_D) + A_2 \sinh(\eta z_D)
 \end{equation}
-where $A_i$ are constants to determine and $\eta^2 = \frac{p + a^2}{\kappa}$.  The no-flow boundary condition at the bottom of the aquifer forces $A_2=0$.  
+where $A_i$ are constants to determine and $\eta^2 = \frac{p + a^2}{\kappa}$.  The no-flow boundary condition at the bottom of the aquifer forces $A_2\equiv 0$.  
 
 \section{New Solution for Saturated Zone}
 Substituting \eqref{eq:sigma} and \eqref{eq:su} into the compatibility
 equations \eqref{eq:headCont} and \eqref{eq:fluxCont} gives
 \begin{equation}\nonumber
-  A_1 \cosh(\eta) + \bar{s}_{HD}^{\ast}(z_D=1) = \tilde{\gamma}e^{\omega_1}
+  A_1 \cosh(\eta) + \bar{s}_{HD}^{\ast}(z_D=1) = \tilde{\beta}e^{\omega_1}
 \end{equation}
 \begin{equation}\nonumber
- A_1 \eta  \sinh(\eta)  = \tilde{\gamma} \omega_2 e^{\omega_1}
+ A_1 \eta  \sinh(\eta)  = \tilde{\beta} \omega_2 e^{\omega_1}
 \end{equation}
 where 
 \begin{equation}\nonumber
- \omega_1 = \frac{B_1}{\beta_1^2} \left( 1 + \beta_1 e^{\beta_1
-        L_D} \right) - B_2 \left( \frac{1}{2}
-     +L_D  \right) 
+ \omega_1 = \frac{B}{\lambda_D^2} \left( 1 + \lambda_D e^{\lambda_D
+        L_D} \right) + C \left( \frac{1}{2}- L_D  \right) 
 \end{equation}
 \begin{equation}
   \label{eq:omega2}
-  \omega_2 = \frac{B_1}{\beta_1} \left( e^{\beta_1 L_D} -1 \right) - B_2 L_D 
+  \omega_2 = \frac{B}{\lambda_D} \left( e^{\lambda_D L_D} -1 \right) - C L_D 
 \end{equation}
 are $u(z_D=1)$ and $\left. \frac{\mathrm{d} u}{\mathrm{d}z_D} \right|_{z_D=1}$
-respecively (without the $\tilde\gamma$ factor).
+respectively (without the $\tilde\beta$ factor).
 Divide the second equation by $\omega_2$ and set the left-hand-sides of the two resulting equations equal to one another.  Solving for $A_1$ leads to
 \begin{equation}\nonumber
 A_1 \cosh(\eta) + \bar{s}_{HD}^{\ast}(z_D=1) = \frac{A_1  \eta}{\omega_2}  \sinh(\eta) 
@@ -303,37 +290,37 @@ of the expressions for $\tilde\beta$ above, and substituting that into
 The ordinary differential equation in the vadose zone can be solved
 via finite differences in space, while still within Laplace-Hankel
 space.  This is done mostly as a check of the other derivation, and
-partly becauase of inspiration derived from a pithy remark by a co-worker.
+partly because of inspiration derived from a pithy remark by a co-worker.
 
 Substituting finite difference approximations for the $z_D$
-derivatives in \eqref{eq:mn-d5-dimless} gives
+derivatives in \eqref{eq:mn-d5} gives
 \begin{equation}
   \nonumber
   \frac{1}{h^2} \left( \sigma_{j+1} - 2 \sigma_j + \sigma_{j+1}
-  \right) - \frac{\beta_3}{h} \left( \sigma_{j+1} - \sigma_j\right) -
-  \left( B_1 e^{-\beta_1 jh} + B_2 \right) \sigma_j
+  \right) - \frac{a_{kD}}{h} \left( \sigma_{j+1} - \sigma_j\right) -
+  \left( B e^{-\lambda_D jh} + C \right) \sigma_j
   = 0
 \end{equation}
-where the bar and star decorators on $\sigma$ are left out for simplicity, $h$ is
+where the bar, star, and $D$ decorators on $\sigma$ are left out for simplicity, $h$ is
 the dimensionless inter-node spacing (assumed constant), and
 the subscript indicates the current node $j$ and the node one above
-$j+1$ and below $j-1$.  The node indices run $0 \le j \le N-1$, where
+$j+1$ and below $j-1$.  The node index run $0 \le j \le N-1$, where
  there are $N$ nodes and $h = L_D / (N - 1)$.
 
-In the following $\omega_j = B_1 e^{-\beta_1 jh} + B_2$;
-explicitly writing out the finite-difference matrix for a 3-node
+In the following $\xi_j = B e^{-\lambda_D jh} + C$.
+Explicitly writing out the finite-difference matrix for a 3-node
 problem with node 1 at $z_D=1$ and node 3 at $z_D=1+L/b$, without
 explicitly handling the boundary conditions, is
 \begin{equation}
   \label{eq:fd-01}
   \left[ \begin{matrix}
-    \frac{1}{h^2} & \left(\frac{\beta_3}{h} - \frac{2}{h^2} - \omega_0\right) &
-    \frac{1}{h^2} - \frac{\beta_3}{h} & 0 & 0 \\ 
-    0 & \frac{1}{h^2} & \left(\frac{\beta_3}{h} - \frac{2}{h^2} - \omega_1 \right)&
-    \frac{1}{h^2} - \frac{\beta_3}{h} & 0  \\ 
-    0 & 0 & \frac{1}{h^2} & \left(\frac{\beta_3}{h} - \frac{2}{h^2}  -
-      \omega_2 \right) &
-    \frac{1}{h^2} - \frac{\beta_3}{h} \\ 
+    \frac{1}{h^2} & \left(\frac{a_{kD}}{h} - \frac{2}{h^2} - \xi_0\right) &
+    \frac{1}{h^2} - \frac{a_{kD}}{h} & 0 & 0 \\ 
+    0 & \frac{1}{h^2} & \left(\frac{a_{kD}}{h} - \frac{2}{h^2} - \xi_1 \right)&
+    \frac{1}{h^2} - \frac{a_{kD}}{h} & 0  \\ 
+    0 & 0 & \frac{1}{h^2} & \left(\frac{a_{kD}}{h} - \frac{2}{h^2}  -
+      \xi_2 \right) &
+    \frac{1}{h^2} - \frac{a_{kD}}{h} \\ 
   \end{matrix}\right] 
 \left[\begin{matrix}
 \sigma_{-1} \\ \sigma_0 \\ \sigma_1 \\ \sigma_2 \\ \sigma_3
@@ -365,52 +352,52 @@ $\mathbf{A}$
 \begin{equation}
   \nonumber
   \frac{1}{h^2} \left[ \sigma_0 - hA_1 \eta \sinh(\eta)\right] +
-  \left(\frac{\beta_3}{h} - \frac{2}{h^2}  - \omega_0\right) \sigma_0
-  + \left(\frac{1}{h^2} - \frac{\beta_3}{h}\right) \sigma_1 = 0
+  \left(\frac{a_{kD}}{h} - \frac{2}{h^2}  - \xi_0\right) \sigma_0
+  + \left(\frac{1}{h^2} - \frac{a_{kD}}{h}\right) \sigma_1 = 0
 \end{equation}
 Further using head continuity equation $\sigma_0 = A_1 \cosh(\eta) +
 s_{H}(z_D=1)$ to eliminate $\sigma_0$ from this first row leads to
 \begin{equation}
  \nonumber
     \frac{A_1}{h}  \eta \sinh(\eta) +
-  \left( \frac{\beta_3}{h} - \frac{1}{h^2} + - \omega_0\right) \left[
+  \left( \frac{a_{kD}}{h} - \frac{1}{h^2} + - \xi_0\right) \left[
     A_1 \cosh(\eta) + s_{H}(1)\right] + \left(\frac{1}{h^2} -
-    \frac{\beta_3}{h}\right) \sigma_1 = 0.
+    \frac{a_{kD}}{h}\right) \sigma_1 = 0.
 \end{equation}
-Performing the substution for $\sigma_0$ into the second row of
+Performing the substitution for $\sigma_0$ into the second row of
 $\mathbf{A}$, and regrouping to solve for $A_1$ in place of the
 eliminated $\sigma_0$ leads to
  \begin{equation}
   \label{eq:fd-02}
   \left[ \begin{matrix}
-     \cosh(\eta)c_1 - \frac{\eta}{h} \sinh(\eta) &
-    \frac{1}{h^2} - \frac{\beta_3}{h} & 0 \\ 
-     \frac{1}{h^2}\cosh(\eta) & c_2 &
-    \frac{1}{h^2} - \frac{\beta_3}{h}   \\ 
-     0 & \frac{1}{h^2} & c_2 +
-    \frac{1}{h^2} - \frac{\beta_3}{h} \\ 
+     \cosh(\eta)\theta_1 - \frac{\eta}{h} \sinh(\eta) &
+    \frac{1}{h^2} - \frac{a_{kD}}{h} & 0 \\ 
+     \frac{1}{h^2}\cosh(\eta) & \theta_2 &
+    \frac{1}{h^2} - \frac{a_{kD}}{h}   \\ 
+     0 & \frac{1}{h^2} & \theta_2 +
+    \frac{1}{h^2} - \frac{a_{kD}}{h} \\ 
   \end{matrix}\right] 
 \left[\begin{matrix}
 A_1 \\ \sigma_1 \\ \sigma_2 
 \end{matrix}\right]
 =
 \left[\begin{matrix}
--c_1 s_H(1) \\ 
+-\theta_1 s_H(1) \\ 
 -\frac{1}{h^2}s_H(1) \\ 0 
 \end{matrix}\right]
 \end{equation}
-where $c_1 = \frac{\beta_3}{h} - \frac{1}{h^2} - \omega_j$ and $c_2 =
-\frac{\beta_3}{h} - \frac{2}{h^2} - \omega_j $.  This 
+where $\theta_1 = \frac{a_{kD}}{h} - \frac{1}{h^2} - \xi_j$ and $\theta_2 =
+\frac{a_{kD}}{h} - \frac{2}{h^2} - \xi_j $.  This 
 $3\times 3$ case illustrates all the entries in a general $n\times
 n$ problem; including boundary nodes and an interior node.  
 
-The upper--left coefficient $\cosh(\eta)c_1 - \frac{\eta}{h}\sinh(\eta)$ in
+The upper--left coefficient $\cosh(\eta)\theta_1 - \frac{\eta}{h}\sinh(\eta)$ in
 \eqref{eq:fd-02} may be problematic due to cancellation between large
-quantitites, so it can be re-written in terms of exponentials as 
+quantities, so it can be re-written in terms of exponentials as 
 \begin{equation}
  \nonumber
- \frac{1}{2} \left[ e^{\eta} \left( c_1 - \frac{\eta}{h}\right) + e^{-\eta}
-   \left( c_1 + \frac{\eta}{h}\right) \right].
+ \frac{1}{2} \left[ e^{\eta} \left( \theta_1 - \frac{\eta}{h}\right) + e^{-\eta}
+   \left( \theta_1 + \frac{\eta}{h}\right) \right].
 \end{equation}
 
 The Thomas algorithm for tri-diagonal matrices can be used to
@@ -424,7 +411,7 @@ solution in the saturated zone is simply
 \end{equation}
 This involves computing the Thomas algorithm in Laplace-Hankel space,
 for each combination of $(a,p)$.  The Thomas algorithm can be
-vectorized to compute many solutions simulataneously.
+vectorized to compute many solutions simultaneously.
 
 For small problems ($n \le 5$) the finite difference matrix above can
 be solved algebraically using Cramer's rule, or using equivalently
