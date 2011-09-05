@@ -4,7 +4,7 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 
-\renewcommand{\baselinestretch}{1.16}
+\renewcommand{\baselinestretch}{1.2}
 \renewcommand{\arraystretch}{1}
 
 \setlength{\oddsidemargin}{0.0in} \setlength{\hoffset}{0in}
@@ -26,7 +26,7 @@
 \patchBothAmsMathEnvironmentsForLineno{equation}
 \patchBothAmsMathEnvironmentsForLineno{align}}
 
-\title{Alternate Formulation for Mishra-Neuman Solution}
+\title{Alternate Formulations for Mishra-Neuman Solution}
 \begin{document}
 \maketitle
 \linenumbers
@@ -36,7 +36,7 @@ The governing equation in the unsaturated zone, as used by \cite{mishra10} and \
   \label{eq:unsatDim}
   K_r k_0(\psi) \frac{1}{r} \frac{\partial}{\partial r} \left( r\frac{\partial \sigma}{\partial r} \right) + K_z \frac{\partial}{\partial z} \left( k_0(z) \frac{\partial \sigma}{\partial z}\right) = C(\psi) \frac{\partial \sigma}{\partial t}
 \end{equation}
-where $K_r$ and $K_z$ are the radial and vertical saturated hydraulic conductivities [L T$^{-1}$], $k_0$ is the dimensionless isotropic relative hydraulic conductivity ($0 < k_0 \le 1$), $\sigma = h_0 - h = b +\psi_a - h$ is drawdown in the vadose zone [L], $C(\psi)=\frac{d\eta}{d \psi}$ is the dimensionless specific moisture capacity, and $\theta$ is dimensionless volumetric water content.  The unsaturated zone begins at the top of the aquifer, and is defined as $b \le z \le b+L$.  Further, the unsaturated parameters are assumed to only be functions of $z$, $k_0(z)=k_0(\theta_0)$ and $C_0(z)=C_0(\theta_0)$.  The initial and boundary conditions for the unsaturated zone are  
+where $K_r$ and $K_z$ are the radial and vertical saturated hydraulic conductivities [L T$^{-1}$], $k_0$ is the dimensionless isotropic relative hydraulic conductivity ($0 < k_0 \le 1$), $\sigma = h_0 - h = b +\psi_a - h$ is drawdown in the vadose zone [L], $h=\psi+z$ is hydraulic head [L], $\psi$ is pressure head [L], $\psi_a$ is air-entry pressure, $C(\psi)=\frac{d\theta}{d \psi}$ is the dimensionless specific moisture capacity, and $\theta$ is dimensionless volumetric water content.  The unsaturated zone begins at the top of the aquifer, $b \le z \le b+L$.  Further, the unsaturated parameters are assumed to only be functions of $z$.  The initial and boundary conditions for the unsaturated zone are  
 \begin{equation}\nonumber
 \sigma(r,z,0) = 0
 \end{equation}
@@ -50,7 +50,7 @@ where $K_r$ and $K_z$ are the radial and vertical saturated hydraulic conductivi
 \lim_{r \rightarrow 0} r \frac{\partial \sigma}{\partial r} = 0 \qquad b\le z \le b+L.
 \end{equation}
 
-Drawdown in the aquifer, $s$, and the vadose zone $\sigma$ are connected using compatibility conditions at the water table ($z=b$);
+Drawdown in the aquifer ($s$) and the vadose zone are connected using compatibility conditions at the water table ($z=b$), namely
 \begin{equation}\nonumber
 s=\sigma \qquad z=b
 \end{equation}
@@ -58,42 +58,44 @@ s=\sigma \qquad z=b
 \frac{\partial s}{\partial z}=\frac{\partial \sigma}{\partial z} \qquad z=b.
 \end{equation} 
 
-The moisture retention curve in the vadose zone is represented as an exponential function
+The moisture retention curve in the vadose zone is modeled as an exponential function
 \begin{equation}\nonumber
 S_e = \frac{\theta(\psi) - \theta_r}{S_y} = e^{a_c \left( \psi - \psi_a \right)} \qquad a_c \ge 0 
 \end{equation}
-where $S_e$ is dimensionless effective saturation, $\theta_r$ is dimensionless residual water content, and $S_y=\theta_s - \theta_r$ is dimensionless drainable porosity (specific yield).  The Gardner model for relative hydraulic conductivity is used; the relative hydraulic conductivity is
+where $S_e$ is dimensionless effective saturation, $\theta_r$ is dimensionless residual volumetric water content, $S_y=\theta_s - \theta_r$ is dimensionless drainable porosity (specific yield), and $\theta_s$ is dimensionless saturated volumetric water content.  The Gardner model for relative hydraulic conductivity is used; the relative hydraulic conductivity is
 \begin{equation}
   \nonumber
   k(\psi) = \left  \{ 
     \begin{array}{c c}
-      e^{a_k \left( \psi - \psi_k\right)} & \psi \le \psi_k \\
+      e^{a_k \left( \psi - \psi_k\right)} & \psi \le \psi_k, \ \\
       1 & \psi < \psi_k\\
     \end{array} 
-\right . \qquad a_k \ge 0.
+\right . \qquad a_k \ge 0,\; \psi_k \le 0,
 \end{equation}
+where $\psi_k$ is the pressure head beyond which the hydraulic conductivity is essentially saturated.  
+
 The four-parameter exponential model for hydraulic conductivity used in the vadose zone is 
 \begin{equation}
   \label{eq:Gardner}
- k_0(z)=e^{a_k\left( b_1 + b - z\right)} \qquad b_1=\psi_a-\psi_k
+ k_0(z)=e^{a_k\left( \Psi + b - z\right)} \qquad \Psi=\psi_a-\psi_k
 \end{equation}
-and the moisture capacity is
+and the exponential model use for moisture capacity is
 \begin{equation}
   \label{eq:mrc}
 C_0(z) = S_y a_c e^{a_c \left( b-z\right)}.
 \end{equation}
 
-The governing equation  must be non-dimensionalized before proceeding further with the solution. Equation \eqref{eq:unsatDim} can be written in dimensionless form as
+The governing equation will be non-dimensionalized before proceeding further with the solution. Equation \eqref{eq:unsatDim} can be written in dimensionless form as
 \begin{equation}
   \label{eq:unsatDimless}
-  k_0(\psi_D) \frac{1}{r_D} \frac{\partial}{\partial r_D} \left( r_D\frac{\partial \sigma_D}{\partial r_D} \right) + \kappa \frac{\partial}{\partial z_D} \left( k_0(z_D) \frac{\partial \sigma_D}{\partial z_D}\right) = \gamma C_0(z_D) \frac{\partial \sigma_D}{\partial t_D}
+  k_0(z_D) \frac{1}{r_D} \frac{\partial}{\partial r_D} \left( r_D\frac{\partial \sigma_D}{\partial r_D} \right) + \kappa \frac{\partial}{\partial z_D} \left( k_0(z_D) \frac{\partial \sigma_D}{\partial z_D}\right) = \gamma C_0(z_D) \frac{\partial \sigma_D}{\partial t_D}
 \end{equation}
-where $r_D=r/b$ is the dimensionless radial coordinate, $z_D=z/b$ is the dimensionless vertical coordinate, $\kappa=K_z/K_r$ is the anisotropy ratio, $\sigma_D = \sigma/H_c$ is dimensionless vadose zone drawdown, $H_C$ is a characteristic head, $t_D = t K_r / (b^2 S_S)$ is dimensionless time, and $\gamma = S_y a_c/S_S$ is the dimensionless storage ratio.  The hydraulic conductivity constitutive model is non-dimensionalized as
+where $r_D=r/b$ is the dimensionless radial coordinate, $z_D=z/b$ is the dimensionless vertical coordinate, $\kappa=K_z/K_r$ is the anisotropy ratio, $\sigma_D = \sigma/H_c$ is dimensionless vadose zone drawdown, $H_C$ is a characteristic head, $t_D = t K_r / (b^2 S_S)$ is dimensionless time, $\gamma = S_y a_c/S_S$ is the dimensionless storage ratio, and $S_S$ is the specific storage [L$^-1$] in the saturated aquifer.  The hydraulic conductivity constitutive model is non-dimensionalized as
 \begin{equation}
   \label{eq:GardnerDimless}
- k_0(z_D)=e^{a_{kD} \left( b_{1D} + 1 - z_D \right)},
+ k_0(z_D)=e^{a_{kD} \left( \Psi_D + 1 - z_D \right)},
 \end{equation}
-where $a_{kD} = a_k b$ and $b_{1D}=b_1/b$, and the moisture capacity model is non-dimensionalized as
+where $a_{kD} = a_k b$ and $\Psi_D=\Psi/b$, and the moisture capacity model is non-dimensionalized as
 \begin{equation}
   \label{eq:mrcDimless}
 C_0(z_D) = e^{a_{cD} \left( 1-z_D\right)},
@@ -104,9 +106,9 @@ where $a_{cD} = a_c b$.
 The dimensionless Laplace transformation (over-bar and $p$) of (\ref{eq:unsatDimless}) results in
 \begin{equation}
   \label{eq:unsatLap}
-   k_0(z_D) \frac{1}{r_D} \frac{\partial}{\partial r_D} \left( r_D\frac{\partial \bar{\sigma}_D}{\partial r_D} \right) +\kappa \frac{\partial}{\partial z_D} \left( k_0(z_D) \frac{\partial \bar{\sigma}_D}{\partial z_D}\right) = p \gamma C_0(z_D)  \bar{\sigma}_D
+   k_0(z_D) \frac{1}{r_D} \frac{\partial}{\partial r_D} \left( r_D\frac{\partial \bar{\sigma}_D}{\partial r_D} \right) +\kappa \frac{\partial}{\partial z_D} \left( k_0(z_D) \frac{\partial \bar{\sigma}_D}{\partial z_D}\right) = p \gamma C_0(z_D)  \bar{\sigma}_D.
 \end{equation}
-where , with the associated transformed dimensionless boundary and initial conditions of
+The associated transformed dimensionless boundary and initial conditions of
 \begin{equation}\nonumber
  \bar{\sigma}_D(\infty,z_D,p) = 0
 \end{equation}
@@ -118,10 +120,10 @@ where , with the associated transformed dimensionless boundary and initial condi
 \end{equation}
 where $L_D = L/b$ is the dimensionless vadose zone thickness.
 
-Further applying the dimensionless Hankel transformation (superscript $\ast$ and $a$) of (\ref{eq:unsatLap}), followed by substitution of the constitutive models (\ref{eq:Gardner}) and (\ref{eq:mrc}) results in the ordinary differential equation
+Further applying the dimensionless Hankel transformation (superscript $\ast$ and $a$) to (\ref{eq:unsatLap}), followed by substitution of the dimensionless constitutive models (\ref{eq:GardnerDimless}) and (\ref{eq:mrcDimless}) results in the ordinary differential equation
 \begin{equation}
   \label{eq:unsatHank}
-   -a^2 \bar{\sigma}^{\ast} - \kappa a_{kD} \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D} + \kappa \frac{\mathrm{d}^2 \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D^2}  = p \gamma \bar{\sigma}_D^{\ast}  e^{-a_{kD} b_{1D}}  e^{\left(a_{kD} -a_{cD} \right)\left( 1 - z_D\right)}  
+   -a^2 \bar{\sigma}^{\ast} - \kappa a_{kD} \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D} + \kappa \frac{\mathrm{d}^2 \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D^2}  = p \gamma \bar{\sigma}_D^{\ast}  e^{-a_{kD} \Psi_D}  e^{\left(a_{kD} -a_{cD} \right)\left( 1 - z_D\right)}  
 \end{equation}
 and the no-flow condition at the top of the vadose zone, 
 \begin{equation}\nonumber
@@ -132,14 +134,14 @@ Equation \ref{eq:unsatHank} can be rearranged and regrouped as
   \label{eq:mn-d5}
   \frac{\mathrm{d}^2 \bar{\sigma}_D^{\ast}}{\mathrm{d}z_D^2} - a_{kD} \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d}z_D} - \left[ B e^{\lambda_D (1-z_D)} + C\right] \bar{\sigma}^{\ast}=0
 \end{equation}
-where $\lambda_D = a_{kD} - a_{cD}$, $B = p\gamma e^{-a_{kD} b_{1D}}$, and $C=\frac{a^2}{\kappa}$.
+where $\lambda_D = a_{kD} - a_{cD}$, $B = p\gamma e^{-a_{kD} \Psi_D}$, and $C=\frac{a^2}{\kappa}$.
 
 The dimensional form of \eqref{eq:mn-d5} was solved in \cite{mishra10} using a general solution from a
 reference book on differential equations.  The solution given in terms
 of two types of Bessel functions of complex argument and non-integer
 order is non-trivial to evaluate numerically. 
 
-\subsection{Modified Solution Procedure} 
+\subsection{Modified Solution Procedure \#1} 
 By further modifying the $z_D$-coordinate and performing an exponential substitution, (\ref{eq:mn-d5}) can be simplified significantly and a solution can be found by integration.  Using a scaled dimensionless vertical coordinate 
 \begin{equation}\nonumber
  \zeta= a_{kD} z_D \qquad z_D=\frac{\zeta}{a_{kD}} 
@@ -153,7 +155,7 @@ the transformed differential equation representing drawdown in the vadose zone (
     B e^{\lambda_D (1-\zeta/a_{kD})} + C\right] \bar{\sigma}_D^{\ast}=0
 \end{equation}
 we divide through by $a_{kD}^2$ and performing the substitution
-$\bar{\sigma}_D^{\ast}(\zeta)=e^{u(\zeta)}$.  This exponential change of variables implies
+$\bar{\sigma}_D^{\ast}(\zeta)=e^{u(\zeta)}$ (e.g., see \cite[p.\ 27]{bender1978advanced}).  This exponential change of variables implies
 \begin{equation}\nonumber
 \frac{\mathrm{d}\bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta} =
 \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u
@@ -213,6 +215,38 @@ where $\tilde{\beta}=e^\beta$ is a modified integration constant. This can be re
      - \left( 1+L_D\right)z_D  \right] \right\}
 \end{equation}
 where $\tilde{\beta}$ will be determined from the matching conditions at the water table.
+
+\subsection{Modified Solution Procedure \#2} 
+By further modifying the $z_D$-coordinate and performing a different exponential substitution, (\ref{eq:mn-d5}) can be changed to the same form as the time-independent Schr\"{o}dinger equation.  Using a slightly different scaled dimensionless vertical coordinate 
+\begin{equation}\nonumber
+ \xi= \frac{a_{kD}}{2} z_D \qquad z_D=\frac{2\xi}{a_{kD}} 
+\end{equation}
+the transformed differential equation representing drawdown in the vadose zone (\ref{eq:mn-d5}) becomes
+\begin{equation}
+  \label{eq:nondimODE2}
+  \frac{a_{kD}^2}{4} \frac{\mathrm{d}^2
+    \bar{\sigma}_D^{\ast}}{\mathrm{d}\xi^2} - \frac{a_{kD}^2}{2}
+  \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d}\xi} - \left[
+    B e^{\lambda_D (1-2\xi/a_{kD})} + C\right] \bar{\sigma}_D^{\ast}=0
+\end{equation}
+we multiply through by $4/a_{kD}^2$ and performing the substitution $\bar{\sigma}^{\ast}_{D} = H(\xi) e^\xi$.  This exponential change of variables (e.g., see \cite{kuhlman2008quasilinear}) implies
+\begin{equation}
+  \nonumber
+  \frac{\mathrm{d} \bar{\sigma}^{\ast}_{D}}{\mathrm{d} \xi} = \frac{\mathrm{d}H}{\mathrm{d}\xi} e^\xi + H e^\xi  
+\end{equation}
+and therefore
+\begin{equation}
+  \nonumber
+  \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}_{D}}{\mathrm{d} \xi^2} = \frac{\mathrm{d}^2H}{\mathrm{d}\xi^2} e^\xi + 2\frac{\mathrm{d}H}{\mathrm{d}\xi} e^\xi + He^\xi  
+\end{equation}
+which changes \eqref{eq:nondimODE2} to the form
+\begin{equation}
+  \label{eq:schrodinger}
+  \frac{d^2 H}{d \xi^2} - \left[B' e^{\lambda_D (1-2\xi/{kD})} + C' \right]H = 0
+\end{equation}
+where $B' = 4B/a_{kD}^2$ and $C'=4C/a_{kD}^2 + 1$.  \eqref{eq:schrodinger} is in the form of the time-independent Schr\"{o}dinger equation.  The $\xi$-dependent coefficient in brackets is referred to as the potential function in the quantum-mechanics literature.  Closed-form solutions have been derived for different potential functions ($1/\xi$, $1/\xi^2$, $e^{-\xi}$, etc.).  
+
+A common solution technique is to transform \eqref{eq:schrodinger} into Bessel's equation and express the solution in terms of Bessel functions (\textit{no help here}).
 
 \section{Saturated Zone Unconfined Solution}
 Following \cite{mishra10}, we decompose the saturated zone solution into two solutions: 1) the Hantush solution $s_H$ for a confined aquifer and a partially penetrating well; 2) an unconfined solution $s_U$ with no well but continuity conditions with the vadose zone solution just derived.  The solution for $s_H$ is given elsewhere, either in terms of a finite cosine transform, or a multi-layer fully penetrating solution.  
