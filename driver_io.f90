@@ -451,8 +451,9 @@ contains
     ! dimensionless pressures
     f%psiaD = f%psia/s%Lc
     f%psikD = f%psik/s%Lc
-    f%usLD = f%usL/f%b
+    f%usLD = f%usL/s%Lc
     f%b1 = f%psia - f%psik
+    f%PsiD = f%b1/s%Lc
 
     s%zD(:) = s%z(:)/s%Lc
     s%rD(:) = s%r(:)/s%Lc

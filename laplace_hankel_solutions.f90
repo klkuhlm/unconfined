@@ -461,28 +461,24 @@ contains
     complex(EP), dimension(size(p),size(zD)) :: sD, sU
     complex(EP), dimension(size(p),size(zD)+1) :: sH
     integer ::  np, nz
-    real(EP), dimension(0:3) :: beta
-    real(EP) :: B2
-    complex(EP), dimension(size(p)) :: eta, omega, B1
+    real(EP) :: C, gamma
+    complex(EP), dimension(size(p)) :: eta, omega, B
     
     np = size(p)
     nz = size(zD)
 
-    beta(0) = f%ac*f%Sy/f%Ss
-    beta(1) = -f%lambdaD  ! b*(ak-ac) << is this off by (-1)?
-    beta(2) = f%ak*f%b1  ! ak*(psi_a - psi_k);
-    beta(3) = f%akD
-
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
     
-    B1(1:np) = p(:)*beta(0)*exp(-beta(2))/f%kappa
-    B2 = (a**2)/f%kappa
+    gamma = f%Sy*f%ac/f%Ss
 
-    omega(1:np) = B1(:)/beta(1)*(exp(beta(1)*f%usLD) - 1.0_EP) -B2*f%usLD
+    B(1:np) = p(:)*gamma/f%kappa*exp(-f%akD*f%PsiD)
+    C = (a**2)/f%kappa
+
+    omega(1:np) = B(:)/f%lambdaD*(exp(f%lambdaD*f%usLD) - 1.0_EP) - C*f%usLD
 
     if (s%quiet > 1) then
-       print *, 'B1(1:2)',B1(1:2),'B2',B2,'omgega(1:2)',omega(1:2)
+       print *, 'B(1:2)',B(1:2),'C',C,'omgega(1:2)',omega(1:2)
     end if
     
     sU(1:np,1:nz) = spread(sH(1:np,nz+1),2,nz)* &
@@ -553,12 +549,12 @@ contains
 
     ! super-diagonal (last entry (n) is undefined)
     c(1:n-1,1:np) = invhsq - beta(3)/h
-    c(n,1:np) = -999999.9
+!!$    c(n,1:np) = -999999.9
 
     ! sub-diagonal (first entry 1 is undefined, second entry is different)
     aa(2:n,1:np) = invhsq  
     aa(2,1:np) = aa(2,1:np)*cosh(eta(:))
-    aa(1,1:np) = 7777777.7
+!!$    aa(1,1:np) = 7777777.7
 
     ! right-hand side (all zero but first and second rows)
     v(3:n,1:np) = 0.0_EP
