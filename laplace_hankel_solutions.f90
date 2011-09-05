@@ -74,8 +74,8 @@ contains
           ! naive implementation of paper
           fp(1:np,1:nz) = mishraNeuman2010(a,s%zD,s,lap%p,f,w)
        case(1)
-          ! simple solving of problem using transformation
-          fp(1:np,1:nz) = mishraNeuman2010simple(a,s%zD,s,lap%p,f,w)
+          print *, 'this approach was a dead-end'
+          stop
        case(2)
           ! finite difference solution of ODE in vadose zone
           fp(1:np,1:nz) = mishraNeuman2010FD(a,s%zD,s,lap%p,f,w)
@@ -445,49 +445,6 @@ contains
 999 format(A,ES11.3E3,4(A,2('(',ES12.3E4,',',ES12.3E4,')')))
   end function mishraNeuman2010
   
-  function mishraNeuman2010simple(a,zD,s,p,f,w) result(sD)
-    use constants, only : DP, EP
-    use types, only : well, formation, solution
-    use utility, only : operator(.X.) 
-    implicit none
-    
-    real(EP), intent(in) :: a
-    real(DP), dimension(:), intent(in) :: zD
-    complex(EP), dimension(:), intent(in) :: p
-    type(solution), intent(in) :: s
-    type(well), intent(in) :: w
-    type(formation), intent(in) :: f
-
-    complex(EP), dimension(size(p),size(zD)) :: sD, sU
-    complex(EP), dimension(size(p),size(zD)+1) :: sH
-    integer ::  np, nz
-    real(EP) :: C, gamma
-    complex(EP), dimension(size(p)) :: eta, omega, B
-    
-    np = size(p)
-    nz = size(zD)
-
-    eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
-    sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
-    
-    gamma = f%Sy*f%ac/f%Ss
-
-    B(1:np) = p(:)*gamma/f%kappa*exp(-f%akD*f%PsiD)
-    C = (a**2)/f%kappa
-
-    omega(1:np) = B(:)/f%lambdaD*(exp(f%lambdaD*f%usLD) - 1.0_EP) - C*f%usLD
-
-    if (s%quiet > 1) then
-       print *, 'B(1:2)',B(1:2),'C',C,'omgega(1:2)',omega(1:2)
-    end if
-    
-    sU(1:np,1:nz) = spread(sH(1:np,nz+1),2,nz)* &
-         & cosh(eta(1:np) .X. s%zD(1:nz))/ &
-         & spread(eta(:)/omega(:)*sinh(eta(:)) - cosh(eta(:)),2,nz)
-    sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
-
-  end function mishraNeuman2010simple
-
   function mishraNeuman2010FD(a,zD,s,p,f,w) result(sD)
     use constants, only : DP, EP
     use types, only : well, formation, solution

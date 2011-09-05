@@ -175,47 +175,11 @@ which changes \eqref{eq:nondimODE} to
 Multiplying this by $e^{-u}$ and simplifying results in
 \begin{equation}
   \label{eq:expsubODE}
-   \frac{\mathrm{d} v}{\mathrm{d}\zeta} +v^2 - v = \left[ \frac{B}{a_{kD}^2} e^{\lambda_D (1-\zeta/a_{kD})} + \frac{C}{a_{kD}^2}\right],
+   \frac{\mathrm{d} v}{\mathrm{d}\zeta} + v^2 - v = \left[ \frac{B}{a_{kD}^2} e^{\lambda_D (1-\zeta/a_{kD})} + \frac{C}{a_{kD}^2}\right],
 \end{equation}
-which is known as the Riccati equation, where $v=u'$.
+which is known as the Riccati equation, where $v=u'$.  This would only be solvable if a solution could first be guessed, then reducing \eqref{eq:expsubODE} to a Bernoulli equation, which are always solvable.
 
-This is an integrable equation; one indefinite integration produces
-\begin{equation}
-  \label{eq:du}
-  \frac{\mathrm{d} u}{\mathrm{d}\zeta} = - \frac{B}{\lambda_D a_{kD}} e^{\lambda_D (1-\zeta/a_{kD})} + \frac{C}{a_{kD}^2}\zeta + \alpha
-\end{equation}
-where $\alpha$ is a constant of integration. A second indefinite integration produces
-\begin{equation}\nonumber
- u =  \frac{B}{\lambda_D^2} e^{\lambda_D (1-\zeta/a_{kD})} + \frac{C}{2a_{kD}^2}\zeta^2 + \alpha\zeta + \beta
-\end{equation}
-where $\beta$ is another constant of integration.  
-
-Also applying the exponential transformation to the boundary condition at the top of the vadose zone results in
-\begin{equation}\nonumber
-\frac{\mathrm{d}u}{\mathrm{d}\zeta} e^u=0 \qquad \zeta= \left(1+ L_D \right) a_{kD}
-\end{equation}
-which is used with \eqref{eq:du} to determine one of the integration constants
-\begin{equation}\nonumber
-\alpha= \frac{B}{\lambda_D a_{kD}} e^{\lambda_D L_D} -
-\frac{C}{a_{kD}} \left( 1+L_D \right) 
-\end{equation}
-
-The solution for the drawdown in the vadose zone is then
-\begin{equation}
-  \nonumber
-  \bar{\sigma}_D^{\ast} (z_D) = \tilde{\beta}\exp\left\{
-    \frac{B}{\lambda_D^2} e^{\lambda_D (1-z_D)} + \frac{C}{2}z_D^2
-    +\left[ \frac{B}{\lambda_D} e^{\lambda_D L_D}  - C \left( 1+L_D\right) \right]z_D  \right\}
-\end{equation}
-where $\tilde{\beta}=e^\beta$ is a modified integration constant. This can be re-grouped as
-\begin{equation}
-  \label{eq:sigma}
-  \bar{\sigma}_D^{\ast} (z_D) = \tilde{\beta}\exp\left\{
-    \frac{B}{\lambda_D^2} \left[ e^{\lambda_D (1-z_D)} + z_D\lambda_D e^{\lambda_D
-        L_D} \right] + C \left[ \frac{z_D^2}{2}
-     - \left( 1+L_D\right)z_D  \right] \right\}
-\end{equation}
-where $\tilde{\beta}$ will be determined from the matching conditions at the water table.
+A simple solution, that is not a Bessel function, might be guessed but I tried a few things and made no progress.
 
 \subsection{Modified Solution Procedure \#2} 
 By further modifying the $z_D$-coordinate and performing a different exponential substitution, (\ref{eq:mn-d5}) can be changed to the same form as the time-independent Schr\"{o}dinger equation.  Using a slightly different scaled dimensionless vertical coordinate 
@@ -283,43 +247,6 @@ The general solution to \eqref{eq:aquifer} is
   \bar{s}_{UD}^{\ast} = A_1 \cosh(\eta z_D) + A_2 \sinh(\eta z_D)
 \end{equation}
 where $A_i$ are constants to determine and $\eta^2 = \frac{p + a^2}{\kappa}$.  The no-flow boundary condition at the bottom of the aquifer forces $A_2\equiv 0$.  
-
-\section{New Solution for Saturated Zone}
-Substituting \eqref{eq:sigma} and \eqref{eq:su} into the compatibility
-equations \eqref{eq:headCont} and \eqref{eq:fluxCont} gives
-\begin{equation}\nonumber
-  A_1 \cosh(\eta) + \bar{s}_{HD}^{\ast}(z_D=1) = \tilde{\beta}e^{\omega_1}
-\end{equation}
-\begin{equation}\nonumber
- A_1 \eta  \sinh(\eta)  = \tilde{\beta} \omega_2 e^{\omega_1}
-\end{equation}
-where 
-\begin{equation}\nonumber
- \omega_1 = \frac{B}{\lambda_D^2} \left( 1 + \lambda_D e^{\lambda_D
-        L_D} \right) + C \left( \frac{1}{2}- L_D  \right) 
-\end{equation}
-\begin{equation}
-  \label{eq:omega2}
-  \omega_2 = \frac{B}{\lambda_D} \left( e^{\lambda_D L_D} -1 \right) - C L_D 
-\end{equation}
-are $u(z_D=1)$ and $\left. \frac{\mathrm{d} u}{\mathrm{d}z_D} \right|_{z_D=1}$
-respectively (without the $\tilde\beta$ factor).
-Divide the second equation by $\omega_2$ and set the left-hand-sides of the two resulting equations equal to one another.  Solving for $A_1$ leads to
-\begin{equation}\nonumber
-A_1 \cosh(\eta) + \bar{s}_{HD}^{\ast}(z_D=1) = \frac{A_1  \eta}{\omega_2}  \sinh(\eta) 
-\end{equation}
-\begin{equation}\nonumber
- A_1 = \frac{\bar{s}_{HD}^{\ast}(z_D=1)}{\frac{\eta}{\omega_2}  \sinh(\eta) - \cosh(\eta)}
-\end{equation}
-which gives the final dimensionless Laplace-Hankel form of the saturated-zone solution as
-\begin{equation}\nonumber
- \bar{s}_D^{\ast}(z_D)  = \bar{s}_{HD}^{\ast}(z_D) + \bar{s}_{HD}^{\ast}(z_D=1) \frac{\cosh(\eta z_D)}{\frac{\eta}{\omega_2}  \sinh(\eta) - \cosh(\eta)}
-\end{equation} 
-This expression is identical in form to \cite[eqn.\ C17]{mishra10},
-with $\omega_2$ instead of $q$.  The final Laplace-Hankel form of the
-unsaturated zone solution can be found by substituting $A_1$ into one
-of the expressions for $\tilde\beta$ above, and substituting that into
-\eqref{eq:sigma}.
 
 \section{Formulation of Finite Difference Solution}
 The ordinary differential equation in the vadose zone can be solved
