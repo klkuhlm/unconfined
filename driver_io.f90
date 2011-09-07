@@ -6,7 +6,7 @@ public :: read_input, write_timeseries_header, write_contour_header
 
 contains
   subroutine read_input(w,f,s,lap,h,gl,ts)
-    use constants, only : EP, DP, PI, PIEP, NUMCHAR, RFMT, HFMT, SFMT, SMALLZ
+    use constants, only : EP, DP, PI, PIEP, NUMCHAR, RFMT, SFMT, SMALLZ
     use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
     use utility, only : logspace, linspace
     

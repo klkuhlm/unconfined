@@ -7,7 +7,7 @@ public :: tanh_sinh_setup, gauss_lobatto_setup, wynn_epsilon, polint
 contains
   !! ###################################################
   subroutine tanh_sinh_setup(t,k,s,j)
-    use constants, only : PIOV2EP, DP, EP
+    use constants, only : PIOV2EP, EP
     use types, only : TanhSinh
     implicit none
     
@@ -180,7 +180,7 @@ contains
     ! x is real and extended-precision
     ! y is complex and extended-precision
 
-    use constants, only : DP, EP
+    use constants, only : EP
     implicit none
 
     real(EP), dimension(:), intent(IN) :: xa

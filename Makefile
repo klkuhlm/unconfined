@@ -14,7 +14,9 @@ FREE = -free
 PERFLDFLAGS = $(PERF)
 ##################################################
 
-EXTERNAL = cbessel.o bessel.o bessel2.o
+LAPACK = lapack.a blas.a
+
+EXTERNAL = cbessel.o 
 HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o
 OBJS =  constants.o $(EXTERNAL) types.o invlap.o utility.o $(HILEV)
 
@@ -33,25 +35,15 @@ LD = $(F90) -fbacktrace
 ####### default optimized (no debugging) target ##########################
 # only the driver routine has openmp directives
 driver: $(OPTOBJS)
-	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS)
+	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS) $(LAPACK)
 
 
 ####### compiler debugging ### 
 ##(no optimization, checks for out-of-bounds arrays and gives more warninngs, but still runs to completion)
 debug_driver: $(DEBUGOBJS)
-	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS)
+	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS) $(LAPACK)
 
-
-# always compile external libray with debugging off (and no default-real-8)
-bessel.debug.o: bessel.f90 constants.mod
-	$(F90) -c $(PERF) -o bessel.debug.o bessel.f90
-bessel.opt.o: bessel.f90 constants.mod
-	$(F90) -c $(PERF) -o bessel.opt.o bessel.f90
-
-bessel2.debug.o: bessel2.f90 constants.mod
-	$(F90) -c $(PERF) -o bessel2.debug.o bessel2.f90
-bessel2.opt.o: bessel2.f90 constants.mod
-	$(F90) -c $(PERF) -o bessel2.opt.o bessel2.f90
+complex_bessel.mod:cbessel.f90
 
 cbessel.debug.o: cbessel.f90 
 	$(F90) -c $(PERF) -o cbessel.debug.o cbessel.f90

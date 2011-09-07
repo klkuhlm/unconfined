@@ -74,8 +74,8 @@ contains
           ! naive implementation of paper
           fp(1:np,1:nz) = mishraNeuman2010(a,s%zD,s,lap%p,f,w)
        case(1)
-          print *, 'this approach was a dead-end'
-          stop
+          ! spectral solution of ODE in vadose zone
+          fp(1:np,1:nz) = mishraNeuman2010spec(a,s%zD,s,lap%p,f,w)
        case(2)
           ! finite difference solution of ODE in vadose zone
           fp(1:np,1:nz) = mishraNeuman2010FD(a,s%zD,s,lap%p,f,w)
@@ -265,8 +265,6 @@ contains
     use constants, only : DP, EP, EYE
     use types, only : well, formation, solution
     use utility, only : operator(.X.) 
-!!$    use complex_bessel
-!!$    use complex_bessel2
     use cbessel, only : cbesj,cbesy ! Amos routine
     implicit none
     
@@ -297,7 +295,6 @@ contains
     integer(4), parameter :: kode = 2, num = 2
     integer(4) :: nzero, ierr
     complex(DP), dimension(size(p)) :: phi
-!!$    complex(EP), allocatable :: tmp2(:,:)
     complex(DP), dimension(2) :: tmp
     real(DP) :: nu
     integer :: i
@@ -325,44 +322,25 @@ contains
     phi(1:np) = cmplx(phiep(1:np),kind=DP)
     nu = real(nuep,kind=DP)
 
-!!$    if (all(abs(phi(:)) < 2.0*(nu+1.0))) then
-!!$       call cjy(nuep,    phiep(:),J(:,1),Y(:,1))
-!!$       call cjy(nuep+1.0,phiep(:),J(:,2),Y(:,2))
-!!$    else
-       do i= 1,np
-!!$          if (2.0*(nu+1.0) > abs(phi(i))) then
-!!$             call cjy(nuep,    phiep(i:i),J(i,1),Y(i,1))
-!!$             call cjy(nuep+1.0,phiep(i:i),J(i,2),Y(i,2))
-!!$          else
-             call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-                  & nz=nzero,ierr=ierr)
-             if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
-                print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
-                     &' i,ierr,nz:',i,ierr,nzero  
-
-             else
-                J(i,1:2) = tmp(1:2)
-             end if
-             call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-                  &nz=nzero,ierr=ierr)
-             if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
-                print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
-                     &' i,ierr,nz:',i,ierr,nzero
-             else
-                Y(i,1:2) = tmp(1:2)
-             end if
-
-!!$             if (any(isnan(abs(J(i,1:2)))) .or. any(isnan(abs(Y(i,1:2))))) then
-!!$                allocate(tmp2(4,0:int(nu)+2))                   
-!!$                call cjyva(nuep+1.0,phiep(i),nv,tmp2(1,:),tmp2(2,:),tmp2(3,:),tmp2(4,:))
-!!$                J(i,1:2) = tmp2(1,int(nv)-1:int(nv))
-!!$                Y(i,1:2) = tmp2(3,int(nv)-1:int(nv))
-!!$                deallocate(tmp2)
-!!$                print *, 'zD=LD',nuep+1.0,phiep(i),J(i,1),Y(i,1)
-!!$             end if
-!!$          end if
-       end do
-!!$    end if
+    do i= 1,np
+       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+            & nz=nzero,ierr=ierr)
+       if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
+          print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
+               &' i,ierr,nz:',i,ierr,nzero  
+          
+       else
+          J(i,1:2) = tmp(1:2)
+       end if
+       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+            &nz=nzero,ierr=ierr)
+       if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
+          print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
+               &' i,ierr,nz:',i,ierr,nzero
+       else
+          Y(i,1:2) = tmp(1:2)
+       end if
+    end do
     
     ! compute v3
     arg1 = real(beta(3),EP) + nuep*beta(1)
@@ -382,43 +360,25 @@ contains
     phiep(1:np) = EYE*sqrt(4.0*B1/beta(1)**2)
     phi(1:np) = cmplx(phiep,kind=DP)
 
-!!$    if (all(abs(phi(:)) < 2.0*(nu+1.0))) then
-!!$       call cjy(nuep,    phiep(:),J(:,1),Y(:,1))
-!!$       call cjy(nuep+1.0,phiep(:),J(:,2),Y(:,2))
-!!$    else
-       do i= 1,np
-!!$          if (2.0*(nu+1.0) > abs(phi(i))) then
-!!$             call cjy(nuep,    phiep(i:i),J(i,1),Y(i,1))
-!!$             call cjy(nuep+1.0,phiep(i:i),J(i,2),Y(i,2))
-!!$          else
-             call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-                  &nz=nzero,ierr=ierr)
-             if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
-                print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
-                     &' i,ierr,nz:',i,ierr,nzero
-             else
-                J(i,1:2) = tmp(1:2)
-             end if
-             
-             call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-                  &nz=nzero,ierr=ierr)
-             if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
-                print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
-                     &' i,ierr,nz:',i,ierr,nzero
-             else
-                Y(i,1:2) = tmp(1:2)
-             end if
-!!$          end if
-!!$          if (any(isnan(abs(J(i,1:2)))) .or. any(isnan(abs(Y(i,1:2))))) then
-!!$             allocate(tmp2(4,0:int(nu)+2))
-!!$             call cjyva(nuep+1.0,phiep(i),nv,tmp2(1,:),tmp2(2,:),tmp2(3,:),tmp2(4,:))
-!!$             J(i,1:2) = tmp2(1,int(nv)-1:int(nv))
-!!$             Y(i,1:2) = tmp2(3,int(nv)-1:int(nv))
-!!$             deallocate(tmp2)
-!!$             print *, 'zD=0 ',nuep+1.0,phiep(i),J(i,1),Y(i,1)
-!!$          end if
-       end do
-!!$    end if
+    do i= 1,np
+       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+            &nz=nzero,ierr=ierr)
+       if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
+          print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
+               &' i,ierr,nz:',i,ierr,nzero
+       else
+          J(i,1:2) = tmp(1:2)
+       end if
+       
+       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
+            &nz=nzero,ierr=ierr)
+       if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
+          print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
+               &' i,ierr,nz:',i,ierr,nzero
+       else
+          Y(i,1:2) = tmp(1:2)
+       end if
+    end do
     
     arg2(1:np) = beta(1)*phiep(1:np)
     aa(2,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
@@ -550,11 +510,11 @@ contains
   end function mishraNeuman2010FD
 
   function mishraNeuman2010spec(a,zD,s,p,f,w) result(sD)
-    use constants, only : DP, EP
+    use constants, only : DP, EP, PI
     use types, only : well, formation, solution
-    use utility, only : operator(.X.), solve_tridiag
+    use utility, only : operator(.X.), spec_basis
     implicit none
-    
+
     real(EP), intent(in) :: a
     real(DP), dimension(:), intent(in) :: zD
     complex(EP), dimension(:), intent(in) :: p
@@ -562,94 +522,92 @@ contains
     type(well), intent(in) :: w
     type(formation), intent(in) :: f
 
-    ! finite difference matrix related 
-    ! a,b,c are sub,main,super diagonals of FD matrix
-    ! sigma is result (A1 + solution in vadose zone)
-    ! v is right-hand side
-    complex(EP), dimension(s%order,size(p)) :: aa,b,c,sigma,v
-
+    ! spectral solution
     complex(EP), dimension(size(p),size(zD)) :: sD
     complex(EP), dimension(size(p),size(zD)+1) :: sH
-    integer ::  np, nz, j, n
-    integer, dimension(s%order) :: ii
+    integer ::  np, nz, i,j, n, nbasis
 
-    complex(EP), dimension(size(p)) :: eta, cc
-    real(EP) :: h, invhsq, B2
-    real(EP), dimension(0:3) :: beta
-    complex(EP), dimension(s%order,size(p)) :: omega, B1
-    integer, parameter :: NPRINT = 2
+    complex(EP), dimension(size(p)) :: eta
+    real(EP) :: gamma
+    complex(EP), dimension(s%order,size(p)) :: omega
+
+    complex(DP), dimension(s%order+1,s%order+1) :: AA
+    complex(DP), dimension(s%order+1) :: bb
+    complex(DP), dimension(size(p),s%order+1) :: xx
+    real(DP), dimension(s%order) :: phi,phix,phixx
+    real(DP), dimension(s%order-2) :: xi
+
+    complex(EP), dimension(s%order+1,size(p)) :: B
+    integer, dimension(s%order+1) :: ipiv 
+    integer :: info
+
+    interface
+       subroutine ZGESV(N,NRHS,A,LDA,IPIV,B,LDB,INFO)
+         integer, intent(in) :: n,nrhs,lda,ldb
+         complex(8), intent(inout), dimension(lda,n) :: a
+         complex(8), intent(inout), dimension(ldb,nrhs) :: b
+         integer, intent(out), dimension(n) :: ipiv
+         integer, intent(out) :: info
+       end subroutine ZGESV
+    end interface
 
     n = s%order
-    h = f%usLD/real(n-1,EP) ! F.D. grid spacing
-    invhsq = 1.0_EP/h**2
+    nbasis = n-2
+    forall (i=1:nbasis)
+       ! range is 1 <= x  <= 1 + LD
+       ! mapped onto interval -1 <= xi <= +1
+       xi(i) = cos(PI*i/(nbasis+1))
+    end forall
+    
     np = size(p)
     nz = size(zD)
-
-    ! integers 0:n-1
-    forall(j=1:n) ii(j) = j-1
-
-    beta(0) = f%ac*f%Sy/f%Ss
-    beta(1) = -f%lambdaD  ! b*(ac-ak)  (-1* definition in driver_io.f90)
-    beta(2) = f%ak*f%b1   ! ak*(psi_a - psi_k)
-    beta(3) = f%akD       ! ak*b
 
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
 
-    B1(1:n,1:np) = spread(p(:)*beta(0)*exp(-beta(2))/f%kappa,1,n)
-    B2 = (a**2)/f%kappa
+    gamma = f%Sy*f%ac/f%Ss
+    B(1:n+1,1:np) = spread(p(:)*gamma*exp(-f%akD*f%PsiD),1,n+1)
 
-    omega(1:n,1:np) = B1(:,:)*spread(exp(-beta(1)*ii(:)*h),2,np) + B2
+    ! interior points
+    omega(1:nbasis,1:np) = (B(1:nbasis,1:np)*spread(&
+         & exp(f%lambdaD*(f%usLD*(xi(1:nbasis) + 1.0)/2.0)),2,np) + a**2)/f%kappa
+    ! top boundary
+    omega(nbasis+1,1:np) = (B(nbasis+1,:)*exp(f%lambdaD*(1.0+f%usLD)) + a**2)/f%kappa
+    ! bottom boundary (2 terms)
+    omega(nbasis+2:,1:np) = (B(nbasis+2:,:)*exp(f%lambdaD) + a**2)/f%kappa
 
-    ! main diagonal (first and last entries are different)
-    cc(1:np) = beta(3)/h - invhsq - omega(1,1:np)
-    b(1,1:np) = 0.5_EP*(exp( eta(:))*(cc(:) - eta(:)/h) + &
-                      & exp(-eta(:))*(cc(:) + eta(:)/h))
-    b(2:n,1:np) = beta(3)/h - 2.0*invhsq - omega(2:n,1:np)
-    b(n,1:np) = b(n,1:np) + invhsq - beta(3)/h
+    do j=1,np
+       AA(:,n+1) = 0.0
+       BB = 0.0
 
-    ! super-diagonal (last entry (n) is undefined)
-    c(1:n-1,1:np) = invhsq - beta(3)/h
-!!$    c(n,1:np) = -999999.9
-
-    ! sub-diagonal (first entry 1 is undefined, second entry is different)
-    aa(2:n,1:np) = invhsq  
-    aa(2,1:np) = aa(2,1:np)*cosh(eta(:))
-!!$    aa(1,1:np) = 7777777.7
-
-    ! right-hand side (all zero but first and second rows)
-    v(3:n,1:np) = 0.0_EP
-    v(2,1:np) =   -invhsq*sH(1:np,nz+1)
-    v(1,1:np) = -cc(1:np)*sH(1:np,nz+1)
-
-    ! sigma(1,1:np) is A1, the constant needed in
-    ! solution for saturated domain
-    call solve_tridiag(aa,b,c,v,sigma)
-
-    ! @ early times sigma_1 is underflowing while cosh(eta*z) is overflowing;
-    ! this should allow the solution to proceed (~Hantush)
-    where(spread(abs(sigma(1,1:np)) > tiny(1.0_EP),2,nz))
-       sD(1:np,1:nz) = sH(1:np,1:nz) + spread(sigma(1,:),2,nz)*&
-            & cosh(eta(1:np) .X. s%zD(1:nz))
-    elsewhere
-       sD(1:np,1:nz) = sH(1:np,1:nz)
-    end where
-
-    if (s%quiet > 1) then
-       write(*,999) ' sD:',sD(1:NPRINT,1), ' A1:',sigma(1,1:NPRINT),&
-            & ' a01:',aa(1,1:NPRINT),' b01:',b(1,1:NPRINT),' c01:',c(1,1:NPRINT)&
-            & ,' v01:',v(1,1:NPRINT),' omega01:',omega(1,1:NPRINT)
-       do j=2,n
-          write(*,998) &
-               &'                                                   '//&
-               &'                                                          a',j,':'&
-               &,aa(j,1:NPRINT),' b',j,':',b(j,1:NPRINT),' c',j,':',c(j,1:NPRINT)&
-               & ,' v',j,':',v(j,1:NPRINT),' omega',j,':',omega(j,1:NPRINT)
+       do i=1,nbasis
+          ! interior of domain
+          call spec_basis(xi(i),n,phi,phix,phixx)
+          AA(i,1:n) = phixx(:) - real(f%akD*phix(:),DP) - cmplx(omega(i,j)*phi(:),kind=DP)
        end do
-    end if
+       ! top no-flow boundary condition at x=1+LD, xi=1
+       call spec_basis(1.0,n,phi,phix,phixx)
+       AA(n-1,1:n) = phix(:)
+       ! flux-matching condition at x=1, xi=-1
+       call spec_basis(-1.0,n,phi,phix,phixx)
+       AA(n,1:n) = phix(:)
+       AA(n,n+1) = cmplx(eta(j)*sinh(eta(j)),kind=DP)
+       AA(n+1,1:n) = phi(:)
+       AA(n+1,n+1) = cmplx(cosh(eta(j)),kind=DP)
+       BB(n+1) = cmplx(sH(j,nz+1),kind=DP)
 
-998 format(5(A,I2.2,A,2('(',ES11.2E4,',',ES11.2E4,')')))
-999 format(7(A,2('(',ES11.2E4,',',ES11.2E4,')')))
+       ! solve for coefficients
+       call zgesv(n=n+1,nrhs=1,a=AA,lda=n,ipiv=ipiv,b=BB,ldb=n,info=info)
+       if (info /= 0) then
+          print *, 'ZGESV info',info
+       end if
+       
+       xx(j,:) = bb
+
+    end do
+    
+    sD(1:np,1:nz) = sH(1:np,1:nz) + spread(xx(:,n+1),2,nz)*&
+         & cosh(eta(1:np) .X. s%zD(1:nz))
 
   end function mishraNeuman2010spec
 

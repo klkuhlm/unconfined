@@ -1,7 +1,7 @@
 module utility
   implicit none
   private
-  public :: logspace, linspace, is_finite, operator(.X.), solve_tridiag 
+  public :: logspace, linspace, is_finite, operator(.X.), solve_tridiag, spec_basis 
   
   interface operator(.X.)
      module procedure outerprod_zd, outerprod_dz, outerprod_dd, outerprod_zz
@@ -109,6 +109,49 @@ contains
     end do backsub
     
   end subroutine solve_tridiag
+
+  subroutine spec_basis(x,nbasis,phi,phix,phixx)
+    use constants, only : DP
+    
+    integer, intent(in) :: nbasis
+    real(DP), intent(in) :: x
+    real(DP), intent(out), dimension(nbasis) :: phi,phix,phixx
+
+    integer :: i,n
+    real(DP) :: t,c,s,tn,tnt,tntt,tnx,tnxx
+
+    intrinsic :: sign
+
+    ! compute the basis functions for spectral problem
+    ! adapted from Boyd, "Chebyshev and Fourier Spectral
+    ! Methods", 2000, section 6.15 
+
+    if (abs(x) < 1.0) then
+       t = acos(x)
+       c = cos(t)
+       s = sin(t)
+       do i=1,nbasis
+          n = i+1
+          tn = cos(n*t)
+          tnt = -n*sin(n*t)
+          tntt = -n*n*tn
+          
+          ! convert t-derivatives into x-derivatives
+          tnx = -tnt/s  ! x-derivative of nth Cheb poly
+          tnxx = tntt/(s*s) - tnt*c/(s*s*s) ! second x-derivative
+       end do
+    else
+       ! alternative formulation when |x|=1
+       do i=1,nbasis
+          phi(i) = 0.0
+          n = i+1
+          phix(i) =  sign(x,1.0)*n*n
+          phixx(i) = sign(x,1.0)**n *n*n *(n*n-1.0)/3.0
+       end do
+    end if
+
+  end subroutine spec_basis
+  
 end module utility
 
 
