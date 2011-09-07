@@ -529,7 +529,7 @@ contains
 
     complex(EP), dimension(size(p)) :: eta
     real(EP) :: gamma
-    complex(EP), dimension(s%order,size(p)) :: omega
+    complex(EP), dimension(s%order+1,size(p)) :: omega
 
     complex(DP), dimension(s%order+1,s%order+1) :: AA
     complex(DP), dimension(s%order+1) :: bb
@@ -597,9 +597,10 @@ contains
        BB(n+1) = cmplx(sH(j,nz+1),kind=DP)
 
        ! solve for coefficients
-       call zgesv(n=n+1,nrhs=1,a=AA,lda=n,ipiv=ipiv,b=BB,ldb=n,info=info)
+       call zgesv(n=n+1,nrhs=1,a=AA,lda=n+1,ipiv=ipiv,&
+                & b=BB,ldb=n+1,info=info)
        if (info /= 0) then
-          print *, 'ZGESV info',info
+!!$          print *, 'ZGESV info',j,info
        end if
        
        xx(j,:) = bb

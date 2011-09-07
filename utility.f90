@@ -118,7 +118,7 @@ contains
     real(DP), intent(out), dimension(nbasis) :: phi,phix,phixx
 
     integer :: i,n
-    real(DP) :: t,c,s,tn,tnt,tntt,tnx,tnxx
+    real(DP) :: t,c,s,tnt,tntt
 
     intrinsic :: sign
 
@@ -132,21 +132,21 @@ contains
        s = sin(t)
        do i=1,nbasis
           n = i+1
-          tn = cos(n*t)
+          phi(i) = cos(n*t)
           tnt = -n*sin(n*t)
-          tntt = -n*n*tn
+          tntt = -n*n*phi(i)
           
           ! convert t-derivatives into x-derivatives
-          tnx = -tnt/s  ! x-derivative of nth Cheb poly
-          tnxx = tntt/(s*s) - tnt*c/(s*s*s) ! second x-derivative
+          phix(i) = -tnt/s  ! x-derivative of nth Cheb poly
+          phixx(i) = tntt/(s*s) - tnt*c/(s*s*s) ! second x-derivative
        end do
     else
        ! alternative formulation when |x|=1
        do i=1,nbasis
-          phi(i) = 0.0
+          phi(i) = 1.0
           n = i+1
-          phix(i) =  sign(x,1.0)*n*n
-          phixx(i) = sign(x,1.0)**n *n*n *(n*n-1.0)/3.0
+          phix(i) =  -sign(x,1.0)**(n+1) * n*n
+          phixx(i) = -sign(x,1.0)**n * n*n * (n*n-1.0)/3.0
        end do
     end if
 
