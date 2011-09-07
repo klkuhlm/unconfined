@@ -549,6 +549,110 @@ contains
 
   end function mishraNeuman2010FD
 
+  function mishraNeuman2010spec(a,zD,s,p,f,w) result(sD)
+    use constants, only : DP, EP
+    use types, only : well, formation, solution
+    use utility, only : operator(.X.), solve_tridiag
+    implicit none
+    
+    real(EP), intent(in) :: a
+    real(DP), dimension(:), intent(in) :: zD
+    complex(EP), dimension(:), intent(in) :: p
+    type(solution), intent(in) :: s
+    type(well), intent(in) :: w
+    type(formation), intent(in) :: f
+
+    ! finite difference matrix related 
+    ! a,b,c are sub,main,super diagonals of FD matrix
+    ! sigma is result (A1 + solution in vadose zone)
+    ! v is right-hand side
+    complex(EP), dimension(s%order,size(p)) :: aa,b,c,sigma,v
+
+    complex(EP), dimension(size(p),size(zD)) :: sD
+    complex(EP), dimension(size(p),size(zD)+1) :: sH
+    integer ::  np, nz, j, n
+    integer, dimension(s%order) :: ii
+
+    complex(EP), dimension(size(p)) :: eta, cc
+    real(EP) :: h, invhsq, B2
+    real(EP), dimension(0:3) :: beta
+    complex(EP), dimension(s%order,size(p)) :: omega, B1
+    integer, parameter :: NPRINT = 2
+
+    n = s%order
+    h = f%usLD/real(n-1,EP) ! F.D. grid spacing
+    invhsq = 1.0_EP/h**2
+    np = size(p)
+    nz = size(zD)
+
+    ! integers 0:n-1
+    forall(j=1:n) ii(j) = j-1
+
+    beta(0) = f%ac*f%Sy/f%Ss
+    beta(1) = -f%lambdaD  ! b*(ac-ak)  (-1* definition in driver_io.f90)
+    beta(2) = f%ak*f%b1   ! ak*(psi_a - psi_k)
+    beta(3) = f%akD       ! ak*b
+
+    eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
+    sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
+
+    B1(1:n,1:np) = spread(p(:)*beta(0)*exp(-beta(2))/f%kappa,1,n)
+    B2 = (a**2)/f%kappa
+
+    omega(1:n,1:np) = B1(:,:)*spread(exp(-beta(1)*ii(:)*h),2,np) + B2
+
+    ! main diagonal (first and last entries are different)
+    cc(1:np) = beta(3)/h - invhsq - omega(1,1:np)
+    b(1,1:np) = 0.5_EP*(exp( eta(:))*(cc(:) - eta(:)/h) + &
+                      & exp(-eta(:))*(cc(:) + eta(:)/h))
+    b(2:n,1:np) = beta(3)/h - 2.0*invhsq - omega(2:n,1:np)
+    b(n,1:np) = b(n,1:np) + invhsq - beta(3)/h
+
+    ! super-diagonal (last entry (n) is undefined)
+    c(1:n-1,1:np) = invhsq - beta(3)/h
+!!$    c(n,1:np) = -999999.9
+
+    ! sub-diagonal (first entry 1 is undefined, second entry is different)
+    aa(2:n,1:np) = invhsq  
+    aa(2,1:np) = aa(2,1:np)*cosh(eta(:))
+!!$    aa(1,1:np) = 7777777.7
+
+    ! right-hand side (all zero but first and second rows)
+    v(3:n,1:np) = 0.0_EP
+    v(2,1:np) =   -invhsq*sH(1:np,nz+1)
+    v(1,1:np) = -cc(1:np)*sH(1:np,nz+1)
+
+    ! sigma(1,1:np) is A1, the constant needed in
+    ! solution for saturated domain
+    call solve_tridiag(aa,b,c,v,sigma)
+
+    ! @ early times sigma_1 is underflowing while cosh(eta*z) is overflowing;
+    ! this should allow the solution to proceed (~Hantush)
+    where(spread(abs(sigma(1,1:np)) > tiny(1.0_EP),2,nz))
+       sD(1:np,1:nz) = sH(1:np,1:nz) + spread(sigma(1,:),2,nz)*&
+            & cosh(eta(1:np) .X. s%zD(1:nz))
+    elsewhere
+       sD(1:np,1:nz) = sH(1:np,1:nz)
+    end where
+
+    if (s%quiet > 1) then
+       write(*,999) ' sD:',sD(1:NPRINT,1), ' A1:',sigma(1,1:NPRINT),&
+            & ' a01:',aa(1,1:NPRINT),' b01:',b(1,1:NPRINT),' c01:',c(1,1:NPRINT)&
+            & ,' v01:',v(1,1:NPRINT),' omega01:',omega(1,1:NPRINT)
+       do j=2,n
+          write(*,998) &
+               &'                                                   '//&
+               &'                                                          a',j,':'&
+               &,aa(j,1:NPRINT),' b',j,':',b(j,1:NPRINT),' c',j,':',c(j,1:NPRINT)&
+               & ,' v',j,':',v(j,1:NPRINT),' omega',j,':',omega(j,1:NPRINT)
+       end do
+    end if
+
+998 format(5(A,I2.2,A,2('(',ES11.2E4,',',ES11.2E4,')')))
+999 format(7(A,2('(',ES11.2E4,',',ES11.2E4,')')))
+
+  end function mishraNeuman2010spec
+
 end module laplace_hankel_solutions
 
 
