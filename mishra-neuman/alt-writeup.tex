@@ -379,6 +379,40 @@ For small problems ($n \le 5$) the finite difference matrix above can
 be solved algebraically using Cramer's rule, or using equivalently
 using Mathematica.  
 
+\section{Formulation of Spectral Solution}
+The ordinary differential equation in the vadose zone can be solved
+via the spectral method in space, while still within Laplace-Hankel
+space.  Compared to the finite difference approach the main
+two related differences are: 1) finite difference use local low-order
+approximations to derivatives and the ODE while spectral uses global
+higher-order approximations 2) finite differences results in
+larger tri-diagonal matrices and spectral method results in smaller
+dense matrices.
+
+For the spectral method, Chebyshev polynomials are used as the basis
+functions,
+\begin{equation}
+  \label{eq:cheb}
+  \bar{\sigma}^{\ast}_D = \sum_{j=0}^{N-1} a_j T_{j}(z_D)
+\end{equation}
+where $N$ is the order of approximation, $T_n (\cos(t)) = \cos(nt)$,
+and $a_j$ are coefficients to be determined \cite{boyd00}.  The
+argument to $T_n$ is always mapped to the $-1\le x \le 1$ interval.
+Substituting \eqref{eq:cheb} into \eqref{eq:mn-d5} results in
+$\mathbf{L} \mathbf{a} = 0$, where $\mathbf{a}$ is the vector of
+coefficients to estimate and the $\mathbf{L}$ operator is
+\begin{equation}
+  \nonumber
+  L_{i,j}= T_{j,zz}(z_i) - a_{kD} T_{j,z}(z_i) - \xi_i T_{j}(z_i).
+\end{equation}
+The $z$ and $zz$ subscripts indicate first and second derivatives of
+the basis functions with respect to $z$.  The $i$ index is related to
+the location where the functions are evaluated $(z_i)$, while the $j$
+index is related to the order of the function approximation.  The
+functions are evaluated on the ``Chebyshev grid'', which is $z_i =
+\cos \left( \frac{\pi i}{N-1} \right)$, plus any evaluations on the
+boundaries, based on required boundary conditions.
+
 \bibliographystyle{alpha}
 \bibliography{mn}
 

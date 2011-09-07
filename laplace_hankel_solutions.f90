@@ -525,7 +525,7 @@ contains
     ! spectral solution
     complex(EP), dimension(size(p),size(zD)) :: sD
     complex(EP), dimension(size(p),size(zD)+1) :: sH
-    integer ::  np, nz, i,j, n, nbasis
+    integer ::  np, nz, i,j, n, nb
 
     complex(EP), dimension(size(p)) :: eta
     real(EP) :: gamma
@@ -534,29 +534,31 @@ contains
     complex(DP), dimension(s%order+1,s%order+1) :: AA
     complex(DP), dimension(s%order+1) :: bb
     complex(DP), dimension(size(p),s%order+1) :: xx
-    real(DP), dimension(s%order) :: phi,phix,phixx
-    real(DP), dimension(s%order-2) :: xi
+    real(DP), dimension(s%order-2) :: phi,phix,phixx
+    real(DP), dimension(s%order-2) :: xi, z
 
     complex(EP), dimension(s%order+1,size(p)) :: B
-    integer, dimension(s%order+1) :: ipiv 
-    integer :: info
+    complex(DP), dimension(33*(s%order-1)) :: work
+    integer :: ierr
 
-    interface
-       subroutine ZGESV(N,NRHS,A,LDA,IPIV,B,LDB,INFO)
-         integer, intent(in) :: n,nrhs,lda,ldb
-         complex(8), intent(inout), dimension(lda,n) :: a
-         complex(8), intent(inout), dimension(ldb,nrhs) :: b
-         integer, intent(out), dimension(n) :: ipiv
-         integer, intent(out) :: info
-       end subroutine ZGESV
+    interface  
+       subroutine ZGELS(TRANS, M, N, NRHS, A, LDA, B, LDB, WORK, &
+            & LDWORK, INFO)
+         integer, intent(in) :: M, N, NRHS, LDA, LDB, LDWORK
+         character(LEN=1), intent(in) :: TRANS
+         complex(8), intent(inout), dimension(LDWORK) :: WORK
+         complex(8), intent(inout), dimension(LDA,N) :: A
+         complex(8), intent(inout), dimension(LDB,NRHS) ::  B
+         integer, intent(out) :: INFO
+       end subroutine ZGELS
     end interface
 
     n = s%order
-    nbasis = n-2
-    forall (i=1:nbasis)
+    nb = n-2
+    forall (i=1:nb)
        ! range is 1 <= x  <= 1 + LD
        ! mapped onto interval -1 <= xi <= +1
-       xi(i) = cos(PI*i/(nbasis+1))
+       xi(i) = cos(PI*i/(nb+1))
     end forall
     
     np = size(p)
@@ -569,39 +571,40 @@ contains
     B(1:n+1,1:np) = spread(p(:)*gamma*exp(-f%akD*f%PsiD),1,n+1)
 
     ! interior points
-    omega(1:nbasis,1:np) = (B(1:nbasis,1:np)*spread(&
-         & exp(f%lambdaD*(f%usLD*(xi(1:nbasis) + 1.0)/2.0)),2,np) + a**2)/f%kappa
+    z(1:nb) = f%lambdaD*(1.0 + f%usLD*(xi(1:nb) + 1.0)/2.0)
+    omega(1:nb,1:np) = (B(1:nb,1:np)*spread(exp(z(:)),2,np) + a**2)/f%kappa
     ! top boundary
-    omega(nbasis+1,1:np) = (B(nbasis+1,:)*exp(f%lambdaD*(1.0+f%usLD)) + a**2)/f%kappa
+    omega(nb+1,1:np) = (B(nb+1,:)*exp(f%lambdaD*(1.0+f%usLD)) + a**2)/f%kappa
     ! bottom boundary (2 terms)
-    omega(nbasis+2:,1:np) = (B(nbasis+2:,:)*exp(f%lambdaD) + a**2)/f%kappa
+    omega(nb+2:nb+3,1:np) = (B(nb+2:nb+3,:)*exp(f%lambdaD) + a**2)/f%kappa
 
     do j=1,np
        AA(:,n+1) = 0.0
        BB = 0.0
 
-       do i=1,nbasis
+       do i=1,nb
           ! interior of domain
-          call spec_basis(xi(i),n,phi,phix,phixx)
-          AA(i,1:n) = phixx(:) - real(f%akD*phix(:),DP) - cmplx(omega(i,j)*phi(:),kind=DP)
+          call spec_basis(xi(i),nb,phi,phix,phixx)
+          AA(i,1:nb) = phixx(:) - cmplx(f%akD*phix(:),kind=DP) - cmplx(omega(i,j)*phi(:),kind=DP)
        end do
        ! top no-flow boundary condition at x=1+LD, xi=1
-       call spec_basis(1.0,n,phi,phix,phixx)
-       AA(n-1,1:n) = phix(:)
+       call spec_basis(1.0,nb,phi,phix,phixx)
+       AA(nb+1,1:nb) = phix(:)
        ! flux-matching condition at x=1, xi=-1
-       call spec_basis(-1.0,n,phi,phix,phixx)
-       AA(n,1:n) = phix(:)
-       AA(n,n+1) = cmplx(eta(j)*sinh(eta(j)),kind=DP)
-       AA(n+1,1:n) = phi(:)
-       AA(n+1,n+1) = cmplx(cosh(eta(j)),kind=DP)
-       BB(n+1) = cmplx(sH(j,nz+1),kind=DP)
+       call spec_basis(-1.0,nb,phi,phix,phixx)
+       AA(nb+2,1:nb) = phix(:)
+       AA(nb+2,nb+1) = cmplx(eta(j)*sinh(eta(j)),kind=DP)
+       AA(nb+3,1:nb) = phi(:)
+       AA(nb+3,nb+1) = cmplx(cosh(eta(j)),kind=DP)
+       BB(nb+3) = cmplx(sH(j,nz+1),kind=DP)
 
        ! solve for coefficients
-       call zgesv(n=n+1,nrhs=1,a=AA,lda=n+1,ipiv=ipiv,&
-                & b=BB,ldb=n+1,info=info)
-       if (info /= 0) then
-!!$          print *, 'ZGESV info',j,info
-       end if
+!!$       print *, size(work)
+       call zgels(trans='n', m=nb+3, n=nb+1, nrhs=1, a=AA, lda=nb+3, b=BB, &
+            & ldb=nb+3, work=work, ldwork=size(work), info=ierr)
+!!$       if (ierr /= 0) then
+!!$          print *, 'ZGESV info',j,ierr
+!!$       end if
        
        xx(j,:) = bb
 
