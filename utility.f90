@@ -117,7 +117,7 @@ contains
     real(DP), intent(in) :: x
     real(DP), intent(out), dimension(nbasis) :: phi,phix,phixx
 
-    integer :: i,n
+    integer :: i,n,nn
     real(DP) :: t,c,s,tnt,tntt
 
     intrinsic :: sign
@@ -143,10 +143,11 @@ contains
     else
        ! alternative formulation when |x|=1
        do i=1,nbasis
-          phi(i) = 1.0
           n = i+1
-          phix(i) =  -sign(x,1.0)**(n+1) * n*n
-          phixx(i) = -sign(x,1.0)**n * n*n * (n*n-1.0)/3.0
+          nn = n**2
+          phi(i) = sign(1.0_DP,x)**mod(n,2)
+          phix(i) =  sign(1.0_DP,x)**(n+1) * nn
+          phixx(i) = sign(1.0_DP,x)**n * nn * (nn-1.0)/3.0
        end do
     end if
 
