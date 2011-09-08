@@ -525,19 +525,21 @@ contains
     ! spectral solution
     complex(EP), dimension(size(p),size(zD)) :: sD
     complex(EP), dimension(size(p),size(zD)+1) :: sH
-    integer ::  np, nz, i,j, n, nb
+    integer ::  np, nz, i,j, k,n, nb
 
     complex(EP), dimension(size(p)) :: eta
     real(EP) :: gamma
     complex(EP), dimension(s%order+1,size(p)) :: omega
 
-    complex(DP), dimension(s%order+1,s%order+1) :: AA
-    complex(DP), dimension(s%order+1) :: bb
-    complex(DP), dimension(size(p),s%order+1) :: xx
+    complex(DP), dimension(s%order+1,s%order-1) :: AA
+    complex(DP), dimension(s%order+1) :: BB
+    complex(DP), dimension(size(p),s%order-1) :: xx
+
     real(DP), dimension(s%order-2) :: phi,phix,phixx
     real(DP), dimension(s%order-2) :: xi, z
 
     complex(EP), dimension(s%order+1,size(p)) :: B
+    real(EP) :: C
     complex(DP), dimension(33*(s%order-1)) :: work
     integer :: ierr
 
@@ -556,7 +558,7 @@ contains
     n = s%order
     nb = n-2
     forall (i=1:nb)
-       ! range is 1 <= x  <= 1 + LD
+       ! range is 1 <= zD <= 1 + LD
        ! mapped onto interval -1 <= xi <= +1
        xi(i) = cos(PI*i/(nb+1))
     end forall
@@ -568,49 +570,61 @@ contains
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
 
     gamma = f%Sy*f%ac/f%Ss
-    B(1:n+1,1:np) = spread(p(:)*gamma*exp(-f%akD*f%PsiD),1,n+1)
+    B(1:nb+3,1:np) = spread(p(:)*gamma/f%kappa*exp(-f%akD*f%PsiD),1,nb+3)
+    C = a**2/f%kappa
 
     ! interior points
-    z(1:nb) = f%lambdaD*(1.0 + f%usLD*(xi(1:nb) + 1.0)/2.0)
-    omega(1:nb,1:np) = (B(1:nb,1:np)*spread(exp(z(:)),2,np) + a**2)/f%kappa
+    ! map chebyshev grid (-1<=xi<=1) back onto zD coordinate (1<=zd<=1+LD)
+    z(1:nb) = f%lambdaD*(1.0 + f%usLD*(xi(:) + 1.0)/2.0)
+
+    omega(1:nb,1:np) = B(1:nb,:)*spread(exp(1.0 - z(:)),2,np) + C
     ! top boundary
-    omega(nb+1,1:np) = (B(nb+1,:)*exp(f%lambdaD*(1.0+f%usLD)) + a**2)/f%kappa
+    omega(nb+1,1:np) = B(nb+1,:)*exp(f%lambdaD*f%usLD) + C
     ! bottom boundary (2 terms)
-    omega(nb+2:nb+3,1:np) = (B(nb+2:nb+3,:)*exp(f%lambdaD) + a**2)/f%kappa
+    omega(nb+2:nb+3,1:np) = B(nb+2:nb+3,:) + C
 
     do j=1,np
-       AA(:,n+1) = 0.0
-       BB = 0.0
+       AA(:,nb+1) = cmplx(0.0,0.0,DP)
+       BB = cmplx(0.0,0.0,DP)
 
        do i=1,nb
           ! interior of domain
           call spec_basis(xi(i),nb,phi,phix,phixx)
           AA(i,1:nb) = phixx(:) - cmplx(f%akD*phix(:),kind=DP) - cmplx(omega(i,j)*phi(:),kind=DP)
        end do
+
        ! top no-flow boundary condition at x=1+LD, xi=1
        call spec_basis(1.0,nb,phi,phix,phixx)
-       AA(nb+1,1:nb) = phix(:)
+       AA(nb+1,1:nb) = phix(1:nb)
+
        ! flux-matching condition at x=1, xi=-1
        call spec_basis(-1.0,nb,phi,phix,phixx)
-       AA(nb+2,1:nb) = phix(:)
+       AA(nb+2,1:nb) = phix(1:nb)
        AA(nb+2,nb+1) = cmplx(eta(j)*sinh(eta(j)),kind=DP)
-       AA(nb+3,1:nb) = phi(:)
+       AA(nb+3,1:nb) = phi(1:nb)
        AA(nb+3,nb+1) = cmplx(cosh(eta(j)),kind=DP)
        BB(nb+3) = cmplx(sH(j,nz+1),kind=DP)
 
        ! solve for coefficients
-!!$       print *, size(work)
+       write(*,'(A)') 'before'
+       do i=1,nb+3
+          write(*,'(I2,4(2(A,ES9.2),A))') i,('[',real(AA(i,k)),',',aimag(AA(i,k)),']',k=1,nb+1)
+       end do
        call zgels(trans='n', m=nb+3, n=nb+1, nrhs=1, a=AA, lda=nb+3, b=BB, &
             & ldb=nb+3, work=work, ldwork=size(work), info=ierr)
-!!$       if (ierr /= 0) then
-!!$          print *, 'ZGESV info',j,ierr
-!!$       end if
+       if (ierr /= 0) then
+          print *, 'ZGESV info',j,ierr
+          do i=1,nb+3
+             write(*,'(I2,4(2(A,ES9.2),A))') i,('[',real(AA(i,k)),',',aimag(AA(i,k)),']',k=1,nb+1)
+          end do
+!!$          stop
+       end if
        
-       xx(j,:) = bb
+       xx(j,1:nb+1) = BB(1:nb+1)
 
     end do
     
-    sD(1:np,1:nz) = sH(1:np,1:nz) + spread(xx(:,n+1),2,nz)*&
+    sD(1:np,1:nz) = sH(1:np,1:nz) + spread(xx(1:np,nb+1),2,nz)*&
          & cosh(eta(1:np) .X. s%zD(1:nz))
 
   end function mishraNeuman2010spec

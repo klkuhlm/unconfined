@@ -124,7 +124,7 @@ contains
 
     ! compute the basis functions for spectral problem
     ! adapted from Boyd, "Chebyshev and Fourier Spectral
-    ! Methods", 2000, section 6.15 
+    ! Methods", 2000, section 6.15 and Appendix A.2 
 
     if (abs(x) < 1.0) then
        t = acos(x)
@@ -145,7 +145,7 @@ contains
        do i=1,nbasis
           n = i+1
           nn = n**2
-          phi(i) = sign(1.0_DP,x)**mod(n,2)
+          phi(i) = sign(1.0_DP,x)**n
           phix(i) =  sign(1.0_DP,x)**(n+1) * nn
           phixx(i) = sign(1.0_DP,x)**n * nn * (nn-1.0)/3.0
        end do
