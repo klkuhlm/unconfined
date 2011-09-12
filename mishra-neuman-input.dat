@@ -1,4 +1,4 @@
-2  6  T  T  T                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
+0  6  T  T  T                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
 2.02D-2                      :: Q (volumetric pumping rate) [L^3/T]
 3.54D-1 7.76D-2          :: l/b, d/b (normalized depth to bottom/top of screened interval)
 2.54D-2    2.54D-2          :: rw, rc (radius of well casing and tubing)
