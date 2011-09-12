@@ -541,17 +541,18 @@ contains
     complex(EP), dimension(s%order+1,size(p)) :: B
     real(EP) :: C
     complex(DP), dimension(33*(s%order-1)) :: work
-    integer :: ierr
+    integer(4) :: ierr
+    character(22) :: fmt
 
     interface  
        subroutine ZGELS(TRANS, M, N, NRHS, A, LDA, B, LDB, WORK, &
-            & LDWORK, INFO)
-         integer, intent(in) :: M, N, NRHS, LDA, LDB, LDWORK
+            & LWORK, INFO)
+         integer(KIND=4), intent(in) :: M, N, NRHS, LDA, LDB, LWORK
          character(LEN=1), intent(in) :: TRANS
-         complex(8), intent(inout), dimension(LDWORK) :: WORK
-         complex(8), intent(inout), dimension(LDA,N) :: A
-         complex(8), intent(inout), dimension(LDB,NRHS) ::  B
-         integer, intent(out) :: INFO
+         complex(KIND=8), intent(inout), dimension(LWORK) :: WORK
+         complex(KIND=8), intent(inout), dimension(M,N) :: A
+         complex(KIND=8), intent(inout), dimension(M,NRHS) ::  B
+         integer(KIND=4), intent(out) :: INFO
        end subroutine ZGELS
     end interface
 
@@ -607,25 +608,28 @@ contains
 
        ! solve for coefficients
        if (s%quiet > 1) then
-          write(*,'(A)') 'before'
+          fmt = '(I2,   (2(A,ES9.2),A))'
+          write(fmt(5:7),'(I3.3)') nb+1
+          write(*,'(A)') 'A matrix'
           do i=1,nb+3
-             write(*,'(I2,4(2(A,ES9.2),A))') i,('[',real(AA(i,k)),',',aimag(AA(i,k)),']',k=1,nb+1)
+             write(*,fmt) i,('[',real(AA(i,k)),',',aimag(AA(i,k)),']',k=1,nb+1)
           end do
        end if
        
-       call zgels(trans='n', m=nb+3, n=nb+1, nrhs=1, a=AA, lda=nb+3, b=BB, &
-            & ldb=nb+3, work=work, ldwork=size(work), info=ierr)
+       call zgels(trans='n', m=int(nb+3,4), n=int(nb+1,4), nrhs=1_4, a=AA, lda=int(nb+3,4), &
+            & b=BB, ldb=int(nb+3,4), work=work, lwork=size(work,kind=4), info=ierr)
        if (ierr /= 0) then
           if (s%quiet > 0) then
-             print *, 'ZGESV info',j,ierr
-          end if
-          if (s%quiet > 1) then
-             do i=1,nb+3
-                write(*,'(I2,4(2(A,ES9.2),A))') i,('[',real(AA(i,k)),',',aimag(AA(i,k)),']',k=1,nb+1)
-             end do
+             print *, 'ZGESV: j,ierr',j,ierr
           end if
        end if
        
+       if (s%quiet > 1) then
+          fmt(2:3) = '2X'
+          write(*,'(A)') 'x solution'
+          write(*,fmt) ('[',real(BB(k)),',',aimag(BB(k)),']',k=1,nb+1)
+       end if
+
        xx(j,1:nb+1) = BB(1:nb+1)
 
     end do

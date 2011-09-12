@@ -14,7 +14,7 @@ FREE = -free
 PERFLDFLAGS = $(PERF)
 ##################################################
 
-LAPACK = lapack.a blas.a
+LAPACK = lapack.a gotoblas.a -lpthread $(OMP)
 
 EXTERNAL = cbessel.o 
 HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o
@@ -35,7 +35,7 @@ LD = $(F90) -fbacktrace
 ####### default optimized (no debugging) target ##########################
 # only the driver routine has openmp directives
 driver: $(OPTOBJS)
-	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS) $(LAPACK)
+	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS) $(LAPACK) 
 
 
 ####### compiler debugging ### 

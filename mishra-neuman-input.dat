@@ -1,4 +1,4 @@
-1  6  T  T  T                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
+2  6  T  T  T                :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
 2.02D-2                      :: Q (volumetric pumping rate) [L^3/T]
 3.54D-1 7.76D-2          :: l/b, d/b (normalized depth to bottom/top of screened interval)
 2.54D-2    2.54D-2          :: rw, rc (radius of well casing and tubing)
@@ -8,7 +8,7 @@
 1.21D-3  5.3D-1                :: Kr,kappa (radial K and ratio Kz/Kr)
 1.05D-4  2.8D-1                :: Ss,Sy
 0.0D0                        ::  beta Malama linearization parameter
-2.0D+0 3.0D-1   2.0D-2 2.0D-3  5.8D+0 1  10   :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L, FD order
+2.0D+0 3.0D-1   2.0D-2 2.0D-3  5.8D+0 1  6   :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L, FD order
 10 1.0D-7  1.0D-8           :: deHoog invlap;  M,alpha,tol
 7  5                         :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
 2  2  8  30                 :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
