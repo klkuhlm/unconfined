@@ -535,8 +535,8 @@ contains
     complex(DP), dimension(s%order+1) :: BB
     complex(DP), dimension(size(p),s%order-1) :: xx
 
-    real(DP), dimension(s%order-2) :: phi,phix,phixx
-    real(DP), dimension(s%order-2) :: xi, z
+    real(EP), dimension(s%order-2) :: phi,phix,phixx
+    real(EP), dimension(s%order-2) :: xi, z
 
     complex(EP), dimension(s%order+1,size(p)) :: B
     real(EP) :: C
@@ -590,34 +590,40 @@ contains
        do i=1,nb
           ! interior of domain
           call spec_basis(xi(i),nb,phi,phix,phixx)
-          AA(i,1:nb) = phixx(:) - cmplx(f%akD*phix(:),kind=DP) - cmplx(omega(i,j)*phi(:),kind=DP)
+          AA(i,1:nb) = cmplx(phixx(:) - f%akD*phix(:) - omega(i,j)*phi(:),kind=DP)
        end do
 
        ! top no-flow boundary condition at x=1+LD, xi=1
-       call spec_basis(1.0,nb,phi,phix,phixx)
-       AA(nb+1,1:nb) = phix(1:nb)
+       call spec_basis(1.0_EP,nb,phi,phix,phixx)
+       AA(nb+1,1:nb) = cmplx(phix(1:nb),kind=DP)
 
        ! flux-matching condition at x=1, xi=-1
-       call spec_basis(-1.0,nb,phi,phix,phixx)
-       AA(nb+2,1:nb) = phix(1:nb)
+       call spec_basis(-1.0_EP,nb,phi,phix,phixx)
+       AA(nb+2,1:nb) = cmplx(phix(1:nb),kind=DP)
        AA(nb+2,nb+1) = cmplx(eta(j)*sinh(eta(j)),kind=DP)
-       AA(nb+3,1:nb) = phi(1:nb)
+       AA(nb+3,1:nb) = cmplx(phi(1:nb),kind=DP)
        AA(nb+3,nb+1) = cmplx(cosh(eta(j)),kind=DP)
        BB(nb+3) = cmplx(sH(j,nz+1),kind=DP)
 
        ! solve for coefficients
-       write(*,'(A)') 'before'
-       do i=1,nb+3
-          write(*,'(I2,4(2(A,ES9.2),A))') i,('[',real(AA(i,k)),',',aimag(AA(i,k)),']',k=1,nb+1)
-       end do
-       call zgels(trans='n', m=nb+3, n=nb+1, nrhs=1, a=AA, lda=nb+3, b=BB, &
-            & ldb=nb+3, work=work, ldwork=size(work), info=ierr)
-       if (ierr /= 0) then
-          print *, 'ZGESV info',j,ierr
+       if (s%quiet > 1) then
+          write(*,'(A)') 'before'
           do i=1,nb+3
              write(*,'(I2,4(2(A,ES9.2),A))') i,('[',real(AA(i,k)),',',aimag(AA(i,k)),']',k=1,nb+1)
           end do
-!!$          stop
+       end if
+       
+       call zgels(trans='n', m=nb+3, n=nb+1, nrhs=1, a=AA, lda=nb+3, b=BB, &
+            & ldb=nb+3, work=work, ldwork=size(work), info=ierr)
+       if (ierr /= 0) then
+          if (s%quiet > 0) then
+             print *, 'ZGESV info',j,ierr
+          end if
+          if (s%quiet > 1) then
+             do i=1,nb+3
+                write(*,'(I2,4(2(A,ES9.2),A))') i,('[',real(AA(i,k)),',',aimag(AA(i,k)),']',k=1,nb+1)
+             end do
+          end if
        end if
        
        xx(j,1:nb+1) = BB(1:nb+1)

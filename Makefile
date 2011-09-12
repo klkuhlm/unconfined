@@ -3,7 +3,7 @@
 # flags / settings for gfortran >= 4.6 compiler
 
 DEBUG = -O0 -g -Wall -Wextra -fwhole-file
-DEBUG += -frange-check -fcheck=all 
+DEBUG += -frange-check -fbounds-check -fcheck=all 
 OMP = -fopenmp
 PERF = -Ofast -march=native 
 PERF += $(OMP)

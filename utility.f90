@@ -111,14 +111,14 @@ contains
   end subroutine solve_tridiag
 
   subroutine spec_basis(x,nbasis,phi,phix,phixx)
-    use constants, only : DP
+    use constants, only : EP
     
     integer, intent(in) :: nbasis
-    real(DP), intent(in) :: x
-    real(DP), intent(out), dimension(nbasis) :: phi,phix,phixx
+    real(EP), intent(in) :: x
+    real(EP), intent(out), dimension(nbasis) :: phi,phix,phixx
 
     integer :: i,n,nn
-    real(DP) :: t,c,s,tnt,tntt
+    real(EP) :: t,c,s,tnt,tntt
 
     intrinsic :: sign
 
@@ -145,9 +145,9 @@ contains
        do i=1,nbasis
           n = i+1
           nn = n**2
-          phi(i) = sign(1.0_DP,x)**n
-          phix(i) =  sign(1.0_DP,x)**(n+1) * nn
-          phixx(i) = sign(1.0_DP,x)**n * nn * (nn-1.0)/3.0
+          phi(i) = sign(1.0_EP,x)**n
+          phix(i) =  sign(1.0_EP,x)**(n+1) * nn
+          phixx(i) = sign(1.0_EP,x)**n * nn * (nn-1.0)/3.0
        end do
     end if
 
