@@ -14,8 +14,6 @@ FREE = -free
 PERFLDFLAGS = $(PERF)
 ##################################################
 
-LAPACK = lapack.a gotoblas.a -lpthread $(OMP)
-
 EXTERNAL = cbessel.o 
 HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o
 OBJS =  constants.o $(EXTERNAL) types.o invlap.o utility.o $(HILEV)
@@ -35,13 +33,13 @@ LD = $(F90) -fbacktrace
 ####### default optimized (no debugging) target ##########################
 # only the driver routine has openmp directives
 driver: $(OPTOBJS)
-	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS) $(LAPACK) 
+	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS) 
 
 
 ####### compiler debugging ### 
 ##(no optimization, checks for out-of-bounds arrays and gives more warninngs, but still runs to completion)
 debug_driver: $(DEBUGOBJS)
-	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS) $(LAPACK)
+	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS) 
 
 complex_bessel.mod:cbessel.f90
 
