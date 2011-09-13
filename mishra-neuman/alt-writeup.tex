@@ -377,8 +377,16 @@ vectorized to compute many solutions simultaneously.
 
 For small problems ($n \le 5$) the finite difference matrix above can
 be solved algebraically using Cramer's rule, or using equivalently
-using Mathematica.  
-
+using Mathematica.  For example, the matrix \eqref{eq:fd-02} for three nodes $(h=L_D/2)$ can be solved for $A_1$ analytically as
+\begin{align}
+  \label{eq:AsolnMathematica}
+  A_1&=\left\lbrace-\frac{4 \left(4-2 a_k L_D\right) \left[4+\left(C+B e^{-L_D \lambda _D}\right) L_D^2\right]}{L_D^6}+\left(B+C+\frac{4-2 a_k L_D}{L_D^2}\right) \right.  \times \notag\\
+      & \left.\left.\left[\frac{8 \left(-2+a_k L_D\right)}{L_D^4}+\left(-C-B e^{-L_D \lambda _D}-\frac{4}{L_D^2}\right) \left(-C-B e^{-\frac{1}{2} L_D \lambda _D}+\frac{2 \left(-4+a_k L_D\right)}{L_D^2}\right)\right]\right\rbrace s_H \right/\notag\\
+  &\left\lbrace\frac{4 \cosh(\eta) \left(4-2 a_k L_D\right) \left(4+\left(C+B e^{-L_D \lambda _D}\right) L_D^2\right)}{L_D^6}+\right. \\
+    &\frac{-4 \cosh(\eta)+L_D \left(-2 \eta  \sinh(\eta)+2 \cosh(\eta) a_k-(B+C) \cosh(\eta) L_D\right)}{L_D^2} \notag\\
+    &\left.\left[\frac{8 \left(-2+a_k L_D\right)}{L_D^4}+\left(-C-B e^{-L_D \lambda _D}-\frac{4}{L_D^2}\right) \left(-C-B e^{-\frac{1}{2} L_D \lambda _D}+\frac{2 \left(-4+a_k L_D\right)}{L_D^2}\right)\right]\right\rbrace \notag
+\end{align}
+which would only be accuracte if the vadose zone was small, so that $L_D/2 \ll 1$. 
 
 \bibliographystyle{alpha}
 \bibliography{mn}
