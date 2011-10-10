@@ -5,13 +5,13 @@
 DEBUG = -O0 -g -Wall -Wextra -fwhole-file
 DEBUG += -frange-check -fbounds-check -fcheck=all 
 OMP = -fopenmp
-PERF = -Ofast -march=native 
+PERF = -Ofast -mtune=core2
 PERF += $(OMP)
 DEFAULTS = -fdefault-real-8 -fdefault-integer-8 
 F90 = gfortran-4.7
 CPP = -cpp
 FREE = -free
-PERFLDFLAGS = $(PERF)
+PERFLDFLAGS = $(PERF) -static
 ##################################################
 
 EXTERNAL = cbessel.o 
@@ -28,7 +28,7 @@ F90SRC=$(patsubst %.o,%.f90,$(OBJS) $(MAIN))
 OUT = unconfined
 DEBUGOUT = debug_$(OUT)
 
-LD = $(F90) -fbacktrace
+LD = $(F90) -fbacktrace -static
 
 ####### default optimized (no debugging) target ##########################
 # only the driver routine has openmp directives
