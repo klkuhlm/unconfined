@@ -6,7 +6,7 @@ public :: read_input, write_timeseries_header, write_contour_header
 
 contains
   subroutine read_input(w,f,s,lap,h,gl,ts)
-    use constants, only : EP, DP, PI, PIEP, NUMCHAR, RFMT, SFMT, SMALLZ
+    use constants, only : EP, DP, PI, PIEP, NUMCHAR, RFMT, SFMT
     use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
     use utility, only : logspace, linspace
 
@@ -273,6 +273,17 @@ contains
        stop
     end if
 
+    if (s%rwobs < spacing(1.0)) then
+       write(*,*) 'ERROR: monitoring well radius must be >0',s%rwobs
+       stop 668
+    end if
+    
+    if (s%sF < spacing(1.0)) then
+       write(*,*) 'ERROR: monitoring well shape factor must be >0',s%sF
+       stop 669
+    end if
+    
+
     if (s%timeseries) then
        ! if computing a time series, read time-related
        ! parameters from input file
@@ -297,7 +308,7 @@ contains
              ! calc points spread out evenly along obs well screen
              s%z(1:s%zOrd) = linspace(s%zBot, s%zTop, s%zOrd)
           else
-             ! if only one point, it goes to middle of interval
+             ! if only one point, it goes to middle of monitoring interval
              s%z(1) = (s%zBot + s%zTop)/2.0
           end if
        end if
@@ -429,11 +440,7 @@ contains
     f%alphaD = f%kappa/f%sigma
     f%betaD = f%beta/s%Lc
 
-    ! pumping and monitoring well screens are entered relative to
-    ! thickness of aquifer (which may not be the characteristic length - see above)
-
     ! dimensionless lengths
-    ! assume dimensionless l_D and d_D were entered (with Lc = b), convert them back
     w%lD = w%l/s%Lc
     w%dD = w%d/s%Lc
     w%bD = w%lD - w%dD
@@ -452,11 +459,10 @@ contains
     f%b1 = f%psia - f%psik
     f%PsiD = f%b1/s%Lc
 
-    s%zD(:) = s%z(:)/s%Lc
-    s%rD(:) = s%r(:)/s%Lc
-
-    ! dimensionless times
-    s%tD(:) = s%t(:)/s%Tc
+    ! dimensionlses coordinates
+    s%zD(1:s%nz) = s%z(:)/s%Lc
+    s%rD(1:s%nr) = s%r(:)/s%Lc
+    s%tD(1:s%nt) = s%t(:)/s%Tc
 
     ! determine in which layer z point(s) are located
     ! z is positive up, with 0 at bottom
@@ -464,11 +470,11 @@ contains
     allocate(s%zLay(size(s%zD)))
     s%zLay = -999
 
-    where(s%zD(:) < SMALLZ .or. s%zD(:) < 1.0 - w%lD)
+    where(s%zD(:) < spacing(1.0) .or. s%zD(:) < (1.0-w%lD))
        ! below well screen (or at bottom of aquifer zD==0)
        s%zLay = 1
     elsewhere
-       where((s%zD(:) - 1.0) > SMALLZ .or. s%zD(:) < 1.0 - w%dD)
+       where((s%zD(:)-1.0) > spacing(1.0) .or. s%zD(:) < (1.0-w%dD))
           ! beside/next-to well screen
           s%zLay = 2
        elsewhere
@@ -480,9 +486,9 @@ contains
     ! ## echo computed quantities #####
 
     if (s%quiet > 0) then
-       write(*,'(A,'//RFMT//')') 'kappa:   ',f%kappa
-       write(*,'(A,'//RFMT//')') 'sigma:   ',f%sigma
-       write(*,'(A,'//RFMT//')') 'alpha_D: ',f%alphaD
+       write(*,'(A,'//RFMT//')') 'kappa   (Kz/Kr):   ',f%kappa
+       write(*,'(A,'//RFMT//')') 'sigma   (Sy/S):   ',f%sigma
+       write(*,'(A,'//RFMT//')') 'alpha_D:(kappa/sigma): ',f%alphaD
        write(*,'(A,2('//RFMT//',1X))') 'beta,beta_D: ',f%beta,f%betaD
        write(*,'(3(A,'//RFMT//'))') 'Tc:',s%Tc,' Lc:',s%Lc,' Hc:',s%Hc
        write(*,'(3(A,'//RFMT//'))') 'b_D:',w%bD,' l_D:',w%lD,' d_D:',w%dD
@@ -502,6 +508,8 @@ contains
        write(*,fmt) 't_D: ',s%nt,s%tD
        write(*,'(A,2('//RFMT//',1X),I0)') 'monitoring screen '//&
             & 'zTop, zBot ,zOrd: ', s%zTop, s%zBot, s%zOrd
+       write(*,'(A,2('//RFMT//',1X))') 'monitoring well rW and shape factor: ', &
+            & s%rwobs, s%sF
        write(*,'(A,I0,2('//RFMT//',1X))') 'deHoog: M,alpha,tol: ', &
             & lap%M, lap%alpha, lap%tol
        write(*,'(A,2(I0,1X))'), 'tanh-sinh: k, num extrapolation steps ', &
@@ -510,7 +518,9 @@ contains
             & h%j0s(:), gl%nacc, gl%ord
        write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman acD,akD, psiaD,psikD :: ', &
             & f%acD,f%akD,f%psiaD,f%psikD
-       write(*,'(A,3('//RFMT//',1X))') 'Mishra&Neuman LD, lambdaD, b1:: ',f%usLD, f%lambdaD, f%b1
+       write(*,'(A,3('//RFMT//',1X),2(I0,1X))') &
+            & 'Mishra&Neuman LD, lambdaD, b1, MN type, MN order:: ',&
+            & f%usLD, f%lambdaD, f%b1, s%MNtype, s%order
     end if
 
     terms = maxval(h%j0s(:)) + gl%nacc + 1
@@ -600,6 +610,8 @@ contains
     else
        write(unit,'(A,3('//RFMT//',1X),I0)') '# screened obs well r,zTop,zBot,zOrd :: ',&
             & s%r(1), s%zTop, s%zBot, s%zOrd
+       write(unit,'(A,2('//RFMT//',1X))') '# screened obs well rW, shape factor :: ',&
+            & s%rwobs, s%sF
     end if
     if(s%model == 4 .or. s%model == 5) then
        ! malama solutions

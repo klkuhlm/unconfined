@@ -1,5 +1,7 @@
 module constants
 
+  public
+
   ! real with range 300 orders of mag, 15 sig figs (8 on both g95 & ifort)
   integer, parameter :: DP = selected_real_kind(p=15,r=300)
 
@@ -10,7 +12,7 @@ module constants
   !!integer, parameter :: EP = selected_real_kind(p=33,r=3000)
 
   !! 3.141592653589793238462643383279503_EP
-  real(DP), parameter :: PI =    4.0_DP*atan(1.0_DP) 
+  real(DP), parameter :: PI =    4.0_DP*atan(1.0_DP)
   real(EP), parameter :: PIEP =  4.0_EP*atan(1.0_EP)
   real(EP), parameter :: INVPIEP = 0.25_EP/atan(1.0_EP)
   real(EP), parameter :: TWOPIEP = 8.0_EP*atan(1.0_EP)
@@ -22,10 +24,8 @@ module constants
 
   !! maximum argument for which sinh(x)-cosh(x) > 0
   ! this is the point where the approximation for sinh(x) or cosh(x) -> 0.5*exp(x)
-  ! for DP  ~18.123, EP ~ 20.72, QP ~ 38.96
+  ! for DP ~ 18.123, EP ~ 20.72, QP ~ 38.96
   real(EP), parameter :: MAXEXP = -log(epsilon(1.0_EP))/3.0_EP
-
-  real(DP), parameter :: SMALLZ = 0.001
 
   !! length of filenames
   integer, parameter :: NUMCHAR = 128
