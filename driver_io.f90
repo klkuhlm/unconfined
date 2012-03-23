@@ -9,7 +9,7 @@ contains
     use constants, only : EP, DP, PI, PIEP, NUMCHAR, RFMT, SFMT, SMALLZ
     use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
     use utility, only : logspace, linspace
-    
+
     type(invLaplace), intent(inout) :: lap
     type(invHankel), intent(inout) :: h
     type(GaussLobatto), intent(inout) :: gl
@@ -35,7 +35,7 @@ contains
     integer :: i
 
     ! used to compute J0 zeros
-    real(EP) :: x, dx 
+    real(EP) :: x, dx
 
     intrinsic :: get_command_argument, bessel_j0, bessel_j1
 
@@ -52,12 +52,12 @@ contains
             & ' for reading'
        stop
     end if
-  
+
     ! ## switches and settings #####
 
-    ! suppress output to screen,  which model to use?, 
-    ! write dimensionless output?, 
-    ! time-series (compute one location through time)? 
+    ! suppress output to screen,  which model to use?,
+    ! write dimensionless output?,
+    ! time-series (compute one location through time)?
     !     [non-time-series option is contours at a single time],
     ! piezometer (point monitoring well) or integrate finite observation screen length?,
     read(19,*) s%quiet, s%model, s%dimless, s%timeseries, s%piezometer
@@ -81,19 +81,19 @@ contains
     read(19,*) w%l, w%d
 
     ! pumping well: well and casing radii [L]
-    read(19,*) w%rw, w%rc 
+    read(19,*) w%rw, w%rc
 
     ! dimensionless skin
     read(19,*) f%gamma
 
     ! pumping well time behavior
-    read(19,'(I3)', advance='no') lap%timeType 
+    read(19,'(I3)', advance='no') lap%timeType
     if (lap%timeType > -1) then
        ! functional time behavior (two or fewer parameters)
        allocate(lap%timePar(2))
        read(19,*) lap%timePar(:)
     else
-       ! arbitrarily long piecewise-constant time behavior 
+       ! arbitrarily long piecewise-constant time behavior
        allocate(lap%timePar(-2*lap%timeType+1))
        read(19,*) lap%timePar(:)
     end if
@@ -105,19 +105,19 @@ contains
 
     ! aquifer radial K [L^2/T] and anisotropy ratio (Kz/Kr)
     read(19,*) f%Kr, f%kappa
-    
+
     ! aquifer specific storage [1/L] and specific yield [-]
     read(19,*) f%Ss, f%Sy
 
     ! Malama linearization beta parameter
-    read(19,*) f%beta 
-    
+    read(19,*) f%beta
+
     ! Mishra/Neuman unsaturated model parameters
     ! capacity & conductivity sorptive numbers (1/length)
     ! negative air-entry & saturation pressures (>0)
     ! unsaturated zone thickness (length)
     read(19,*) f%ac, f%ak, f%psia, f%psik, f%usL, s%MNtype, s%order
-    
+
     ! ## echo check parameters #####
 
     if (s%quiet > 0) then
@@ -139,9 +139,9 @@ contains
                & lap%timeType,lap%timePar(:-lap%timeType+1),'| ',&
                & lap%timePar(-lap%timeType+2:)
        end if
-       write(*,'(A,'//RFMT//')') 'b (initial aquier sat thickness):: ',f%b  
-       write(*,'(A,2('//RFMT//',1X))') 'l/b,d/b (relative screen bot&top from above):: ', w%l, w%d  
-       write(*,'(A,2('//RFMT//',1X))') 'rw,rc (well and casing radii):: ', w%rw, w%rc  
+       write(*,'(A,'//RFMT//')') 'b (initial aquier sat thickness):: ',f%b
+       write(*,'(A,2('//RFMT//',1X))') 'l,d (screen bot&top measured from above):: ', w%l, w%d
+       write(*,'(A,2('//RFMT//',1X))') 'rw,rc (well and casing radii):: ', w%rw, w%rc
        write(*,'(A,3('//RFMT//',1X))') 'Kr,kappa,gamma:: ', f%Kr, f%kappa, f%gamma
        write(*,'(A,2('//RFMT//',1X))') 'Ss,Sy:: ', f%Ss, f%Sy
        write(*,'(A,'//RFMT//')') 'beta (Malama linearization factor):: ',f%beta
@@ -157,7 +157,7 @@ contains
        write(*,*) 'ERROR: negative aquifer / geometry parameters:', &
             &  f%Sy, f%gamma, w%d, w%l
        stop
-    end if   
+    end if
 
     if(any([f%b,f%Kr,f%kappa,f%Ss,w%rw,w%rc] < spacing(0.0))) then
        write(*,*) 'ERROR: zero or negative parameters:', &
@@ -175,12 +175,12 @@ contains
             & f%ac,f%ak,f%usL,f%psia,f%psik
        stop
     end if
-    
+
     if (f%beta < 0.0) then
        write(*,*) 'ERROR: Malama linearization beta cannot be negative',f%beta
        stop
     end if
-      
+
     if (s%order < 3) then
        write(*,*) 'ERROR: order of Mishra/Neuman finite difference matrix must be >=3',s%order
        stop
@@ -200,22 +200,22 @@ contains
     ! tanh-sinh quadrature parameters
     ! integration order 2^(k-1) and Richardson extrapolation order
     read(19,*) ts%k, ts%R
-    
+
     ! Gauss-Lobatto quadrature parameters
     ! max/min J0 zero to split at, # zeros to accelerate, GL-order
-    read(19,*) h%j0s(1:2), gl%nacc, gl%ord  
+    read(19,*) h%j0s(1:2), gl%nacc, gl%ord
 
     ! ## checking of numerical parameters #####
 
     if (lap%M < 2) then
        write(*,*)  'ERROR: deHoog # FS terms must be >= 1 M=',lap%M
-       stop 
+       stop
     end if
 
     if (lap%tol < epsilon(lap%tol)) then
        lap%tol = epsilon(lap%tol)
        write(*,'(A,'//RFMT//')') 'WARNING: increased INVLAP tolerance to ',&
-            & lap%tol 
+            & lap%tol
     end if
 
     if(ts%k - ts%R < 2) then
@@ -229,7 +229,7 @@ contains
             &'level must be >= 1:  ',ts%R
        stop
     end if
-    
+
     if(any([h%j0s(:),gl%nacc, ts%k] < 1)) then
        write(*,*) 'ERROR max/min split, # accelerated terms, ',&
             & 'and tanh-sinh k must be >= 1:',h%j0s(:),gl%nacc, ts%k
@@ -243,7 +243,7 @@ contains
     ! or log-sampled between endpoints
 
     read(19,*) timeFileName, tval  ! either tval or data in file used
-    
+
     ! solution at one or more locations through time
     ! locations can be specified in a file,
     ! or linear-sampled between endpoints
@@ -253,17 +253,17 @@ contains
     ! if computing contour or profile, these aren't used
     ! point observation depth only top used if piezometer
     ! z is positive up, with zero at bottom of aquifer
-    read(19,*) s%zTop, s%zBot, s%zOrd, s%rwobs, s%sF 
+    read(19,*) s%zTop, s%zBot, s%zOrd, s%rwobs, s%sF
 
-    if (s%zTop < s%zBot .or. s%zTop < 0.0 .or. s%zBot > 1.0) then
-       write(*,*) 'ERROR: top of monitoring well screen must be ',&
-            & 'above bottom and both between 0 and 1',s%zTop,s%zBot
+    if (.not. s%piezometer .and. s%zTop < s%zBot) then
+       write(*,*) 'ERROR: for screened observation wells top of monitoring well'// &
+            &'screen must be above bottom',s%zTop,s%zBot
        stop 666
     end if
-    
-    if (s%zTop > 1.0 .or. s%zBot < 0.0) then
+
+    if (s%zTop > f%b .or. s%zBot < 0.0) then
        write(*,*) 'ERROR: top of monitoring well screen must be ',&
-            & 'above bottom and both between 0 and 1',s%zTop,s%zBot
+            & 'above bottom and both between 0 and b',s%zTop,s%zBot,f%b
        stop 667
     end if
 
@@ -284,22 +284,21 @@ contains
           write(*,*) 'ERROR: r must be > rw',rval
           stop
        end if
-       
+
        if (s%piezometer) then
           s%zOrd = 1
        end if
 
-       allocate(s%z(s%zOrd), s%zD(s%zOrd))       
-       if (s%piezometer) then 
-          s%z(1) = s%zTop*f%b
+       allocate(s%z(s%zOrd), s%zD(s%zOrd))
+       if (s%piezometer) then
+          s%z(1) = s%zTop
        else
           if (s%zOrd > 1) then
              ! calc points spread out evenly along obs well screen
-             ! zBot and zTop are scaled 0.0<->1.0 already
-             s%z(1:s%zOrd) = linspace(s%zBot, s%zTop, s%zOrd)*f%b
+             s%z(1:s%zOrd) = linspace(s%zBot, s%zTop, s%zOrd)
           else
              ! if only one point, it goes to middle of interval
-             s%z(1) = (s%zBot + s%zTop)*f%b/2.0 
+             s%z(1) = (s%zBot + s%zTop)/2.0
           end if
        end if
 
@@ -309,13 +308,13 @@ contains
           write(*,*) 'ERROR opening time input file '// &
                & trim(timeFileName)//' for reading'
        end if
-       
+
        ! compute times?, # times to read (not used if vector computed)
        read(22,*) computeTimes, numTFile
 
        ! log_10(t_min), log_10(t_max), # times
-       read(22,*) minLogT, maxLogT, numTComp   
-       
+       read(22,*) minLogT, maxLogT, numTComp
+
        if (computeTimes) then
           s%nt = numTComp
        else
@@ -325,7 +324,7 @@ contains
        allocate(s%t(s%nt), s%tD(s%nt), h%sv(s%nt))
 
        if (computeTimes) then
-          ! computing times 
+          ! computing times
           s%t = logspace(minLogT,maxLogT,numTComp)
        else
           ! times listed one per line
@@ -340,7 +339,7 @@ contains
           close(22)
           if(any(s%t < spacing(0.0))) then
              write(*,*) 'ERROR t must be > 0:',s%t
-             stop                
+             stop
           end if
        end if
     else
@@ -355,7 +354,7 @@ contains
        end if
 
        ! piezometer doesn't mean anything
-       ! when computing contours / profile 
+       ! when computing contours / profile
 
        open(unit=23, file=trim(spaceFileName), status='old', &
             & action='read',iostat=ioerr)
@@ -375,10 +374,10 @@ contains
           s%nr = numRFile
           s%nz = numZFile
        end if
-       
+
        allocate(s%z(s%nz), s%zD(s%nz), &
             &   s%r(s%nr), s%rD(s%nr))
-      
+
        if (computeSpace) then
           s%r = linspace(minR,maxR,numRComp)
           if(minZ < 0.0 .or. maxZ > f%b) then
@@ -409,13 +408,13 @@ contains
           end if
        end if
     end if
-    
+
     s%nt = size(s%t,1)
     s%nz = size(s%z,1)
     s%nr = size(s%r,1)
-    
+
     ! output filename
-    read(19,*) s%outfilename                        
+    read(19,*) s%outfilename
     close(19)
 
     ! ## compute dimensionless quantities #####
@@ -424,7 +423,7 @@ contains
     s%Lc = f%b
     s%Tc = f%b**2/(f%Kr/f%Ss)
     s%Hc = w%Q/(4.0*PI*f%Kr*f%b)
-    
+
     ! compute derived or dimensionless properties
     f%sigma = f%Sy/(f%Ss*f%b)
     f%alphaD = f%kappa/f%sigma
@@ -435,8 +434,6 @@ contains
 
     ! dimensionless lengths
     ! assume dimensionless l_D and d_D were entered (with Lc = b), convert them back
-    w%l = w%l*f%b  
-    w%d = w%d*f%b
     w%lD = w%l/s%Lc
     w%dD = w%d/s%Lc
     w%bD = w%lD - w%dD
@@ -498,13 +495,13 @@ contains
        write(*,fmt) 'zLay: ',s%zLay
        fmt = '(A,I0,1X,     ('//SFMT//',1X))          '
        write(fmt(10:14),'(I5.5)') s%nr
-       write(*,fmt) 'r  : ',s%nr,s%r 
+       write(*,fmt) 'r  : ',s%nr,s%r
        write(*,fmt) 'r_D: ',s%nr,s%rD
        write(fmt(10:14),'(I5.5)') s%nt
        write(*,fmt) 't  : ',s%nt,s%t
        write(*,fmt) 't_D: ',s%nt,s%tD
-       write(*,'(A,2('//RFMT//',1X),I0)') 'relative monitoring screen '//&
-            & 'zTop/b, zBot/b ,zOrd: ', s%zTop, s%zBot, s%zOrd
+       write(*,'(A,2('//RFMT//',1X),I0)') 'monitoring screen '//&
+            & 'zTop, zBot ,zOrd: ', s%zTop, s%zBot, s%zOrd
        write(*,'(A,I0,2('//RFMT//',1X))') 'deHoog: M,alpha,tol: ', &
             & lap%M, lap%alpha, lap%tol
        write(*,'(A,2(I0,1X))'), 'tanh-sinh: k, num extrapolation steps ', &
@@ -523,7 +520,7 @@ contains
 !!$    open(unit=56,file='bessel.zeros',action='write',status='replace')
 
     ! asymptotic estimate of zeros - initial guess
-    forall (i=0:terms-1) 
+    forall (i=0:terms-1)
        h%j0z(i+1) = (i + 0.75)*PIEP
     end forall
     do i=1,terms
@@ -538,15 +535,15 @@ contains
        end do NR
        h%j0z(i) = x
 !!$       write(56,*) i,x
-    end do    
+    end do
 !!$    close(56)
 
-    ! split between finite/infinite part should be 
+    ! split between finite/infinite part should be
     ! small for large time, large for small time
     zRange = maxval(h%j0s(:)) - minval(h%j0s(:))
     minLSp = floor(minval(log10(s%tD)))   ! min log(td) -> maximum split
     maxLSp = ceiling(maxval(log10(s%tD))) ! max log(td) -> minimum split
-    spRange = maxlsp - minlsp + 1 
+    spRange = maxlsp - minlsp + 1
     h%sv = minval(h%j0s(:)) + int(zrange*((maxlsp - log10(s%tD))/spRange))
 
   end subroutine read_input
@@ -554,7 +551,7 @@ contains
   subroutine write_timeseries_header(w,f,s,lap,h,gl,ts,unit)
     use constants, only : RFMT, EP
     use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
-    
+
     type(invLaplace), intent(in) :: lap
     type(invHankel), intent(in) :: h
     type(GaussLobatto), intent(in) :: gl
@@ -568,10 +565,10 @@ contains
 
     open (unit=unit, file=s%outFileName, status='replace', action='write', iostat=ioerr)
     if (ioerr /= 0) then
-       write(*,'(A)') 'cannot open output file '//trim(s%outFileName)//' for writing' 
+       write(*,'(A)') 'cannot open output file '//trim(s%outFileName)//' for writing'
        stop
     end if
-  
+
     ! echo input parameters at head of output file
     write(unit,'(A)') '# -*-auto-revert-*-'
     write(unit,'(A,I0,1X,A,I0)') '# model, EP :: ',s%model,trim(s%modelDescrip(s%model))//', ',EP
@@ -582,9 +579,9 @@ contains
     write(unit,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
          & f%b
     write(unit,'(A,2('//RFMT//',1X))') '# l,d (screen bot & top) :: ',&
-         & w%l, w%d  
+         & w%l, w%d
     write(unit,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
-         & w%rw, w%rc  
+         & w%rw, w%rc
     write(unit,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
     write(unit,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
     write(unit,'(A,'//RFMT//')') '# gamma :: ',f%gamma
@@ -615,9 +612,9 @@ contains
           write(unit,'(A,I0,1X,'//RFMT//')') '# Mishra/Neuman FD order,h ::',&
                & s%order,f%usL/(s%order-1)
        end if
-       
+
     end if
-    
+
     write(unit,'(A,I0)') '# times :: ',s%nt
     write(unit,'(A,2('//RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
     if (s%dimless) then
@@ -636,7 +633,7 @@ contains
   subroutine write_contour_header(w,f,s,lap,h,gl,ts,unit)
     use constants, only : RFMT, EP
     use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
-    
+
     type(invLaplace), intent(in) :: lap
     type(invHankel), intent(in) :: h
     type(GaussLobatto), intent(in) :: gl
@@ -650,10 +647,10 @@ contains
 
     open (unit=unit, file=s%outFileName, status='replace', action='write', iostat=ioerr)
     if (ioerr /= 0) then
-       write(*,'(A)') 'cannot open output file '//trim(s%outFileName)//' for writing' 
+       write(*,'(A)') 'cannot open output file '//trim(s%outFileName)//' for writing'
        stop
     end if
-  
+
     ! echo input parameters at head of output file
     write(unit,'(A)') '# -*-auto-revert-*-'
     write(unit,'(A,I0,1X,A,I0)') '# model, EP :: ',s%model,trim(s%modelDescrip(s%model))//', ',EP
@@ -664,9 +661,9 @@ contains
     write(unit,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
          & f%b
     write(unit,'(A,2('//RFMT//',1X))') '# l,d (screen bot & top) :: ',&
-         & w%l, w%d  
+         & w%l, w%d
     write(unit,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
-         & w%rw, w%rc  
+         & w%rw, w%rc
     write(unit,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
     write(unit,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
     write(unit,'(A,'//RFMT//')') '# gamma :: ',f%gamma

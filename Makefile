@@ -1,20 +1,19 @@
-
 ##################################################
 # flags / settings for gfortran >= 4.6 compiler
 
 DEBUG = -O0 -g -Wall -Wextra -fwhole-file
-DEBUG += -frange-check -fbounds-check -fcheck=all 
-OMP = -fopenmp
-PERF = -Ofast -mtune=core2
+DEBUG += -frange-check -fbounds-check -fcheck=all
+#OMP = -fopenmp
+PERF = -Ofast -march=native
 PERF += $(OMP)
-DEFAULTS = -fdefault-real-8 -fdefault-integer-8 
+DEFAULTS = -fdefault-real-8 -fdefault-integer-8
 F90 = gfortran-4.7
 CPP = -cpp
 FREE = -free
 PERFLDFLAGS = $(PERF) -static
 ##################################################
 
-EXTERNAL = cbessel.o 
+EXTERNAL = cbessel.o
 HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o
 OBJS =  constants.o $(EXTERNAL) types.o invlap.o utility.o $(HILEV)
 
@@ -33,19 +32,18 @@ LD = $(F90) -fbacktrace -static
 ####### default optimized (no debugging) target ##########################
 # only the driver routine has openmp directives
 driver: $(OPTOBJS)
-	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS) 
+	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS)
 
-
-####### compiler debugging ### 
+####### compiler debugging ###
 ##(no optimization, checks for out-of-bounds arrays and gives more warninngs, but still runs to completion)
 debug_driver: $(DEBUGOBJS)
-	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS) 
+	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS)
 
 complex_bessel.mod:cbessel.f90
 
-cbessel.debug.o: cbessel.f90 
+cbessel.debug.o: cbessel.f90
 	$(F90) -c $(PERF) -o cbessel.debug.o cbessel.f90
-cbessel.opt.o: cbessel.f90 
+cbessel.opt.o: cbessel.f90
 	$(F90) -c $(PERF) -o cbessel.opt.o cbessel.f90
 
 
