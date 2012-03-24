@@ -9,10 +9,10 @@ contains
     use constants, only : DP, EP, MAXEXP
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
-    use utility, only : operator(.X.) 
+    use utility, only : operator(.X.)
 
     implicit none
-    
+
     real(EP), intent(in) :: a
     real(DP), intent(in) :: rD
     integer, intent(in) :: np,nz
@@ -40,7 +40,7 @@ contains
        fp(1:np,1:nz) = hantushstorage(a,s%zD,s,lap%p,f,w)
 
     case(3)
-       ! Moench (unconfined w/ wellbore storage)
+       ! MWT BC (like Neuman) + delay term (like Boulton)
        stop 'ERROR Moench model not implmented yet'
 
     case(4:5)
@@ -55,11 +55,11 @@ contains
        else
           udp(1:np,1:nz+1) = hantush(a,[s%zD,1.0],s,lap%p,f,w)
        end if
-       
+
        where (spread(real(eta) < MAXEXP,2,nz))
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
                & cosh(eta .X. s%zD)/spread((1.0_EP + f%beta*eta*xi)*&
-               & cosh(eta) + xi*sinh(eta),2,nz)          
+               & cosh(eta) + xi*sinh(eta),2,nz)
        elsewhere
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
                & exp(eta .X. (s%zD - 1.0))/&
@@ -71,20 +71,20 @@ contains
        ! Mishra/Neuman  2010 model
        select case(s%MNtype)
        case(0)
-          ! naive implementation of paper
+          ! naive implementation of paper (often doesnt work)
           fp(1:np,1:nz) = mishraNeuman2010(a,s%zD,s,lap%p,f,w)
        case(2)
           ! finite difference solution of ODE in vadose zone
           fp(1:np,1:nz) = mishraNeuman2010FD(a,s%zD,s,lap%p,f,w)
        end select
-       
+
     end select
 
     ! apply common Hankel-transform and time-behavior factors
     fp(1:np,1:nz) = a*bessel_j0(a*rD)*fp*spread(lapTime(lap),2,nz)
 
   end function lap_hank_soln
-  
+
   function theis(a,p,nz) result(udf)
     use constants, only : EP
     real(EP), intent(in) :: a
@@ -97,13 +97,13 @@ contains
   end function theis
 
   function hantush(a,zD,sol,p,f,w) result(udp)
-    ! implemented in the form given in Malama, Kuhlman & Barrash 2008 
+    ! implemented in the form given in Malama, Kuhlman & Barrash 2008
     use constants, only : DP, EP
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
-    use utility, only : operator(.X.) 
+    use utility, only : operator(.X.)
     implicit none
-    
+
     real(EP), intent(in) :: a
     real(DP), dimension(:), intent(in) :: zD
     complex(EP), dimension(:), intent(in) :: p
@@ -125,14 +125,14 @@ contains
        ! called directly
        zLay(1:np,1:nz) = spread(sol%zLay(:),1,np)
     else
-       ! called from other method, requiring solution 
+       ! called from other method, requiring solution
        ! at the water table for boundary conditions
        ! (top boundary condition is always layer 3)
        zLay(1:np,1:nz) = spread([sol%zLay(:),3],1,np)
     end if
 
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
-    
+
     ! above well screen
      g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zD(1:nz)))
     ff(1,1:np,1:nz) = spread(sinh(eta*w%dD),2,nz)
@@ -158,19 +158,19 @@ contains
           udp(1:np,1:nz) = g(1,:,:) - g(2,:,:)
        end where
     end where
-        
+
     udp(1:np,1:nz) = udp(:,:)*theis(a,p,nz)/w%bD
 
   end function hantush
-  
+
   function hantushstorage(a,zD,sol,p,f,w) result(u)
     use constants, only : DP, EP, PI
     use types, only : well, formation, invLaplace, solution
     use time, only : lapTime
-    use utility, only : operator(.X.) 
+    use utility, only : operator(.X.)
     use cbessel, only : cbesk ! Amos routine
     implicit none
-    
+
     real(EP), intent(in) :: a
     real(DP), dimension(:), intent(in) :: zD
     complex(EP), dimension(:), intent(in) :: p
@@ -202,12 +202,12 @@ contains
        zLay(1:np,1:nz) = spread([sol%zLay(:),3],1,np)
     end if
 
-    ! dimensionless well storage coefficient
+    ! dimensionless pumping wellbore storage coefficient
     CDw = w%rDw**2/(2.0*(w%l - w%d)*f%Ss)
-    
+
     ! dimensionless well delay time
     tDb = PI*sol%rDwobs**2/(sol%sF*f%Ss)
-    
+
     xi(1:np) = w%rDw*sqrt(p(:))
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
 
@@ -219,19 +219,19 @@ contains
                &' i,ierr,nz:',i,ierr,nzero
        end if
     end do
-    
+
     A0(1:np) = 2.0/(p(:)*CDw*K(0,:) + xi(:)*K(1,:))
     uDf(1:np) = A0(:)/(p*(p + a**2)*(p*tDb + 1.0_EP))
-        
+
     where (zLay == 3)
        g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zd(:)))
     end where
-    
+
     where (zLay == 1 .or. zLay == 2)
        ff(1,1:np,1:nz) = spread(sinh(eta(:)*w%dD),2,nz)
        ff(2,1:np,1:nz) = spread(sinh(eta(:)*(1.0 - w%lD)),2,nz)
     end where
-    
+
     where (zLay == 2 .or. zLay == 3)
        g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zd) + &
             & ff(2,:,:)*cosh(eta .X. (1.0 - zd)))/&
@@ -245,7 +245,7 @@ contains
 
     where (zLay == 3) !!(spread(zD > 1-w%dD,2,nz))
        uDp(1:np,1:nz) = g(1,:,:) - g(2,:,:)
-    elsewhere 
+    elsewhere
        where (zLay == 1) !!(spread(zD < (1.0-w%lD),2,nz))
           uDp(1:np,1:nz) = ff(3,:,:)*cosh(eta .X. zd)
        elsewhere
@@ -253,7 +253,7 @@ contains
           uDp(1:np,1:nz) = 1.0_EP - g(2,:,:)
        end where
     end where
-    
+
     u(1:np,1:nz) = spread(uDf(:)/w%bD,2,nz)*uDp(:,:)
 
   end function hantushstorage
@@ -261,10 +261,10 @@ contains
   function mishraNeuman2010(a,zD,s,p,f,w) result(sD)
     use constants, only : DP, EP, EYE
     use types, only : well, formation, solution
-    use utility, only : operator(.X.) 
+    use utility, only : operator(.X.)
     use cbessel, only : cbesj,cbesy ! Amos routine
     implicit none
-    
+
     real(EP), intent(in) :: a
     real(DP), dimension(:), intent(in) :: zD
     complex(EP), dimension(:), intent(in) :: p
@@ -285,7 +285,7 @@ contains
     complex(EP), dimension(2,2,size(p)) :: aa
     complex(EP), dimension(size(p)) :: eta
     complex(EP), dimension(size(p),2) :: J,Y
-    
+
     integer, parameter :: NPRINT = 2
 
     ! size integer expected by BF library
@@ -308,14 +308,14 @@ contains
 
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
-    
+
     B1(1:np) = p(:)*beta(0)*exp(-beta(2))/f%kappa
     B2 = (a**2)/f%kappa
 
     ! compute v1
     phiep(1:np) = EYE*sqrt(4.0*B1/(beta(1)**2))*exp(0.5_DP*beta(1)*f%usLD)
     nuep = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
- 
+
     phi(1:np) = cmplx(phiep(1:np),kind=DP)
     nu = real(nuep,kind=DP)
 
@@ -324,8 +324,8 @@ contains
             & nz=nzero,ierr=ierr)
        if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero  
-          
+               &' i,ierr,nz:',i,ierr,nzero
+
        else
           J(i,1:2) = tmp(1:2)
        end if
@@ -338,7 +338,7 @@ contains
           Y(i,1:2) = tmp(1:2)
        end if
     end do
-    
+
     ! compute v3
     arg1 = real(beta(3),EP) + nuep*beta(1)
     arg2(1:np) = beta(1)*phiep(1:np)
@@ -366,7 +366,7 @@ contains
        else
           J(i,1:2) = tmp(1:2)
        end if
-       
+
        call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
             &nz=nzero,ierr=ierr)
        if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
@@ -376,7 +376,7 @@ contains
           Y(i,1:2) = tmp(1:2)
        end if
     end do
-    
+
     arg2(1:np) = beta(1)*phiep(1:np)
     aa(2,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(2,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
@@ -401,13 +401,13 @@ contains
 
 999 format(A,ES11.3E3,4(A,2('(',ES12.3E4,',',ES12.3E4,')')))
   end function mishraNeuman2010
-  
+
   function mishraNeuman2010FD(a,zD,s,p,f,w) result(sD)
     use constants, only : DP, EP
     use types, only : well, formation, solution
     use utility, only : operator(.X.), solve_tridiag
     implicit none
-    
+
     real(EP), intent(in) :: a
     real(DP), dimension(:), intent(in) :: zD
     complex(EP), dimension(:), intent(in) :: p
@@ -415,7 +415,7 @@ contains
     type(well), intent(in) :: w
     type(formation), intent(in) :: f
 
-    ! finite difference matrix related 
+    ! finite difference matrix related
     ! a,b,c are sub,main,super diagonals of FD matrix
     ! sigma is result (A1 + solution in vadose zone)
     ! v is right-hand side
@@ -466,7 +466,7 @@ contains
 !!$    c(n,1:np) = -999999.9
 
     ! sub-diagonal (first entry 1 is undefined, second entry is different)
-    aa(2:n,1:np) = invhsq  
+    aa(2:n,1:np) = invhsq
     aa(2,1:np) = aa(2,1:np)*cosh(eta(:))
 !!$    aa(1,1:np) = 7777777.7
 
@@ -507,7 +507,4 @@ contains
   end function mishraNeuman2010FD
 
 end module laplace_hankel_solutions
-
-
-
 
