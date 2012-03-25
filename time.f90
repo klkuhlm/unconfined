@@ -1,13 +1,13 @@
 module time
   implicit none
 
-  private 
+  private
   public :: lapTime
 
 contains
 
   ! ##################################################
-  ! return a vector of p for imposing general time behavior 
+  ! return a vector of p for imposing general time behavior
   ! on a function that is a pulse in time
   function lapTime(l) result(mult)
     use constants, only: EP
@@ -20,7 +20,7 @@ contains
     integer :: n
     real(EP), allocatable :: ti(:), Q(:)
     real(EP) :: tf
-    
+
     select case(l%timeType)
     case(1)
        ! step on at time=par1
@@ -31,8 +31,8 @@ contains
     case(3)
        ! instantaneous at t=par1
        mult(1:l%np) = exp(-l%timePar(1)*l%p)
-    case(4)  
-       ! "step test": increasing by integer multiples of Q each 
+    case(4)
+       ! "step test": increasing by integer multiples of Q each
        ! integer multiple of par1 time, off at par2
        mult(1:l%np) = 1.0/(l%p - l%p*exp(-l%timePar(1)*l%p)) * &
                       & (1.0 - exp(-l%timePar(2)*l%p))/l%p
@@ -65,7 +65,7 @@ contains
        ti(1:n) = l%timePar(1:n)
        tf = l%timePar(n+1)
        Q(0:n) = [0.0_EP, l%timePar(n+2:2*n+1)]
-       
+
        mult(1:l%np) = (sum(spread(Q(1:n) - Q(0:n-1),2,l%np)*&
             & exp(-spread(ti(1:n),2,l%np)*spread(l%p(1:l%np),1,n)),dim=1) - &
             & sum(Q(1:n) - Q(0:n-1))*exp(-tf*l%p(:)))/l%p(:)

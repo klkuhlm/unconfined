@@ -10,7 +10,7 @@ contains
     use constants, only : PIOV2EP, EP
     use types, only : TanhSinh
     implicit none
-    
+
     type(TanhSinh), intent(inout) :: t
     real(EP), intent(in) :: s
     integer, intent(in) :: k, j
@@ -19,12 +19,12 @@ contains
     real(EP) :: h
     real(EP), allocatable :: u(:,:)
 
-    !! compute weights 
+    !! compute weights
     N = 2**k-1
     r = (N-1)/2
     h = 4.0_EP/2**k
     allocate(u(2,N))
-     
+
     forall (i=-r:r)
        u(1,i+r+1) = PIOV2EP*cosh(h*i)
        u(2,i+r+1) = PIOV2EP*sinh(h*i)
@@ -55,7 +55,7 @@ contains
     real(EP), dimension(gl%ord) :: x, xold, w
     integer :: i, N, N1, k
 
-    ! leave out the endpoints (abcissa = +1 & -1), since 
+    ! leave out the endpoints (abcissa = +1 & -1), since
     ! they will be the zeros of the Bessel functions
     ! (therefore, e.g., 5th order integration only uses 3 points)
     ! code modified from Matlab routine by Greg von Winckel, at
@@ -65,7 +65,7 @@ contains
     N1 = N+1
 
     ! first guess
-    forall (i=0:N) 
+    forall (i=0:N)
        x(i+1) = cos(PIEP*i/N)
     end forall
 
@@ -73,22 +73,22 @@ contains
     P = 0.0_EP
     xold = 2.0_EP
 
-    iter: do 
+    iter: do
        if (maxval(abs(x-xold)) > spacing(1.0_EP)) then
           xold = x
           P(:,1) = 1.0_EP
           P(:,2) = x
-          
+
           do k = 2,N
              P(:,k+1) = ((2*k-1)*x*P(:,k) - (k-1)*P(:,k-1))/k
           end do
-          
+
           x = xold - (x*P(:,N1)-P(:,N))/(N1*P(:,N1))
        else
           exit iter
        end if
     end do iter
-    
+
     w = 2.0_EP/(N*N1*P(:,N1)**2)
 
     ! leave off endpoints (BF defined as zero there)
@@ -108,7 +108,7 @@ contains
     integer, parameter :: MINTERMS = 4
     complex(EP), dimension(:), intent(in) :: series
     integer, intent(in) :: quiet
-    complex(EP) :: accsum, denom 
+    complex(EP) :: accsum, denom
     integer :: ns, i, j, m
     complex(EP), dimension(1:size(series),-1:size(series)-1) :: eps
 
@@ -142,7 +142,7 @@ contains
     eps(:,-1) = 0.0_EP
 
     ! build up epsilon table (each column has one less entry)
-    do j = 0,ns-2 
+    do j = 0,ns-2
        do m = 1,ns-(j+1)
           denom = eps(m+1,j) - eps(m,j)
           if(abs(denom) > epsilon(abs(denom))) then ! check for div by zero

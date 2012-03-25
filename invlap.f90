@@ -5,16 +5,16 @@
 
 module invlap
   implicit none
-  
+
   private
   public :: deHoog_invlap, deHoog_pvalues
-  
+
   interface deHoog_invlap
      module procedure deHoog_invlap_vect, deHoog_invlap_scalt
   end interface
 
 contains
-  
+
   !! an implementation of the de Hoog et al. method
   !! assumes proper f(p) have been computed for the p
   !! required for the vector of t passed to this function
@@ -54,7 +54,7 @@ contains
        ! Re(p) -- this is the de Hoog parameter c
        gamma = lap%alpha - log(lap%tol)/(2.0*tee)
 
-       ! initialize Q-D table 
+       ! initialize Q-D table
        e(0:2*M,0) = cmplx(0.0,0.0,EP)
        q(0,1) = ffpp(1)/(ffpp(0)/2.0) ! half first term
        q(1:2*M-1,1) = ffpp(2:2*M)/ffpp(1:2*M-1)
@@ -121,14 +121,14 @@ contains
   function deHoog_invLap_scalt(t,tee,fp,lap) result(ft)
     use constants, only : DP,EP
     use types, only : invLaplace
-    real(DP), intent(in) ::  t, tee 
+    real(DP), intent(in) ::  t, tee
     type(invLaplace), intent(in) :: lap
     complex(EP), intent(in), dimension(0:2*lap%M) :: fp
     real(EP) :: ft ! output
-    
+
     ft = sum(deHoog_invLap_vect([t],tee,fp,lap))
   end function deHoog_invLap_scalt
-  
+
   function deHoog_pvalues(tee,lap) result(p)
     use constants, only : EP, DP, PIEP
     use types, only : invLaplace
@@ -137,15 +137,15 @@ contains
     complex(EP), dimension(2*lap%M+1) :: p
     real(EP) :: sigma
     integer :: i
-    
+
     ! real portion is constant
     ! TODO: more generally, should the 2.0 in the denominator
     ! TODO: be the constant set in driver.f90?
-    sigma = real(lap%alpha,EP) - log(real(lap%tol,EP))/(2.0_EP*tee) 
+    sigma = real(lap%alpha,EP) - log(real(lap%tol,EP))/(2.0_EP*tee)
 
     forall (i=0:2*lap%M)
        p(i+1) = cmplx(sigma, PIEP*i/tee, EP)
     end forall
-    
+
   end function deHoog_pvalues
 end module invlap

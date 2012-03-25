@@ -1,13 +1,13 @@
 program Driver
 
-  ! type definitions 
+  ! type definitions
   use types
 
   use driver_io, only : read_input, write_timeseries_header, write_contour_header
-  
+
   ! constants and coefficients
   use constants, only : DP, EP, RFMT, HFMT
- 
+
   ! function to be evaluated in Laplace/Hankel space
   use laplace_hankel_solutions, only : soln => lap_hank_soln
 
@@ -17,7 +17,7 @@ program Driver
   ! integration setup and extrapolation routines
   use integration, only : tanh_sinh_setup, gauss_lobatto_setup, wynn_epsilon, polint
 
-  ! openMP library interface 
+  ! openMP library interface
   !$ use omp_lib, only : OMP_get_max_threads, OMP_get_num_procs
 
   implicit none
@@ -48,20 +48,20 @@ program Driver
   ! and allocate some solution vectors
   call read_input(w,f,s,l,h,gl,ts)
 
-  !$ if (s%quiet > 0) then
+  !$ if (s%quiet > 1) then
   !$ write(*,'(2(A,I0))') '# avail. processors: ',OMP_get_num_procs(), &
   !$     & '  maximum # threads: ',OMP_get_max_threads()
   !$ end if
-  
+
   ! number of Laplace transform Fourier series coefficients
-  l%np = 2*l%M + 1  
+  l%np = 2*l%M + 1
   ! number of tanh-sinh terms
   ts%N = 2**ts%k - 1
 
   allocate(finint(l%np,s%nz), infint(l%np,s%nz), totlap(l%np,s%nz), totint(s%nz), &
        & totintd(s%nz), l%p(l%np), ts%kv(ts%R), ts%Nv(ts%R), ts%Q(ts%R), ts%hv(ts%R))
 
-  forall (m = 1:ts%R) 
+  forall (m = 1:ts%R)
      ! count up to k, a vector of length R
      ts%kv(m) = ts%k - ts%R + m
   end forall
@@ -73,13 +73,13 @@ program Driver
   else
      call write_contour_header(w,f,s,l,h,gl,ts,UNIT)
   end if
-       
+
   ! loop over all desired calculation times
   do i = 1, s%nt
      if (s%quiet > 0 .and. s%timeseries) then
         write(*,'(I5,A,'//RFMT//')') i,' td ',s%tD(i)
      end if
-     
+
      ! using 'optimal' vector of p values for each time
      l%p(1:l%np) = pvalues(TEE_MULT*s%tD(i),l)
 
@@ -92,7 +92,7 @@ program Driver
         if (s%quiet > 0 .and. .not. s%timeseries) then
            write(*,'(I5,A,'//RFMT//')') i,' rd ',s%rD(k)
         end if
-        
+
         ! compute abcissa and for highest-order case (others are subsets)
         ! split between finite & infinite integrals
         arg = h%j0z(h%sv(i))/s%rD(k)
@@ -120,13 +120,13 @@ program Driver
         do j=1,ts%R-1
 
            ! only need to re-compute weights and indices for each subsequent
-           ! coarser step they are only computed the first time step and saved 
+           ! coarser step they are only computed the first time step and saved
            if (first) then
               ! only Q%iv and Q%w are allocated for less-dense levels
               allocate(ts%Q(j)%iv(ts%Nv(j)), ts%Q(j)%w(ts%Nv(j)))
               call tanh_sinh_setup(ts,ts%kv(j),arg,j)
 
-              ! compute index vector, to slice up solution 
+              ! compute index vector, to slice up solution
               ! for R'th turn count regular integers
               ! for (R-1)'th turn count even integers
               ! for (R-2)'th turn count every 4th integer, etc...
@@ -138,7 +138,7 @@ program Driver
                 & sum(spread(spread(ts%Q(j)%w,2,l%np),3,s%nz) * &
                 & fa(ts%Q(j)%iv,:,:),dim=1)
         end do
-        
+
         if (ts%R > 1) then
            ! perform Richardson extrapolation to spacing -> zero
            !$OMP PARALLEL DO SHARED(ts,tmp,finint)
@@ -157,7 +157,7 @@ program Driver
 
         !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         ! "infinite" portion of Hankel  integral for each time level
-        ! integrate between zeros of Bessel function, extrapolate 
+        ! integrate between zeros of Bessel function, extrapolate
         ! area from series of areas of alternating sign
         ! TODO: use higher-order GL quadrature for lower-order zeros?
 
@@ -173,22 +173,22 @@ program Driver
            lob = real(h%j0z(j-1)/s%rD(k),EP) ! lower bound
            hib = real(h%j0z(j)/s%rD(k),EP)   ! upper bound
            width = hib - lob
-           
+
            ! transform GL abcissa (x) to global coordinates (y)
            GLy(:) = (width*gl%x(:) + (hib+lob))/2.0
-           
+
            !$OMP PARALLEL DO SHARED(GLy,w,f,s,l,k)
            do m = 1,gl%ord-2
               GLz(m,1:l%np,1:s%nz) = soln( GLy(m),s%rD(k),l%np,s%nz,w,f,s,l )
            end do
            !$OMP END PARALLEL DO
-          
+
 !!$           print *, j,'GLz:',GLz(1:2,1:2,1:2)
 
            GLarea(j-h%sv(i),1:l%np,1:s%nz) = width/2.0*sum(GLz(1:gl%ord-2,:,:)* &
                 & spread(spread(gl%w(1:gl%ord-2),2,l%np),3,s%nz),dim=1)
         end do
- 
+
 !!$        print *, 'GLarea: shape',shape(GLarea),'vals',GLarea(1:2,1:2,1:2)
 
         !$OMP PARALLEL DO SHARED(GLarea,infint)
@@ -203,12 +203,12 @@ program Driver
         end do
         !$OMP END PARALLEL DO
 
-        totlap(1:l%np,1:s%nz) = finint(1:l%np,1:s%nz) + infint(1:l%np,1:s%nz) 
+        totlap(1:l%np,1:s%nz) = finint(1:l%np,1:s%nz) + infint(1:l%np,1:s%nz)
         tee = s%tD(i)*TEE_MULT
-        
+
         !$OMP PARALLEL DO SHARED(totint,totintd,l,s,totlap,i,tee)
         do m = 1,s%nz
-           totint(m)  = dehoog(s%tD(i),tee,totlap(1:l%np,m),l) 
+           totint(m)  = dehoog(s%tD(i),tee,totlap(1:l%np,m),l)
         end do
         !$OMP END PARALLEL DO
 

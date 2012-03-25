@@ -128,7 +128,7 @@ contains
 
     ! ## echo check parameters #####
 
-    if (s%quiet > 0) then
+    if (s%quiet > 2) then
        write(*,'(A,A,1X,1L)') 'model, dimless output?:: ',&
             & trim(s%modelDescrip(s%model)) ,s%dimless
        write(*,'(A,2(L1,1X))') 'time-series plot?, piezometer?:: ', &
