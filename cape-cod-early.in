@@ -7,7 +7,7 @@
 1.60D+2                 :: b (initial saturated thickness)
 2.4D-1   5.0D-1         :: Kr,kappa (radial K and ratio Kz/Kr)
 2.9D-5   2.3D-1         :: Ss,Sy
-0.0D0                   :: beta Malama linearization parameter
+0.0D0  1 -999.                   :: beta Malama linearization parameter
 2.9D0  3.7D-1   2.0D0  2.2D-1   2.0D1  2 5  :: M/N  a_c,a_k,  psi_a,psi_k, L, soln type,MN order
 26  1.0D-8  1.0D-9      :: deHoog invlap;  M,alpha,tol
 6  4                    :: tanh-sinh quad;  2^k-1 order, # extrapollation steps

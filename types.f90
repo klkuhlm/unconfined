@@ -18,11 +18,11 @@ module types
 
      complex(EP), allocatable :: p(:)
 
-     ! time behavior / parameters 
+     ! time behavior / parameters
      ! 1 = step on,              tpar(1)  = on time
      ! 2 = finite pulse,         tpar(1:2) = on/off time
      ! 3 = instan. pulse         tpar(1) = pulse time
-     ! 4 = stairs,               tpar(1) = time step (increasing Q by integer multiples 
+     ! 4 = stairs,               tpar(1) = time step (increasing Q by integer multiples
      !                                     @ integer multiples tpar(1)); tpar(2) =off time.
      ! 5 = + only square wave,   tpar(1) = 1/2 period of wave; tpar(2) = start time
      ! 6 = cosine(tpar(1)*t),    tpar(1) = frequency multiplier; tpar(2) = start time
@@ -31,7 +31,7 @@ module types
      ! n<0 = arbitrary piecewise constant rate, comprised of n steps from tpar(1) to tfinal
      !                tpar(1:n) = starting times of each step
      !                tpar(n+1) = final time of last step
-     !                tpar(n+2:2*n+1) = strength at each of n steps 
+     !                tpar(n+2:2*n+1) = strength at each of n steps
      ! (is multiplied by constant strength too -- you probably want to set that to unity)
      character(81), dimension(9) :: timeDescrip = &
           & ['step on; tpar(1) = on time; tpar(2) not used                                     ',&
@@ -43,7 +43,7 @@ module types
           &  'rectified triangular wave; tpar(1) = 1/4 period of wave; tpar(2) = start time    ',&
           &  'rectified square wave; tpar(1) = 1/2 period of wave; tpar(2) = start time        ',&
           &  'piecewise constant rate (n steps); tpar(1:n)=ti; tpar(n+1)=tfinal; tpar(n+2:)=Q  ']
-     
+
      ! type of time behavior  (see above)
      integer :: timeType = -999
 
@@ -59,7 +59,7 @@ module types
      integer, allocatable :: sv(:) ! split index  vector
 
      ! min/max j0 split between infinite/fininte integrals
-     integer, dimension(2) :: j0s = [-999, -999] 
+     integer, dimension(2) :: j0s = [-999, -999]
   end type invHankel
 
   ! parameters specific to GL quadrature
@@ -68,7 +68,7 @@ module types
      integer :: err = -999   ! return value container
 
      ! abcissa and weights
-     real(EP), allocatable :: x(:), w(:) 
+     real(EP), allocatable :: x(:), w(:)
 
      ! order of integration
      integer :: ord = -999
@@ -81,12 +81,12 @@ module types
      real(EP), allocatable :: w(:), a(:)
   end type vecs
 
-  ! parameters specific to tanh-sinh quadrature  
+  ! parameters specific to tanh-sinh quadrature
   type :: TanhSinh
      integer :: k = -999  ! N = 2**k-1 is integration order
      integer :: N = -999
      integer :: R = -999  ! # orders to extrapolate (Rord <= k-2)
-     
+
      ! these vectors give spacing, order, number and indexing
      ! at each step in the Richardson extrapolation process
      real(EP), allocatable ::  hv(:) ! spacing vector
@@ -101,7 +101,7 @@ module types
      real(DP) :: d = -999. ! aquifer top to screen/packer bottom dist.
      real(DP) :: rw = -999., rc = -999. ! well / casing radii
      real(DP) :: Q = -999. ! volumetric pumping rate
- 
+
      ! dimensionless parameters
      real(DP) :: rDw = -999. ! dimensionless well radius
      real(DP) :: lD = -999.  ! dimensionless l
@@ -119,12 +119,15 @@ module types
      real(DP) :: gamma = -999.  ! dimensionless skin (1=no skin)
      real(DP) :: usL = -999. ! thickness of unsaturated zone
      ! Mishra & Neuman unsaturated parameters
-     ! moisture capacity & hydraulic conductivity sorptive numbers (1/length) 
-     real(DP) :: ak = -999., ac = -999. 
+     ! moisture capacity & hydraulic conductivity sorptive numbers (1/length)
+     real(DP) :: ak = -999., ac = -999.
      ! air-entry pressure (<= 0), pressure for saturation (<= 0)
      real(DP) :: psia = 999., psik = 999.
      ! Malama linearization parameter
-     real(DP) :: beta = -999. 
+     real(DP) :: beta = -999.
+
+     real(DP), allocatable :: MoenchAlpha(:), MoenchGamma(:)
+     integer :: MoenchAlphaM = -999
 
      ! computed aquifer parameters
      real(DP) :: sigma = -999.  ! Sy/(Ss*b)
@@ -137,7 +140,7 @@ module types
 
   ! parameters related to numerical solution
   type :: solution
-  
+
      ! characteristic quantities for non-dimensionalizing
      real(DP) :: Lc = -999.  ! length
      real(DP) :: Tc = -999.  ! time
@@ -152,10 +155,10 @@ module types
      ! 1 = Hantush (confined partially penetrating)
      ! 2 = Hantush-type with wellbore storage
      ! 3 = Moench 199?
-     ! 4 = Malama 2011 fully penetrating 
+     ! 4 = Malama 2011 fully penetrating
      ! 5 = Malama 2011 partially penetrating
      ! 6 = Mishra/Neuman 2011
-     
+
      character(15), dimension(0:6) :: modelDescrip = [ &
           & 'Theis          ', 'Hantush        ', 'Hantush w/ stor', &
           & 'Moench         ', 'Malama full pen', 'Malama part pen', &
@@ -167,24 +170,24 @@ module types
      logical :: piezometer = .false. ! point observation location?
 
      ! number of times / locations to be computed or read from file
-     integer :: nt = -999, nr = -999, nz = -999  
+     integer :: nt = -999, nr = -999, nz = -999
 
      ! vector of times / locations to compute solution at
      real(DP), allocatable :: t(:), tD(:)
-     real(DP), allocatable :: r(:), rD(:) 
+     real(DP), allocatable :: r(:), rD(:)
      real(DP), allocatable :: z(:), zD(:)
 
      ! which layer (above, in, or below screen) each z point falls in
      integer, allocatable :: zLay(:)
 
-     ! top/bot of monitoring well screen 
-     real(DP) :: zTop = -999., zBot = -999. 
-     ! diameter of observation well 
+     ! top/bot of monitoring well screen
+     real(DP) :: zTop = -999., zBot = -999.
+     ! diameter of observation well
      real(DP) :: rwobs = -999., rDwobs = -999.
      ! observation well shape factor
      real(DP) :: sF = -999.
      ! order of quadrature at monitoring well screen
-     integer :: zOrd = -999 
+     integer :: zOrd = -999
 
      character(NUMCHAR) :: outFileName
   end type solution

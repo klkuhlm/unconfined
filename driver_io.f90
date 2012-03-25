@@ -87,15 +87,16 @@ contains
     read(19,*) f%gamma
 
     ! pumping well time behavior
-    read(19,'(I3)', advance='no') lap%timeType
+    read(19,*) lap%timeType
+    backspace(19) ! re-read this record after allocating space
     if (lap%timeType > -1) then
        ! functional time behavior (two or fewer parameters)
        allocate(lap%timePar(2))
-       read(19,*) lap%timePar(:)
+       read(19,*) lap%timeType,lap%timePar(:)
     else
        ! arbitrarily long piecewise-constant time behavior
        allocate(lap%timePar(-2*lap%timeType+1))
-       read(19,*) lap%timePar(:)
+       read(19,*) lap%timeType,lap%timePar(:)
     end if
 
     ! ## aquifer / formation parameters #####
@@ -110,7 +111,14 @@ contains
     read(19,*) f%Ss, f%Sy
 
     ! Malama linearization beta parameter
-    read(19,*) f%beta
+    ! Moench M (number of alpha coefficients)
+    read(19,*) f%beta, f%MoenchAlphaM
+    backspace(19)
+    if (f%MoenchAlphaM < 1) then
+       write(*,*) 'ERROR: number of Moench alpha parameters must be >0',f%MoenchAlphaM
+    end if
+    allocate(f%MoenchAlpha(f%MoenchAlphaM),f%MoenchGamma(f%MoenchAlphaM))
+    read(19,*) f%beta, f%MoenchAlphaM, f%MoenchAlpha(:)
 
     ! Mishra/Neuman unsaturated model parameters
     ! capacity & conductivity sorptive numbers (1/length)
@@ -145,6 +153,9 @@ contains
        write(*,'(A,3('//RFMT//',1X))') 'Kr,kappa,gamma:: ', f%Kr, f%kappa, f%gamma
        write(*,'(A,2('//RFMT//',1X))') 'Ss,Sy:: ', f%Ss, f%Sy
        write(*,'(A,'//RFMT//')') 'beta (Malama linearization factor):: ',f%beta
+       fmt = '(A,I0,    (1X,'//RFMT//'))                  '
+       write(fmt(7:10),'(I4.4)') f%MoenchAlphaM
+       write(*,fmt) 'alpha (Moench Delayed Yield):: ',f%MoenchAlphaM,f%MoenchAlpha(:)
        write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman ac,ak (sorptive #s), psia,psik '//&
             & '(neg air-entry & sat. pressures):: ', f%ac,f%ak,f%psia,f%psik
        write(*,'(A,I0)') 'Mishra&Neuman type of solution (0=naive,2=FD)::',s%MNtype
@@ -180,6 +191,8 @@ contains
        write(*,*) 'ERROR: Malama linearization beta cannot be negative',f%beta
        stop
     end if
+
+    ! Moench parameters can be positive, negative, or zero (no checking needed)
 
     if (s%order < 3) then
        write(*,*) 'ERROR: order of Mishra/Neuman finite difference matrix must be >=3',s%order
@@ -277,12 +290,12 @@ contains
        write(*,*) 'ERROR: monitoring well radius must be >0',s%rwobs
        stop 668
     end if
-    
+
     if (s%sF < spacing(1.0)) then
        write(*,*) 'ERROR: monitoring well shape factor must be >0',s%sF
        stop 669
     end if
-    
+
 
     if (s%timeseries) then
        ! if computing a time series, read time-related
@@ -446,6 +459,8 @@ contains
     w%bD = w%lD - w%dD
     w%rDw = w%rw/s%Lc
     s%rDwobs = s%rwobs/s%Lc
+
+    f%MoenchGamma(:) = f%MoenchAlpha(:)*s%Tc
 
     ! dimensionless sorptive numbers
     f%acD = f%ac*s%Lc
@@ -616,6 +631,10 @@ contains
     if(s%model == 4 .or. s%model == 5) then
        ! malama solutions
        write(unit,'(A,'//RFMT//')') '# Malama beta linearization parameter :: ',f%beta
+    elseif(s%model == 3) then
+       fmt = '(A,I0,    (1X,'//RFMT//'))       '
+       write(fmt(7:10),'(I4.4)') f%MoenchAlphaM
+       write(*,fmt) '# Moench Delayed Yield (alpha):: ',f%MoenchAlphaM,f%MoenchAlpha(:)
     elseif(s%model == 6) then
        ! mishra/neuman solution
        write(unit,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ad,psia,psik,b1 ::',&
@@ -699,6 +718,10 @@ contains
     if(s%model == 4 .or. s%model == 5) then
        ! malama solutions
        write(unit,'(A,'//RFMT//')') '# Malama beta linearization parameter :: ',f%beta
+    elseif(s%model == 3) then
+       fmt = '(A,I0,    (1X,'//RFMT//'))       '
+       write(fmt(7:10),'(I4.4)') f%MoenchAlphaM
+       write(*,fmt) '# Moench Delayed Yield (alpha):: ',f%MoenchAlphaM,f%MoenchAlpha(:)
     elseif(s%model == 6) then
        ! mishra/neuman solution
        write(unit,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ad,psia,psik,b1 ::',&

@@ -22,7 +22,7 @@ contains
     type(formation), intent(in) :: f
     complex(EP), dimension(np,nz) :: fp
 
-    complex(EP), allocatable :: eta(:), xi(:), udp(:,:), udf(:,:)
+    complex(EP), allocatable :: eta(:), xi(:), udp(:,:)
 
     intrinsic :: bessel_j0
 
@@ -39,19 +39,27 @@ contains
        ! Hantush-style solution with wellbore storage
        fp(1:np,1:nz) = hantushstorage(a,s%zD,s,lap%p,f,w)
 
-    case(3)
-       ! MWT BC (like Neuman) + delay term (like Boulton)
-       stop 'ERROR Moench model not implmented yet'
-
-    case(4:5)
-       ! Malama 2011 partial penetrating model (Neuman 74 when beta=0)
+    case(3:5)
+      ! Moench hybrid water table condition made a special case
+      ! Malama 2011 partial penetrating model (Neuman 74 when beta=0)
        allocate(eta(np),xi(np),udp(np,nz+1))
 
        eta(1:np) = sqrt((lap%p(:) + a**2)/f%kappa)
-       xi(1:np) = eta(:)*f%alphaD/lap%p(:)
+
+       if (s%model == 3) then
+          ! Moench model -> just alters alphaD
+          xi(1:np) = eta(:)/lap%p(:)*f%alphaD*f%MoenchAlphaM/ &
+               & sum(1.0/(1.0 + &
+               & spread(lap%p(:),1,f%MoenchAlphaM)/&
+               & spread(f%MoenchGamma(:),2,np)),dim=1)
+       else
+          ! standard (Malama or Neuman) version of alphaD
+          xi(1:np) = eta(:)*f%alphaD/lap%p(:)
+       end if
+
        if (s%model == 4) then
-          udf(1:np,1:nz) = theis(a,lap%p,nz)
-          udf(1:np,nz+1) = udf(1:np,nz)
+          udp(1:np,1:nz) = theis(a,lap%p,nz)
+          udp(1:np,nz+1) = udp(1:np,nz)
        else
           udp(1:np,1:nz+1) = hantush(a,[s%zD,1.0],s,lap%p,f,w)
        end if
