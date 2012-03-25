@@ -116,49 +116,6 @@ contains
 
   end subroutine solve_tridiag
 
-  subroutine spec_basis(x,nbasis,phi,phix,phixx)
-    use constants, only : EP
-
-    integer, intent(in) :: nbasis
-    real(EP), intent(in) :: x
-    real(EP), intent(out), dimension(nbasis) :: phi,phix,phixx
-
-    integer :: i,n,nn
-    real(EP) :: t,c,s,tnt,tntt
-
-    intrinsic :: sign
-
-    ! compute the basis functions for spectral problem
-    ! adapted from Boyd, "Chebyshev and Fourier Spectral
-    ! Methods", 2000, section 6.15 and Appendix A.2
-
-    if (abs(x) < 1.0) then
-       t = acos(x)
-       c = cos(t)
-       s = sin(t)
-       do i=1,nbasis
-          n = i+1
-          phi(i) = cos(n*t)
-          tnt = -n*sin(n*t)
-          tntt = -n*n*phi(i)
-
-          ! convert t-derivatives into x-derivatives
-          phix(i) = -tnt/s  ! x-derivative of nth Cheb poly
-          phixx(i) = tntt/(s*s) - tnt*c/(s*s*s) ! second x-derivative
-       end do
-    else
-       ! alternative formulation when |x|=1
-       do i=1,nbasis
-          n = i+1
-          nn = n**2
-          phi(i) = sign(1.0_EP,x)**n
-          phix(i) =  sign(1.0_EP,x)**(n+1) * nn
-          phixx(i) = sign(1.0_EP,x)**n * nn * (nn-1.0)/3.0
-       end do
-    end if
-
-  end subroutine spec_basis
-
 end module utility
 
 
