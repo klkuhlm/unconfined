@@ -92,10 +92,12 @@ contains
     if (lap%timeType > -1) then
        ! functional time behavior (two or fewer parameters)
        allocate(lap%timePar(2))
+       lap%timePar = -999.
        read(19,*) lap%timeType,lap%timePar(:)
     else
        ! arbitrarily long piecewise-constant time behavior
        allocate(lap%timePar(-2*lap%timeType+1))
+       lap%timePar = -999.
        read(19,*) lap%timeType,lap%timePar(:)
     end if
 
@@ -118,6 +120,8 @@ contains
        write(*,*) 'ERROR: number of Moench alpha parameters must be >0',f%MoenchAlphaM
     end if
     allocate(f%MoenchAlpha(f%MoenchAlphaM),f%MoenchGamma(f%MoenchAlphaM))
+    f%MoenchAlpha = -999.
+    f%MoenchGamma = -999.
     read(19,*) f%beta, f%MoenchAlphaM, f%MoenchAlpha(:)
 
     ! Mishra/Neuman unsaturated model parameters
@@ -128,8 +132,8 @@ contains
 
     ! ## echo check parameters #####
 
-    if (s%quiet > 2) then
-       write(*,'(A,A,1X,1L)') 'model, dimless output?:: ',&
+    if (s%quiet > 1) then
+       write(*,'(A,A,1X,L1)') 'model, dimless output?:: ',&
             & trim(s%modelDescrip(s%model)) ,s%dimless
        write(*,'(A,2(L1,1X))') 'time-series plot?, piezometer?:: ', &
             & s%timeSeries, s%piezometer
@@ -152,58 +156,72 @@ contains
        write(*,'(A,2('//RFMT//',1X))') 'rw,rc (well and casing radii):: ', w%rw, w%rc
        write(*,'(A,3('//RFMT//',1X))') 'Kr,kappa,gamma:: ', f%Kr, f%kappa, f%gamma
        write(*,'(A,2('//RFMT//',1X))') 'Ss,Sy:: ', f%Ss, f%Sy
-       write(*,'(A,'//RFMT//')') 'beta (Malama linearization factor):: ',f%beta
-       fmt = '(A,I0,    (1X,'//RFMT//'))                  '
-       write(fmt(7:10),'(I4.4)') f%MoenchAlphaM
-       write(*,fmt) 'alpha (Moench Delayed Yield):: ',f%MoenchAlphaM,f%MoenchAlpha(:)
-       write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman ac,ak (sorptive #s), psia,psik '//&
-            & '(neg air-entry & sat. pressures):: ', f%ac,f%ak,f%psia,f%psik
-       write(*,'(A,I0)') 'Mishra&Neuman type of solution (0=naive,2=FD)::',s%MNtype
-       write(*,'(A,'//RFMT//')') 'unsaturated zone thickness:: ',f%usL
-       write(*,'(A,I0,'//RFMT//')') 'unsaturated zone FD order, FD h:: ',&
-            & s%order,f%usL/(s%order-1)
+       if (s%model == 3) then
+          fmt = '(A,I0,    (1X,'//RFMT//'))                  '
+          write(fmt(7:10),'(I4.4)') f%MoenchAlphaM
+          write(*,fmt) 'alpha (Moench Delayed Yield):: ',f%MoenchAlphaM,f%MoenchAlpha(:)
+       elseif (s%model == 4 .or. s%model == 5) then
+          write(*,'(A,'//RFMT//')') 'beta (Malama linearization factor):: ',f%beta
+       elseif (s%model == 6) then
+          write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman ac,ak (sorptive #s), psia,psik '//&
+               & '(neg air-entry & sat. pressures):: ', f%ac,f%ak,f%psia,f%psik
+          write(*,'(A,I0)') 'Mishra&Neuman type of solution (0=naive,2=FD)::',s%MNtype
+          write(*,'(A,'//RFMT//')') 'unsaturated zone thickness:: ',f%usL
+          write(*,'(A,I0,'//RFMT//')') 'unsaturated zone FD order, FD h:: ',&
+               & s%order,f%usL/(s%order-1)
+       end if
     end if
 
-    if(any([f%Sy, f%gamma, w%d, w%l] < 0.0)) then
-       write(*,*) 'ERROR: negative aquifer / geometry parameters:', &
-            &  f%Sy, f%gamma, w%d, w%l
+    if(s%model > 0 .and. any([f%gamma, w%d, w%l] < 0.0)) then
+       write(*,*) 'ERROR: negative geometry parameters:', &
+            &  f%gamma, w%d, w%l
        stop
     end if
 
-    if(any([f%b,f%Kr,f%kappa,f%Ss,w%rw,w%rc] < spacing(0.0))) then
-       write(*,*) 'ERROR: zero or negative parameters:', &
-            &  f%b, f%Kr, f%kappa, f%Ss, w%l, w%rw, w%rc
+    if (any([f%b,f%Kr,f%Ss] < spacing(0.0))) then
+       write(*,*) 'ERROR: zero or negative aquifer parametrs:',[f%b,f%Kr,f%Ss]
        stop
     end if
 
-    if (w%d >= w%l) then
+    if(s%model > 2 .and. any([f%kappa,f%Sy] < spacing(0.0))) then
+       write(*,*) 'ERROR: zero or negative unconfined aquifer parameters:', &
+            &  [f%kappa,f%Sy]
+       stop
+    end if
+
+    if (s%model > 0 .and. w%d >= w%l) then
        write(*,*) 'ERROR: screen top/bottom l must be > d; l=',w%l,' d=',w%d
        stop
     end if
 
-    if (any([f%ac,f%ak,f%usL,f%psia,f%psik] < 0.0)) then
-       write(*,*) 'ERROR: ivalid Mishra/Neuman parameters',&
-            & f%ac,f%ak,f%usL,f%psia,f%psik
-       stop
+    if (s%model == 6) then
+       if (any([f%ac,f%ak,f%usL,f%psia,f%psik] < 0.0)) then
+          write(*,*) 'ERROR: ivalid Mishra/Neuman parameters',&
+               & f%ac,f%ak,f%usL,f%psia,f%psik
+          stop
+       end if
+       if (s%order < 3) then
+          write(*,*) 'ERROR: order of Mishra/Neuman finite difference matrix must be >=3',s%order
+          stop
+       end if
+
+       if (s%MNtype /= 0 .and. s%MNtype /= 2) then
+          write(*,*) 'ERROR: invalid choice for Mishra/Neuman solution type '&
+               & //'(naive=0,finite difference=2)',s%MNtype
+          stop
+       end if
     end if
 
-    if (f%beta < 0.0) then
+    if ((s%model == 4 .or. s%model == 5) .and. f%beta < 0.0) then
        write(*,*) 'ERROR: Malama linearization beta cannot be negative',f%beta
        stop
     end if
 
-    ! Moench parameters can be positive, negative, or zero (no checking needed)
-
-    if (s%order < 3) then
-       write(*,*) 'ERROR: order of Mishra/Neuman finite difference matrix must be >=3',s%order
+    if (s%model == 3 .and. any(f%MoenchAlpha(:) < 0.0)) then
+       write(*,*) 'ERROR: Moench alpha parameters cannot be negative',f%MoenchAlpha
        stop
     end if
 
-    if (s%MNtype /= 0 .and. s%MNtype /= 2) then
-       write(*,*) 'ERROR: invalid choice for Mishra/Neuman solution type '&
-            & //'(naive=0,finite difference=2)',s%MNtype
-       stop
-    end if
 
     ! ## numerical implementation-related parameters #####
 
@@ -263,41 +281,41 @@ contains
 
     read(19,*) spaceFileName, rval ! either rval or data in file used
 
-    ! if computing contour or profile, these aren't used
-    ! point observation depth only top used if piezometer
+    ! if computing contour or profile, these aren't used at all.
+    ! if piezometer, midpoint between ztop and zbot is used.
     ! z is positive up, with zero at bottom of aquifer
     read(19,*) s%zTop, s%zBot, s%zOrd, s%rwobs, s%sF
 
-    if (.not. s%piezometer .and. s%zTop < s%zBot) then
-       write(*,*) 'ERROR: for screened observation wells top of monitoring well'// &
-            &'screen must be above bottom',s%zTop,s%zBot
-       stop 666
-    end if
-
-    if (s%zTop > f%b .or. s%zBot < 0.0) then
-       write(*,*) 'ERROR: top of monitoring well screen must be ',&
-            & 'above bottom and both between 0 and b',s%zTop,s%zBot,f%b
-       stop 667
-    end if
-
-    if (.not. s%piezometer .and. s%zOrd < 1) then
-       write(*,*) 'ERROR: # of quadrature points at ',&
-            & 'monitoring location must be > 0', s%zOrd
-       stop
-    end if
-
-    if (s%rwobs < spacing(1.0)) then
-       write(*,*) 'ERROR: monitoring well radius must be >0',s%rwobs
-       stop 668
-    end if
-
-    if (s%sF < spacing(1.0)) then
-       write(*,*) 'ERROR: monitoring well shape factor must be >0',s%sF
-       stop 669
-    end if
-
-
     if (s%timeseries) then
+
+       ! checking only related to timeseries (observation well parameters)
+       if (s%zTop < s%zBot) then
+          write(*,*) 'ERROR: for screened observation wells top of monitoring well'// &
+               &'screen must be at or above bottom',s%zTop,s%zBot
+          stop 666
+       end if
+
+       if (s%zTop > f%b .or. s%zBot < 0.0) then
+          write(*,*) 'ERROR: top of monitoring well screen must be ',&
+               & 'above bottom and both between 0 and b',s%zTop,s%zBot,f%b
+          stop 667
+       end if
+
+       if (.not. s%piezometer .and. s%zOrd < 1) then
+          write(*,*) 'ERROR: # of quadrature points at ',&
+               & 'monitoring location must be > 0', s%zOrd
+          stop
+       end if
+
+       if (s%rwobs < spacing(1.0)) then
+          write(*,*) 'ERROR: monitoring well radius must be >0',s%rwobs
+          stop 668
+       end if
+       if (s%sF < spacing(1.0)) then
+          write(*,*) 'ERROR: monitoring well shape factor must be >0',s%sF
+          stop 669
+       end if
+
        ! if computing a time series, read time-related
        ! parameters from input file
 
@@ -314,17 +332,10 @@ contains
        end if
 
        allocate(s%z(s%zOrd), s%zD(s%zOrd))
-       if (s%piezometer) then
-          s%z(1) = s%zTop
-       else
-          if (s%zOrd > 1) then
-             ! calc points spread out evenly along obs well screen
-             s%z(1:s%zOrd) = linspace(s%zBot, s%zTop, s%zOrd)
-          else
-             ! if only one point, it goes to middle of monitoring interval
-             s%z(1) = (s%zBot + s%zTop)/2.0
-          end if
-       end if
+       s%zD = -999.
+       ! calc points spread out evenly along obs well screen
+       ! a single point is located in the middle of the wellscreen
+       s%z(1:s%zOrd) = linspace(s%zBot, s%zTop, s%zOrd)
 
        open(unit=22, file=trim(timeFileName), status='old', &
             & action='read',iostat=ioerr)
@@ -346,6 +357,8 @@ contains
        end if
 
        allocate(s%t(s%nt), s%tD(s%nt), h%sv(s%nt))
+       s%tD = -999.
+       h%sv = -999
 
        if (computeTimes) then
           ! computing times
@@ -371,6 +384,8 @@ contains
        ! read space related parameters from other file
 
        allocate(s%t(1), s%tD(1), h%sv(1))
+       s%tD = -999.
+       h%sv = -999
        if (tval > spacing(0.0)) then
           s%t(1) = tval
        else
@@ -399,8 +414,11 @@ contains
           s%nz = numZFile
        end if
 
-       allocate(s%z(s%nz), s%zD(s%nz), &
-            &   s%r(s%nr), s%rD(s%nr))
+       allocate(s%z(s%nz), s%zD(s%nz),s%r(s%nr), s%rD(s%nr))
+       s%z = -999.
+       s%zD = -999.
+       s%r = -999.
+       s%rD = -999.
 
        if (computeSpace) then
           s%r = linspace(minR,maxR,numRComp)
@@ -449,7 +467,7 @@ contains
     s%Hc = w%Q/(4.0*PI*f%Kr*f%b)
 
     ! compute derived or dimensionless properties
-    f%sigma = f%Sy/(f%Ss*f%b)
+    f%sigma = f%Sy/(f%Ss*f%b) ! this is the inverse of Neuman's (1972 & 1974) "sigma"
     f%alphaD = f%kappa/f%sigma
     f%betaD = f%beta/s%Lc
 
@@ -527,9 +545,9 @@ contains
             & s%rwobs, s%sF
        write(*,'(A,I0,2('//RFMT//',1X))') 'deHoog: M,alpha,tol: ', &
             & lap%M, lap%alpha, lap%tol
-       write(*,'(A,2(I0,1X))'), 'tanh-sinh: k, num extrapolation steps ', &
+       write(*,'(A,2(I0,1X))') 'tanh-sinh: k, num extrapolation steps ', &
             & ts%k, ts%R
-       write(*,'(A,4(I0,1X))'), 'GL: J0 split, num zeros accel, GL-order ',&
+       write(*,'(A,4(I0,1X))') 'GL: J0 split, num zeros accel, GL-order ',&
             & h%j0s(:), gl%nacc, gl%ord
        write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman acD,akD, psiaD,psikD :: ', &
             & f%acD,f%akD,f%psiaD,f%psikD
@@ -542,8 +560,6 @@ contains
     allocate(h%j0z(terms))
 
     ! ## compute zeros of J0 bessel function #####
-!!$    open(unit=56,file='bessel.zeros',action='write',status='replace')
-
     ! asymptotic estimate of zeros - initial guess
     forall (i=0:terms-1)
        h%j0z(i+1) = (i + 0.75)*PIEP
@@ -559,9 +575,7 @@ contains
           end if
        end do NR
        h%j0z(i) = x
-!!$       write(56,*) i,x
     end do
-!!$    close(56)
 
     ! split between finite/infinite part should be
     ! small for large time, large for small time
@@ -616,9 +630,9 @@ contains
          & trim(lap%timeDescrip(lap%timeType)), lap%timePar
     write(unit,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
-    write(unit,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
+    write(unit,'(A,2(I0,1X))') '# tanh-sinh: k, n extrapolation steps :: ',&
          & ts%k, ts%R
-    write(unit,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
+    write(unit,'(A,4(I0,1X))') '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
     if(s%piezometer) then
        write(unit,'(A,4('//RFMT//',1X))') '# point obs well r,rD,z,zD :: ',s%r(1),s%rD(1),s%z(1),s%zD(1)
@@ -704,9 +718,9 @@ contains
          & trim(lap%timeDescrip(lap%timeType)), lap%timePar
     write(unit,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
-    write(unit,'(A,2(I0,1X))'), '# tanh-sinh: k, n extrapolation steps :: ',&
+    write(unit,'(A,2(I0,1X))') '# tanh-sinh: k, n extrapolation steps :: ',&
          & ts%k, ts%R
-    write(unit,'(A,4(I0,1X))'), '# GLquad: J0 split, n 0-accel, GL-order :: ',&
+    write(unit,'(A,4(I0,1X))') '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
     fmt = '(A,I0,1X,    ('//RFMT//',1X))    '
     write(fmt(10:13),'(I4.4)') s%nr

@@ -172,8 +172,9 @@ contains
   end function wynn_epsilon
 
   !! ###################################################
-  ! polynomial extrapolation modified from numerical recipes f90 (section 3.1)
   subroutine polint(xa,ya,x,y,dy)
+    ! TODO: replace this routine with a vectorized one
+
     ! xa and ya are given x and y locations to fit an nth degree polynomial
     ! through.  results is a value y at given location x, with error estimate dy
 

@@ -23,6 +23,7 @@ contains
     complex(EP), dimension(np,nz) :: fp
 
     complex(EP), allocatable :: eta(:), xi(:), udp(:,:)
+    integer :: mm
 
     intrinsic :: bessel_j0
 
@@ -45,16 +46,12 @@ contains
        allocate(eta(np),xi(np),udp(np,nz+1))
 
        eta(1:np) = sqrt((lap%p(:) + a**2)/f%kappa)
+       xi(1:np) = eta(:)*f%alphaD/lap%p(:)
 
        if (s%model == 3) then
+          mm = f%MoenchAlphaM
           ! Moench model -> just alters alphaD
-          xi(1:np) = eta(:)/lap%p(:)*f%alphaD*f%MoenchAlphaM/ &
-               & sum(1.0/(1.0 + &
-               & spread(lap%p(:),1,f%MoenchAlphaM)/&
-               & spread(f%MoenchGamma(:),2,np)),dim=1)
-       else
-          ! standard (Malama or Neuman) version of alphaD
-          xi(1:np) = eta(:)*f%alphaD/lap%p(:)
+          xi(1:np) = xi(:)*mm/sum(1.0/(1.0 + (lap%p .X. 1.0/f%MoenchGamma)),dim=2)
        end if
 
        if (s%model == 4) then

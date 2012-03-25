@@ -220,15 +220,13 @@ program Driver
         !$OMP END PARALLEL DO
 
         ! do trapezoid rule across monitoring well screen if necessary
-        ! result is divided by length of interval to get average value
+        ! average is integral (which is multiplied by length) divided by length
         if (s%timeseries) then
            if(.not. s%piezometer .and. s%zOrd > 1) then
-              ! weights are uniform, except for endpoints
-              ! divide by interval length
-              totObs = (totint(1)/2.0 + sum(totint(2:s%zOrd)) + &
-                   & totint(s%zOrd)/2.0)/(s%zOrd - 1)
-              totDeriv = (totintd(1)/2.0 + sum(totintd(2:s%zOrd)) + &
-                   & totintd(s%zOrd)/2.0)/(s%zOrd - 1)
+              totObs = (totint(1) + 2.0*sum(totint(2:s%zOrd)) + &
+                   & totint(s%zOrd))/(2*(s%zOrd - 1))
+              totDeriv = (totintd(1) + 2.0*sum(totintd(2:s%zOrd)) + &
+                   & totintd(s%zOrd))/(2*(s%zOrd - 1))
            else
               totObs = totint(1) ! one point, interval has no length
               totDeriv = totintd(1)

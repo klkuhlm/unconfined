@@ -17,12 +17,18 @@ contains
     integer :: i
     real(DP) :: rnum, range, sgn
 
-    rnum = real(num - 1,DP)
-    range = abs(hi - lo)
-    sgn = sign(1.0_DP,hi-lo) ! if lo > high, count backwards
-    forall (i=0:num-1)
-       v(i+1) = lo + sgn*real(i,DP)*range/rnum
-    end forall
+    if (num == 1) then
+       ! convention puts a single point in the
+       ! middle of the interval
+       v = [(lo + hi)/2.0]
+    else
+       rnum = real(num - 1,DP)
+       range = abs(hi - lo)
+       sgn = sign(1.0_DP,hi-lo) ! if lo > high, count backwards
+       forall (i=0:num-1)
+          v(i+1) = lo + sgn*real(i,DP)*range/rnum
+       end forall
+    end if
   end function linspace
 
   function logspace(lo,hi,num) result(v)

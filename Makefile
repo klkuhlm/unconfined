@@ -1,7 +1,7 @@
 ##################################################
 # flags / settings for gfortran >= 4.6 compiler
 
-DEBUG = -O0 -g -Wall -Wextra -fcheck=all
+DEBUG = -O0 -g -Wall -Wextra -fcheck=all -fno-realloc-lhs -std=f2008 -fall-intrinsics
 OMP = -fopenmp
 PERF = -Ofast -mtune=native
 DEFAULTS = -fdefault-real-8 -fdefault-integer-8
@@ -25,8 +25,11 @@ F90SRC=$(patsubst %.o,%.f90,$(OBJS) $(MAIN))
 OUT = unconfined
 DEBUGOUT = debug_$(OUT)
 
-# can't link statically when using OpenMP!!!
-LD = $(F90) -fbacktrace # -static
+LD = $(F90) -fbacktrace
+
+# can't normally link statically when using OpenMP
+# following line is an "unsupported" workaround
+#LD += -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 
 ####### default optimized (no debugging) target ##########################
 # use OMP in optimized link step

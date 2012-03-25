@@ -1,0 +1,18 @@
+1  6  F  T  T           :: quiet output?, model choice, dimensionless output?, timeseries?, piezometer?
+4.28D+1                 :: Q (volumetric pumping rate) [L^3/T]
+6.02D+1  1.32D+1        :: l,d (depth to bottom/top of screened interval)
+3.333D-1   3.333D-1     :: rw, rc (radius of well casing and tubing)
+1.0D+0                  :: gamma (dimensionless wellbore skin)
+1  0.0D+0  1.0D+0     :: pumping well time behavior and parameters
+1.60D+2                 :: b (initial saturated thickness)
+2.4D-1  4.0D-1          :: Kr,kappa (radial K and ratio Kz/Kr)
+2.9D-5  2.3D-1             :: Ss,Sy
+1.0D0  1 -999.                   :: beta Malama linearization parameter
+8.0D-1  7.0D-1   2.0D0  1.25D0   1.98D+1  2 30  :: M/N  a_c,a_k,  psi_a,psi_k, L, soln type,MN order
+26  1.0D-8  1.0D-9      :: deHoog invlap;  M,alpha,tol
+6  4                    :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
+1  1  10  50            :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
+timedata.dat  9999.9      :: file to read time data from (and default t otherwise)
+spacedata.dat  8.51D+1          :: file to read space data from (and default r otherwise)
+1.467D+2  1.447D+2  2  1.67D-1  1.0       :: relative top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
+cape-cod-F377-037-mishra.out
