@@ -110,15 +110,10 @@ program Driver
         end do
         !$OMP END PARALLEL DO
 
-!!$        print *, 'fa:',fa(1:2,1:2,1:2)
-
         tmp(ts%R,1:l%np,1:s%nz) = arg/2.0 * &
              & sum(spread(spread(ts%Q(ts%R)%w,2,l%np),3,s%nz)*fa(:,:,:),dim=1)
 
-!!$        print *, 'tmp:',fa(ts%R,1:2,1:2)
-
         do j=1,ts%R-1
-
            ! only need to re-compute weights and indices for each subsequent
            ! coarser step they are only computed the first time step and saved
            if (first) then
@@ -153,8 +148,6 @@ program Driver
            finint(1:l%np,1:s%nz) = tmp(1,1:l%np,1:s%nz)
         end if
 
-!!$        print *, 'finint:',finint(1:3,1:2)
-
         !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         ! "infinite" portion of Hankel  integral for each time level
         ! integrate between zeros of Bessel function, extrapolate
@@ -183,18 +176,13 @@ program Driver
            end do
            !$OMP END PARALLEL DO
 
-!!$           print *, j,'GLz:',GLz(1:2,1:2,1:2)
-
            GLarea(j-h%sv(i),1:l%np,1:s%nz) = width/2.0*sum(GLz(1:gl%ord-2,:,:)* &
                 & spread(spread(gl%w(1:gl%ord-2),2,l%np),3,s%nz),dim=1)
         end do
 
-!!$        print *, 'GLarea: shape',shape(GLarea),'vals',GLarea(1:2,1:2,1:2)
-
         !$OMP PARALLEL DO SHARED(GLarea,infint)
         do j = 1,l%np
            do m = 1,s%nz
-!!$              print *, 'np,nz, GLarea',j,m,GLarea(:,j,m)
               ! accelerate each series independently
               if (any(abs(Glarea(1:gl%nacc,j,m)) > 0)) then
                  infint(j,m) = wynn_epsilon(GLarea(1:gl%nacc,j,m),s%quiet)
@@ -220,13 +208,13 @@ program Driver
         !$OMP END PARALLEL DO
 
         ! do trapezoid rule across monitoring well screen if necessary
-        ! average is integral (which is multiplied by length) divided by length
+        ! average is integral (which is multiplied by length) then divided by length
         if (s%timeseries) then
            if(.not. s%piezometer .and. s%zOrd > 1) then
               totObs = (totint(1) + 2.0*sum(totint(2:s%zOrd)) + &
-                   & totint(s%zOrd))/(2*(s%zOrd - 1))
+                   & totint(s%zOrd))/(2*s%zOrd)
               totDeriv = (totintd(1) + 2.0*sum(totintd(2:s%zOrd)) + &
-                   & totintd(s%zOrd))/(2*(s%zOrd - 1))
+                   & totintd(s%zOrd))/(2*s%zOrd)
            else
               totObs = totint(1) ! one point, interval has no length
               totDeriv = totintd(1)
