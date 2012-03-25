@@ -1,7 +1,7 @@
 module utility
   implicit none
   private
-  public :: logspace, linspace, is_finite, operator(.X.), solve_tridiag, spec_basis
+  public :: logspace, linspace, is_finite, operator(.X.), solve_tridiag
 
   interface operator(.X.)
      module procedure outerprod_zd, outerprod_dz, outerprod_dd, outerprod_zz
