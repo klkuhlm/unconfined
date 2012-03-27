@@ -196,7 +196,7 @@ contains
     do m=1,n-1
        den(1:n-m) = xin(1:n-m) - xin(1+m:n)
        if (any(abs(den(1:n-m)) < spacing(0.0))) then
-          write(*,*) 'polint: calculation failure',abs(den(1:n-m))
+          write(*,*) 'extraptozero: calculation failure',abs(den(1:n-m))
           stop
        end if
 
