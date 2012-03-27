@@ -1,6 +1,9 @@
 This is the modern Fortran (2003/2008) implementation of my well-test
 simulator.  It performs numerical Laplace-Hankel inversion,
 implementing the the main unconfined approaches still in use today.
+The program is free software (MIT license), which can essentially be
+used, modified, or redistributed for any purpose, given the license is
+left intact.
 
 This code is a command-line utility, which reads a text input file and
 writes a text datafile, formatted for simple plotting using available
