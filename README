@@ -11,20 +11,27 @@ parallel on a multi-processor computer.
 
 The solutions implemented include:
 ------------------------------------------
-1) Mishra & Neuman (2009) : Unsaturated/saturated flow to a partially
+1) Mishra & Neuman (2010,2011) : Unsaturated/saturated flow to a partially
 penetrating well.
+http://dx.doi.org/10.1029/2009WR008899
+http://dx.doi.org/10.1029/2010WR010177
 
 2) Malama (2011) : Alternative linearization of the
 moving water table boundary condition.  Basically an improvement on
 Neuman (1974).
+http://dx.doi.org/10.1016/j.jhydrol.2010.11.007
 
-3) Moench (2001,1995) : The hybrid water table boundary condition of Moench
-(1995), but including the multiple delayed yield (α) coefficients, as
-used in the large Cape Cod, Massachusetts pumping test in USGS Water
-Supply Paper 1629.
+3) Moench (2001,1995) : The hybrid water table boundary condition of
+Moench (1995), but including the multiple delayed yield (α)
+coefficients, as used in the large Cape Cod, Massachusetts pumping
+test in USGS Water Supply Paper 1629.
+http://dx.doi.org/10.1111/j.1745-6584.1995.tb00293.x
+http://pubs.usgs.gov/pp/pp1629/pdf/pp1629ver2.pdf
 
 4) Neuman (1974,1972) : The standard moving water table solution used
 by most hydrologists for well-test interpretation.
+http://dx.doi.org/10.1029/WR008i004p01031
+http://dx.doi.org/10.1029/WR010i002p00303
 
 5) Hantush (1961) : The confined solution which includes the effects
 of partial penetration, but using a three-layer approach of Malama
@@ -35,7 +42,8 @@ other solutions build upon.
 
 The code is distributed as a collection of Fortran source files and a
 makefile.  On Linux/Unix/Mac platforms this is trivial to turn into a
-command-line program, by simply typing
+command-line program, by simply going to the source directory and
+typing:
 
 make
 
