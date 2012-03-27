@@ -1,9 +1,0 @@
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <cmath>
-#include <complex>
-#include <stdio.h>
-#include <ctime>
-#include <cstdlib>
-#include <omp.h>
