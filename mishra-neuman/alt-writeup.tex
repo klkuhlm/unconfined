@@ -26,17 +26,29 @@
 \patchBothAmsMathEnvironmentsForLineno{equation}
 \patchBothAmsMathEnvironmentsForLineno{align}}
 
-\title{Alternate Formulations for Mishra-Neuman Solution}
+\title{Alternate Potential Formulations for Mishra-Neuman (2010) Solution}
+\author{Kristopher L. Kuhlman}
 \begin{document}
 \maketitle
 \linenumbers
 \section{Unsaturated Zone Governing Equations}
-The governing equation in the unsaturated zone, as used by \cite{mishra10} and \cite{tartakovsky07}, is
+The governing equation in the unsaturated zone, as used by
+\cite{mishra10} and \cite{tartakovsky07}, is
 \begin{equation}
   \label{eq:unsatDim}
   K_r k_0(\psi) \frac{1}{r} \frac{\partial}{\partial r} \left( r\frac{\partial \sigma}{\partial r} \right) + K_z \frac{\partial}{\partial z} \left( k_0(z) \frac{\partial \sigma}{\partial z}\right) = C(\psi) \frac{\partial \sigma}{\partial t}
 \end{equation}
-where $K_r$ and $K_z$ are the radial and vertical saturated hydraulic conductivities [L T$^{-1}$], $k_0$ is the dimensionless isotropic relative hydraulic conductivity ($0 < k_0 \le 1$), $\sigma = h_0 - h = b +\psi_a - h$ is drawdown in the vadose zone [L], $h=\psi+z$ is hydraulic head [L], $\psi$ is pressure head [L], $\psi_a$ is air-entry pressure, $C(\psi)=\frac{d\theta}{d \psi}$ is the dimensionless specific moisture capacity, and $\theta$ is dimensionless volumetric water content.  The unsaturated zone begins at the top of the aquifer, $b \le z \le b+L$.  Further, the unsaturated parameters are assumed to only be functions of $z$.  The initial and boundary conditions for the unsaturated zone are  
+where $K_r$ and $K_z$ are the radial and vertical saturated hydraulic
+conductivities [L T$^{-1}$], $k_0$ is the dimensionless isotropic
+relative hydraulic conductivity ($0 < k_0 \le 1$), $\sigma = h_0 - h =
+b +\psi_a - h$ is drawdown in the vadose zone [L], $h=\psi+z$ is
+hydraulic head [L], $\psi$ is pressure head [L], $\psi_a$ is air-entry
+pressure, $C(\psi)=\frac{d\theta}{d \psi}$ is the dimensionless
+specific moisture capacity, and $\theta$ is dimensionless volumetric
+water content.  The unsaturated zone begins at the top of the aquifer,
+$b \le z \le b+L$.  Further, the unsaturated parameters are assumed to
+only be functions of $z$.  The initial and boundary conditions for the
+unsaturated zone are
 \begin{equation}\nonumber
 \sigma(r,z,0) = 0
 \end{equation}
@@ -45,36 +57,45 @@ where $K_r$ and $K_z$ are the radial and vertical saturated hydraulic conductivi
 \end{equation}
 \begin{equation}\nonumber
 \frac{\partial \sigma}{\partial z}=0 \qquad z=b+L
-\end{equation} and 
+\end{equation} and
 \begin{equation}\nonumber
-\lim_{r \rightarrow 0} r \frac{\partial \sigma}{\partial r} = 0 \qquad b\le z \le b+L.
+  \lim_{r \rightarrow 0} r \frac{\partial \sigma}{\partial r} = 0 \qquad b\le z \le b+L.
 \end{equation}
 
-Drawdown in the aquifer ($s$) and the vadose zone are connected using compatibility conditions at the water table ($z=b$), namely
+Drawdown in the aquifer ($s$) and the vadose zone are connected using
+compatibility conditions at the water table ($z=b$), namely
 \begin{equation}\nonumber
 s=\sigma \qquad z=b
 \end{equation}
 \begin{equation}\nonumber
 \frac{\partial s}{\partial z}=\frac{\partial \sigma}{\partial z} \qquad z=b.
-\end{equation} 
-
-The moisture retention curve in the vadose zone is modeled as an exponential function
-\begin{equation}\nonumber
-S_e = \frac{\theta(\psi) - \theta_r}{S_y} = e^{a_c \left( \psi - \psi_a \right)} \qquad a_c \ge 0 
 \end{equation}
-where $S_e$ is dimensionless effective saturation, $\theta_r$ is dimensionless residual volumetric water content, $S_y=\theta_s - \theta_r$ is dimensionless drainable porosity (specific yield), and $\theta_s$ is dimensionless saturated volumetric water content.  The Gardner model for relative hydraulic conductivity is used; the relative hydraulic conductivity is
+
+The moisture retention curve in the vadose zone is modeled as an
+exponential function
+\begin{equation}\nonumber
+S_e = \frac{\theta(\psi) - \theta_r}{S_y} = e^{a_c \left( \psi - \psi_a \right)} \qquad a_c \ge 0
+\end{equation}
+where $S_e$ is dimensionless effective saturation, $\theta_r$ is
+dimensionless residual volumetric water content, $S_y=\theta_s -
+\theta_r$ is dimensionless drainable porosity (specific yield), and
+$\theta_s$ is dimensionless saturated volumetric water content.  The
+Gardner model for relative hydraulic conductivity is used; the
+relative hydraulic conductivity is
 \begin{equation}
   \nonumber
-  k(\psi) = \left  \{ 
+  k(\psi) = \left  \{
     \begin{array}{c c}
       e^{a_k \left( \psi - \psi_k\right)} & \psi \le \psi_k, \ \\
       1 & \psi < \psi_k\\
-    \end{array} 
+    \end{array}
 \right . \qquad a_k \ge 0,\; \psi_k \le 0,
 \end{equation}
-where $\psi_k$ is the pressure head beyond which the hydraulic conductivity is essentially saturated.  
+where $\psi_k$ is the pressure head beyond which the hydraulic
+conductivity is essentially saturated.
 
-The four-parameter exponential model for hydraulic conductivity used in the vadose zone is 
+The four-parameter exponential model for hydraulic conductivity used
+in the vadose zone is
 \begin{equation}
   \label{eq:Gardner}
  k_0(z)=e^{a_k\left( \Psi + b - z\right)} \qquad \Psi=\psi_a-\psi_k
@@ -85,17 +106,27 @@ and the exponential model use for moisture capacity is
 C_0(z) = S_y a_c e^{a_c \left( b-z\right)}.
 \end{equation}
 
-The governing equation will be non-dimensionalized before proceeding further with the solution. Equation \eqref{eq:unsatDim} can be written in dimensionless form as
+The governing equation will be non-dimensionalized before proceeding
+further with the solution. Equation \eqref{eq:unsatDim} can be written
+in dimensionless form as
 \begin{equation}
   \label{eq:unsatDimless}
   k_0(z_D) \frac{1}{r_D} \frac{\partial}{\partial r_D} \left( r_D\frac{\partial \sigma_D}{\partial r_D} \right) + \kappa \frac{\partial}{\partial z_D} \left( k_0(z_D) \frac{\partial \sigma_D}{\partial z_D}\right) = \gamma C_0(z_D) \frac{\partial \sigma_D}{\partial t_D}
 \end{equation}
-where $r_D=r/b$ is the dimensionless radial coordinate, $z_D=z/b$ is the dimensionless vertical coordinate, $\kappa=K_z/K_r$ is the anisotropy ratio, $\sigma_D = \sigma/H_c$ is dimensionless vadose zone drawdown, $H_C$ is a characteristic head, $t_D = t K_r / (b^2 S_S)$ is dimensionless time, $\gamma = S_y a_c/S_S$ is the dimensionless storage ratio, and $S_S$ is the specific storage [L$^-1$] in the saturated aquifer.  The hydraulic conductivity constitutive model is non-dimensionalized as
+where $r_D=r/b$ is the dimensionless radial coordinate, $z_D=z/b$ is
+the dimensionless vertical coordinate, $\kappa=K_z/K_r$ is the
+anisotropy ratio, $\sigma_D = \sigma/H_c$ is dimensionless vadose zone
+drawdown, $H_C$ is a characteristic head, $t_D = t K_r / (b^2 S_S)$ is
+dimensionless time, $\gamma = S_y a_c/S_S$ is the dimensionless
+storage ratio, and $S_S$ is the specific storage [L$^-1$] in the
+saturated aquifer.  The hydraulic conductivity constitutive model is
+non-dimensionalized as
 \begin{equation}
   \label{eq:GardnerDimless}
  k_0(z_D)=e^{a_{kD} \left( \Psi_D + 1 - z_D \right)},
 \end{equation}
-where $a_{kD} = a_k b$ and $\Psi_D=\Psi/b$, and the moisture capacity model is non-dimensionalized as
+where $a_{kD} = a_k b$ and $\Psi_D=\Psi/b$, and the moisture capacity
+model is non-dimensionalized as
 \begin{equation}
   \label{eq:mrcDimless}
 C_0(z_D) = e^{a_{cD} \left( 1-z_D\right)},
@@ -103,12 +134,14 @@ C_0(z_D) = e^{a_{cD} \left( 1-z_D\right)},
 where $a_{cD} = a_c b$.
 
 \section{Unsaturated Zone Solution}
-The dimensionless Laplace transformation (over-bar and $p$) of (\ref{eq:unsatDimless}) results in
+The dimensionless Laplace transformation (over-bar and $p$) of
+(\ref{eq:unsatDimless}) results in
 \begin{equation}
   \label{eq:unsatLap}
-   k_0(z_D) \frac{1}{r_D} \frac{\partial}{\partial r_D} \left( r_D\frac{\partial \bar{\sigma}_D}{\partial r_D} \right) +\kappa \frac{\partial}{\partial z_D} \left( k_0(z_D) \frac{\partial \bar{\sigma}_D}{\partial z_D}\right) = p \gamma C_0(z_D)  \bar{\sigma}_D.
+  k_0(z_D) \frac{1}{r_D} \frac{\partial}{\partial r_D} \left( r_D\frac{\partial \bar{\sigma}_D}{\partial r_D} \right) +\kappa \frac{\partial}{\partial z_D} \left( k_0(z_D) \frac{\partial \bar{\sigma}_D}{\partial z_D}\right) = p \gamma C_0(z_D)  \bar{\sigma}_D.
 \end{equation}
-The associated transformed dimensionless boundary and initial conditions of
+The associated transformed dimensionless boundary and initial
+conditions of
 \begin{equation}\nonumber
  \bar{\sigma}_D(\infty,z_D,p) = 0
 \end{equation}
@@ -120,33 +153,42 @@ The associated transformed dimensionless boundary and initial conditions of
 \end{equation}
 where $L_D = L/b$ is the dimensionless vadose zone thickness.
 
-Further applying the dimensionless Hankel transformation (superscript $\ast$ and $a$) to (\ref{eq:unsatLap}), followed by substitution of the dimensionless constitutive models (\ref{eq:GardnerDimless}) and (\ref{eq:mrcDimless}) results in the ordinary differential equation
+Further applying the dimensionless Hankel transformation (superscript
+$\ast$ and $a$) to (\ref{eq:unsatLap}), followed by substitution of
+the dimensionless constitutive models (\ref{eq:GardnerDimless}) and
+(\ref{eq:mrcDimless}) results in the ordinary differential equation
 \begin{equation}
   \label{eq:unsatHank}
-   -a^2 \bar{\sigma}^{\ast} - \kappa a_{kD} \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D} + \kappa \frac{\mathrm{d}^2 \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D^2}  = p \gamma \bar{\sigma}_D^{\ast}  e^{-a_{kD} \Psi_D}  e^{\left(a_{kD} -a_{cD} \right)\left( 1 - z_D\right)}  
+   -a^2 \bar{\sigma}^{\ast} - \kappa a_{kD} \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D} + \kappa \frac{\mathrm{d}^2 \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D^2}  = p \gamma \bar{\sigma}_D^{\ast}  e^{-a_{kD} \Psi_D}  e^{\left(a_{kD} -a_{cD} \right)\left( 1 - z_D\right)}
 \end{equation}
-and the no-flow condition at the top of the vadose zone, 
+and the no-flow condition at the top of the vadose zone,
 \begin{equation}\nonumber
- \frac{\mathrm{d}\bar{\sigma}_D^{\ast}}{\mathrm{d}z_D}=0 \qquad z_D=1+L_D 
+ \frac{\mathrm{d}\bar{\sigma}_D^{\ast}}{\mathrm{d}z_D}=0 \qquad z_D=1+L_D
 \end{equation}
 Equation \ref{eq:unsatHank} can be rearranged and regrouped as
 \begin{equation}
   \label{eq:mn-d5}
   \frac{\mathrm{d}^2 \bar{\sigma}_D^{\ast}}{\mathrm{d}z_D^2} - a_{kD} \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d}z_D} - \left[ B e^{\lambda_D (1-z_D)} + C\right] \bar{\sigma}^{\ast}=0
 \end{equation}
-where $\lambda_D = a_{kD} - a_{cD}$, $B = \frac{p\gamma}{\kappa} e^{-a_{kD} \Psi_D}$, and $C=\frac{a^2}{\kappa}$.
+where $\lambda_D = a_{kD} - a_{cD}$, $B = \frac{p\gamma}{\kappa}
+e^{-a_{kD} \Psi_D}$, and $C=\frac{a^2}{\kappa}$.
 
-The dimensional form of \eqref{eq:mn-d5} was solved in \cite{mishra10} using a general solution from a
-reference book on differential equations.  The solution given in terms
-of two types of Bessel functions of complex argument and non-integer
-order is non-trivial to evaluate numerically. 
+The dimensional form of \eqref{eq:mn-d5} was solved in \cite{mishra10}
+using a general solution from a reference book on differential
+equations.  The solution given in terms of two types of Bessel
+functions of complex argument and non-integer order is non-trivial to
+evaluate numerically.
 
-\subsection{Modified Solution Procedure \#1} 
-By further modifying the $z_D$-coordinate and performing an exponential substitution, (\ref{eq:mn-d5}) can be simplified significantly and a solution can be found by integration.  Using a scaled dimensionless vertical coordinate 
+\subsection{Modified Solution Procedure \#1}
+By further modifying the $z_D$-coordinate and performing an
+exponential substitution, (\ref{eq:mn-d5}) can be simplified
+significantly and a solution can be found by integration.  Using a
+scaled dimensionless vertical coordinate
 \begin{equation}\nonumber
- \zeta= a_{kD} z_D \qquad z_D=\frac{\zeta}{a_{kD}} 
+ \zeta= a_{kD} z_D \qquad z_D=\frac{\zeta}{a_{kD}}
 \end{equation}
-the transformed differential equation representing drawdown in the vadose zone (\ref{eq:mn-d5}) becomes
+the transformed differential equation representing drawdown in the
+vadose zone (\ref{eq:mn-d5}) becomes
 \begin{equation}
   \label{eq:nondimODE}
   a_{kD}^2 \frac{\mathrm{d}^2
@@ -155,11 +197,13 @@ the transformed differential equation representing drawdown in the vadose zone (
     B e^{\lambda_D (1-\zeta/a_{kD})} + C\right] \bar{\sigma}_D^{\ast}=0
 \end{equation}
 we divide through by $a_{kD}^2$ and performing the substitution
-$\bar{\sigma}_D^{\ast}(\zeta)=e^{u(\zeta)}$ (e.g., see \cite[p.\ 27]{bender1978advanced} and \cite[\S 60]{zwillinger1998handbook}).  This exponential change of variables implies
+$\bar{\sigma}_D^{\ast}(\zeta)=e^{u(\zeta)}$ (e.g., see \cite[p.\
+27]{bender1978advanced} and \cite[\S 60]{zwillinger1998handbook}).
+This exponential change of variables implies
 \begin{equation}\nonumber
 \frac{\mathrm{d}\bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta} =
 \frac{\mathrm{d}u}{\mathrm{d}\zeta}e^u
-\end{equation} 
+\end{equation}
 and therefore
 \begin{equation}\nonumber
 \frac{\mathrm{d}^2\bar{\sigma}_D^{\ast}}{\mathrm{d}\zeta^2} =
@@ -177,16 +221,24 @@ Multiplying this by $e^{-u}$ and simplifying results in
   \label{eq:expsubODE}
    \frac{\mathrm{d} v}{\mathrm{d}\zeta} + v^2 - v = \left[ \frac{B}{a_{kD}^2} e^{\lambda_D (1-\zeta/a_{kD})} + \frac{C}{a_{kD}^2}\right],
 \end{equation}
-which is known as the Riccati equation, where $v=u'$.  This would only be solvable if a solution could first be guessed, then reducing \eqref{eq:expsubODE} to a Bernoulli equation, which are always solvable.
+which is known as the Riccati equation, where $v=u'$.  This would only
+be solvable if a solution could first be guessed, then reducing
+\eqref{eq:expsubODE} to a Bernoulli equation, which are always
+solvable.
 
-A simple solution, that is not a Bessel function, might be guessed but I tried a few things and made no progress.
+A simple solution, that is not a Bessel function, might be guessed but
+I tried a few things and made no progress.
 
-\subsection{Modified Solution Procedure \#2} 
-By further modifying the $z_D$-coordinate and performing a different exponential substitution, (\ref{eq:mn-d5}) can be changed to the same form as the time-independent Schr\"{o}dinger equation.  Using a slightly different scaled dimensionless vertical coordinate 
+\subsection{Modified Solution Procedure \#2}
+By further modifying the $z_D$-coordinate and performing a different
+exponential substitution, (\ref{eq:mn-d5}) can be changed to the same
+form as the time-independent Schr\"{o}dinger equation.  Using a
+slightly different scaled dimensionless vertical coordinate
 \begin{equation}\nonumber
- \xi= \frac{a_{kD}}{2} z_D \qquad z_D=\frac{2\xi}{a_{kD}} 
+ \xi= \frac{a_{kD}}{2} z_D \qquad z_D=\frac{2\xi}{a_{kD}}
 \end{equation}
-the transformed differential equation representing drawdown in the vadose zone (\ref{eq:mn-d5}) becomes
+the transformed differential equation representing drawdown in the
+vadose zone (\ref{eq:mn-d5}) becomes
 \begin{equation}
   \label{eq:nondimODE2}
   \frac{a_{kD}^2}{4} \frac{\mathrm{d}^2
@@ -194,27 +246,42 @@ the transformed differential equation representing drawdown in the vadose zone (
   \frac{\mathrm{d} \bar{\sigma}_D^{\ast}}{\mathrm{d}\xi} - \left[
     B e^{\lambda_D (1-2\xi/a_{kD})} + C\right] \bar{\sigma}_D^{\ast}=0
 \end{equation}
-we multiply through by $4/a_{kD}^2$ and performing the substitution $\bar{\sigma}^{\ast}_{D} = H(\xi) e^\xi$.  This exponential change of variables (e.g., see \cite{kuhlman2008quasilinear}) implies
+we multiply through by $4/a_{kD}^2$ and performing the substitution
+$\bar{\sigma}^{\ast}_{D} = H(\xi) e^\xi$.  This exponential change of
+variables (e.g., see \cite{kuhlman2008quasilinear}) implies
 \begin{equation}
   \nonumber
-  \frac{\mathrm{d} \bar{\sigma}^{\ast}_{D}}{\mathrm{d} \xi} = \frac{\mathrm{d}H}{\mathrm{d}\xi} e^\xi + H e^\xi  
+  \frac{\mathrm{d} \bar{\sigma}^{\ast}_{D}}{\mathrm{d} \xi} = \frac{\mathrm{d}H}{\mathrm{d}\xi} e^\xi + H e^\xi
 \end{equation}
 and therefore
 \begin{equation}
   \nonumber
-  \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}_{D}}{\mathrm{d} \xi^2} = \frac{\mathrm{d}^2H}{\mathrm{d}\xi^2} e^\xi + 2\frac{\mathrm{d}H}{\mathrm{d}\xi} e^\xi + He^\xi  
+  \frac{\mathrm{d}^2 \bar{\sigma}^{\ast}_{D}}{\mathrm{d} \xi^2} = \frac{\mathrm{d}^2H}{\mathrm{d}\xi^2} e^\xi + 2\frac{\mathrm{d}H}{\mathrm{d}\xi} e^\xi + He^\xi
 \end{equation}
 which changes \eqref{eq:nondimODE2} to the form
 \begin{equation}
   \label{eq:schrodinger}
   \frac{d^2 H}{d \xi^2} - \left[B' e^{\lambda_D (1-2\xi/{kD})} + C' \right]H = 0
 \end{equation}
-where $B' = 4B/a_{kD}^2$ and $C'=4C/a_{kD}^2 + 1$.  \eqref{eq:schrodinger} is in the form of the time-independent Schr\"{o}dinger equation.  The $\xi$-dependent coefficient in brackets is referred to as the potential function in the quantum-mechanics literature.  Closed-form solutions have been derived for different potential functions ($1/\xi$, $1/\xi^2$, $e^{-\xi}$, etc.).  
+where $B' = 4B/a_{kD}^2$ and $C'=4C/a_{kD}^2 + 1$.
+\eqref{eq:schrodinger} is in the form of the time-independent
+Schr\"{o}dinger equation.  The $\xi$-dependent coefficient in brackets
+is referred to as the potential function in the quantum-mechanics
+literature.  Closed-form solutions have been derived for different
+potential functions ($1/\xi$, $1/\xi^2$, $e^{-\xi}$, etc.).
 
-A common solution technique is to transform \eqref{eq:schrodinger} into Bessel's equation and express the solution in terms of Bessel functions (\textit{no help here}).
+A common solution technique is to transform \eqref{eq:schrodinger}
+into Bessel's equation and express the solution in terms of Bessel
+functions (\textit{no help here}).
 
 \section{Saturated Zone Unconfined Solution}
-Following \cite{mishra10}, we decompose the saturated zone solution into two solutions: 1) the Hantush solution $s_H$ for a confined aquifer and a partially penetrating well; 2) an unconfined solution $s_U$ with no well but continuity conditions with the vadose zone solution just derived.  The solution for $s_H$ is given elsewhere, either in terms of a finite cosine transform, or a multi-layer fully penetrating solution.  
+Following \cite{mishra10}, we decompose the saturated zone solution
+into two solutions: 1) the Hantush solution $s_H$ for a confined
+aquifer and a partially penetrating well; 2) an unconfined solution
+$s_U$ with no well but continuity conditions with the vadose zone
+solution just derived.  The solution for $s_H$ is given elsewhere,
+either in terms of a finite cosine transform, or a multi-layer fully
+penetrating solution.
 
 The governing ordinary differential equation in Laplace-Hankel
 transform space for the saturated unconfined $\bar{s}^{\ast}_{UD}$ is
@@ -224,7 +291,7 @@ transform space for the saturated unconfined $\bar{s}^{\ast}_{UD}$ is
 \end{equation}
 with the no-flow boundary condition at the base of the aquifer
 \begin{equation}\nonumber
- \frac{\mathrm{d} \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D} = 0 \qquad z_D=0 
+ \frac{\mathrm{d} \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D} = 0 \qquad z_D=0
 \end{equation}
 and the following continuity equations at the water table
 \begin{equation}
@@ -235,24 +302,27 @@ and the following continuity equations at the water table
   \label{eq:fluxCont}
   \frac{\mathrm{d} \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D}  = \frac{\mathrm{d}
     \bar{\sigma}_D^{\ast}}{\mathrm{d} z_D} \qquad \rightarrow \qquad \frac{\mathrm{d} \bar{s}_{UD}^{\ast}}{\mathrm{d} z_D}  = \frac{\mathrm{d}u}{\mathrm{d} \zeta} e^u \qquad z_D=1
-  \qquad 
+  \qquad
 \end{equation}
 note the vertical flux of $\bar{s}_{HD}^{\ast}$ is defined as zero at
 the top and bottom of the aquifer, so it is not included in the
 continuity condition \eqref{eq:fluxCont}.
 
-The general solution to \eqref{eq:aquifer} is 
+The general solution to \eqref{eq:aquifer} is
 \begin{equation}
   \label{eq:su}
   \bar{s}_{UD}^{\ast} = A_1 \cosh(\eta z_D) + A_2 \sinh(\eta z_D)
 \end{equation}
-where $A_i$ are constants to determine and $\eta^2 = \frac{p + a^2}{\kappa}$.  The no-flow boundary condition at the bottom of the aquifer forces $A_2\equiv 0$.  
+where $A_i$ are constants to determine and $\eta^2 = \frac{p +
+  a^2}{\kappa}$.  The no-flow boundary condition at the bottom of the
+aquifer forces $A_2\equiv 0$.
 
 \section{Formulation of Finite Difference Solution}
 The ordinary differential equation in the vadose zone can be solved
 via finite differences in space, while still within Laplace-Hankel
 space.  This is done mostly as a check of the other derivation, and
-partly because of inspiration derived from a pithy remark by a co-worker.
+partly because of inspiration derived from a pithy remark by a
+co-worker.
 
 Substituting finite difference approximations for the $z_D$
 derivatives in \eqref{eq:mn-d5} gives
@@ -263,27 +333,27 @@ derivatives in \eqref{eq:mn-d5} gives
   \left( B e^{-\lambda_D jh} + C \right) \sigma_j
   = 0
 \end{equation}
-where the bar, star, and $D$ decorators on $\sigma$ are left out for simplicity, $h$ is
-the dimensionless inter-node spacing (assumed constant), and
-the subscript indicates the current node $j$ and the node one above
-$j+1$ and below $j-1$.  The node index run $0 \le j \le N-1$, where
- there are $N$ nodes and $h = L_D / (N - 1)$.
+where the bar, star, and $D$ decorators on $\sigma$ are left out for
+simplicity, $h$ is the dimensionless inter-node spacing (assumed
+constant), and the subscript indicates the current node $j$ and the
+node one above $j+1$ and below $j-1$.  The node index run $0 \le j \le
+N-1$, where there are $N$ nodes and $h = L_D / (N - 1)$.
 
-In the following $\xi_j = B e^{-\lambda_D jh} + C$.
-Explicitly writing out the finite-difference matrix for a 3-node
-problem with node 1 at $z_D=1$ and node 3 at $z_D=1+L/b$, without
-explicitly handling the boundary conditions, is
+In the following $\xi_j = B e^{-\lambda_D jh} + C$.  Explicitly
+writing out the finite-difference matrix for a 3-node problem with
+node 1 at $z_D=1$ and node 3 at $z_D=1+L/b$, without explicitly
+handling the boundary conditions, is
 \begin{equation}
   \label{eq:fd-01}
   \left[ \begin{matrix}
     \frac{1}{h^2} & \left(\frac{a_{kD}}{h} - \frac{2}{h^2} - \xi_0\right) &
-    \frac{1}{h^2} - \frac{a_{kD}}{h} & 0 & 0 \\ 
+    \frac{1}{h^2} - \frac{a_{kD}}{h} & 0 & 0 \\
     0 & \frac{1}{h^2} & \left(\frac{a_{kD}}{h} - \frac{2}{h^2} - \xi_1 \right)&
-    \frac{1}{h^2} - \frac{a_{kD}}{h} & 0  \\ 
+    \frac{1}{h^2} - \frac{a_{kD}}{h} & 0  \\
     0 & 0 & \frac{1}{h^2} & \left(\frac{a_{kD}}{h} - \frac{2}{h^2}  -
       \xi_2 \right) &
-    \frac{1}{h^2} - \frac{a_{kD}}{h} \\ 
-  \end{matrix}\right] 
+    \frac{1}{h^2} - \frac{a_{kD}}{h} \\
+  \end{matrix}\right]
 \left[\begin{matrix}
 \sigma_{-1} \\ \sigma_0 \\ \sigma_1 \\ \sigma_2 \\ \sigma_3
 \end{matrix}\right]
@@ -292,11 +362,11 @@ explicitly handling the boundary conditions, is
 0 \\ 0\\ 0 \\ 0 \\ 0
 \end{matrix}\right]
 \end{equation}
-where $\sigma_{-1}$ and $\sigma_3$ are ``ghost'' nodes
-which will be used to represent boundary conditions, but do not
-physically exist; \eqref{eq:fd-01} is in the canonical form $\mathbf{Ax}=\mathbf{b}$.  Because
-$\partial \sigma/\partial z =0$ at $z = b+L$, we can set $\sigma_2=
-\sigma_3$, which means adding the two rightmost columns of
+where $\sigma_{-1}$ and $\sigma_3$ are ``ghost'' nodes which will be
+used to represent boundary conditions, but do not physically exist;
+\eqref{eq:fd-01} is in the canonical form $\mathbf{Ax}=\mathbf{b}$.
+Because $\partial \sigma/\partial z =0$ at $z = b+L$, we can set
+$\sigma_2= \sigma_3$, which means adding the two rightmost columns of
 $\mathbf{A}$ and eliminating $\sigma_3$.
 
 The node at the bottom of the vadose zone ($\sigma_0$) appears in two
@@ -333,29 +403,30 @@ eliminated $\sigma_0$ leads to
   \label{eq:fd-02}
   \left[ \begin{matrix}
      \cosh(\eta)\theta_1 - \frac{\eta}{h} \sinh(\eta) &
-    \frac{1}{h^2} - \frac{a_{kD}}{h} & 0 \\ 
+    \frac{1}{h^2} - \frac{a_{kD}}{h} & 0 \\
      \frac{1}{h^2}\cosh(\eta) & \theta_2 &
-    \frac{1}{h^2} - \frac{a_{kD}}{h}   \\ 
+    \frac{1}{h^2} - \frac{a_{kD}}{h}   \\
      0 & \frac{1}{h^2} & \theta_2 +
-    \frac{1}{h^2} - \frac{a_{kD}}{h} \\ 
-  \end{matrix}\right] 
+    \frac{1}{h^2} - \frac{a_{kD}}{h} \\
+  \end{matrix}\right]
 \left[\begin{matrix}
-A_1 \\ \sigma_1 \\ \sigma_2 
+A_1 \\ \sigma_1 \\ \sigma_2
 \end{matrix}\right]
 =
 \left[\begin{matrix}
--\theta_1 s_H(1) \\ 
--\frac{1}{h^2}s_H(1) \\ 0 
+-\theta_1 s_H(1) \\
+-\frac{1}{h^2}s_H(1) \\ 0
 \end{matrix}\right]
 \end{equation}
-where $\theta_1 = \frac{a_{kD}}{h} - \frac{1}{h^2} - \xi_j$ and $\theta_2 =
-\frac{a_{kD}}{h} - \frac{2}{h^2} - \xi_j $.  This 
-$3\times 3$ case illustrates all the entries in a general $n\times
-n$ problem; including boundary nodes and an interior node.  
+where $\theta_1 = \frac{a_{kD}}{h} - \frac{1}{h^2} - \xi_j$ and
+$\theta_2 = \frac{a_{kD}}{h} - \frac{2}{h^2} - \xi_j $.  This $3\times
+3$ case illustrates all the entries in a general $n\times n$ problem;
+including boundary nodes and an interior node.
 
-The upper--left coefficient $\cosh(\eta)\theta_1 - \frac{\eta}{h}\sinh(\eta)$ in
-\eqref{eq:fd-02} may be problematic due to cancellation between large
-quantities, so it can be re-written in terms of exponentials as 
+The upper--left coefficient $\cosh(\eta)\theta_1 -
+\frac{\eta}{h}\sinh(\eta)$ in \eqref{eq:fd-02} may be problematic due
+to cancellation between large quantities, so it can be re-written in
+terms of exponentials as
 \begin{equation}
  \nonumber
  \frac{1}{2} \left[ e^{\eta} \left( \theta_1 - \frac{\eta}{h}\right) + e^{-\eta}
@@ -365,7 +436,7 @@ quantities, so it can be re-written in terms of exponentials as
 The Thomas algorithm for tri-diagonal matrices can be used to
 numerically solve for $A_1$ and $\sigma_j$, where $j=1,2, \dots, n$
 (not including $\sigma_0$).  Once $A_1$ is found numerically, the
-solution in the saturated zone is simply 
+solution in the saturated zone is simply
 \begin{equation}
  \nonumber
  \bar{\sigma}^{\ast}_{D}(z_D) = \bar{\sigma}^{\ast}_{HD}(z_D) + A_1
@@ -376,8 +447,9 @@ for each combination of $(a,p)$.  The Thomas algorithm can be
 vectorized to compute many solutions simultaneously.
 
 For small problems ($n \le 5$) the finite difference matrix above can
-be solved algebraically using Cramer's rule, or using equivalently
-using Mathematica.  For example, the matrix \eqref{eq:fd-02} for three nodes $(h=L_D/2)$ can be solved for $A_1$ analytically as
+be solved algebraically using Cramer's rule, or equivalently using
+Mathematica.  For example, the matrix \eqref{eq:fd-02} for three nodes
+$(h=L_D/2)$ can be solved for $A_1$ analytically as
 \begin{align}
   \label{eq:AsolnMathematica}
   A_1&=\left\lbrace-\frac{4 \left(4-2 a_k L_D\right) \left[4+\left(C+B e^{-L_D \lambda _D}\right) L_D^2\right]}{L_D^6}+\left(B+C+\frac{4-2 a_k L_D}{L_D^2}\right) \right.  \times \notag\\
@@ -386,7 +458,8 @@ using Mathematica.  For example, the matrix \eqref{eq:fd-02} for three nodes $(h
     &\frac{-4 \cosh(\eta)+L_D \left(-2 \eta  \sinh(\eta)+2 \cosh(\eta) a_k-(B+C) \cosh(\eta) L_D\right)}{L_D^2} \notag\\
     &\left.\left[\frac{8 \left(-2+a_k L_D\right)}{L_D^4}+\left(-C-B e^{-L_D \lambda _D}-\frac{4}{L_D^2}\right) \left(-C-B e^{-\frac{1}{2} L_D \lambda _D}+\frac{2 \left(-4+a_k L_D\right)}{L_D^2}\right)\right]\right\rbrace \notag
 \end{align}
-which would only be accuracte if the vadose zone was small, so that $L_D/2 \ll 1$. 
+which would only be accurate if the vadose zone was small, so that
+$L_D/2 \ll 1$.
 
 \bibliographystyle{alpha}
 \bibliography{mn}
