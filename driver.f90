@@ -15,7 +15,7 @@ program Driver
   use invLap, only : dehoog => dehoog_invlap , pvalues => dehoog_pvalues
 
   ! integration setup and extrapolation routines
-  use integration, only : tanh_sinh_setup, gauss_lobatto_setup, wynn_epsilon, polint
+  use integration, only : tanh_sinh_setup, gauss_lobatto_setup, wynn_epsilon, extraptozero
 
   ! openMP library interface
   !$ use omp_lib, only : OMP_get_max_threads, OMP_get_num_procs
@@ -139,7 +139,7 @@ program Driver
            !$OMP PARALLEL DO SHARED(ts,tmp,finint)
            do m = 1,l%np
               do n = 1,s%nz
-                 call polint(ts%hv(1:ts%R), tmp(1:ts%R,m,n), 0.0_EP, finint(m,n), dy)
+                 finint(m,n) = extraptozero(ts%hv(1:ts%R), tmp(1:ts%R,m,n))
               end do
            end do
            !$OMP END PARALLEL DO

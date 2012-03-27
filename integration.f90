@@ -2,7 +2,7 @@ module integration
 implicit none
 
 private
-public :: tanh_sinh_setup, gauss_lobatto_setup, wynn_epsilon, polint
+public :: tanh_sinh_setup, gauss_lobatto_setup, wynn_epsilon, extraptozero
 
 contains
   !! ###################################################
@@ -116,7 +116,6 @@ contains
 
     ! build up partial sums, but check for problems
     check: do i=1,ns
-!!$       write(*,'(I0,A,ES12.3E4,A,ES12.3E4,A)',advance='no'), i,'(',real(series(i)),',',aimag(series(i)),') '
        if (.not. is_finite(series(i))) then
           ns = i-1
           if(ns < MINTERMS) then
@@ -151,10 +150,6 @@ contains
              accsum = eps(m+1,j)
              if (quiet > 1) then
                 write(*,'(A,I0,1X,I0,A)') 'epsilon cancel ',m,j,':'
-!!$                write(*,'(A,I0,1X,I0,3(A,ES12.3E4,A,ES12.3E4),A)',advance='no') &
-!!$                     & 'epsilon cancel ',m,j,' denom(',real(denom),',',aimag(denom),&
-!!$                     &') eps(m+1,j)=(',real(eps(m+1,j)),',',aimag(eps(m+1,j)),&
-!!$                     &') eps(m,j)=(',real(eps(m,j)),',',aimag(eps(m,j)),') : '
              end if
              goto 777
           end if
@@ -172,50 +167,50 @@ contains
   end function wynn_epsilon
 
   !! ###################################################
-  subroutine polint(xa,ya,x,y,dy)
-    ! TODO: replace this routine with a vectorized one
+  function extraptozero(xin,yin) result(y)
+    ! xa and ya are given x and y locations to fit an polynomial through.
 
-    ! xa and ya are given x and y locations to fit an nth degree polynomial
-    ! through.  results is a value y at given location x, with error estimate dy
-
-    ! x is real and extended-precision
-    ! y is complex and extended-precision
+    ! xinput  is real and extended-precision
+    ! yinput is complex and extended precsion
+    ! output is complex and extended-precision
 
     use constants, only : EP
     implicit none
 
-    real(EP), dimension(:), intent(IN) :: xa
-    complex(EP), dimension(:), intent(in) :: ya
-    real(EP), intent(IN) :: x
-    complex(EP), intent(OUT) :: y,dy
-    integer :: m,n,ns
-    complex(EP), dimension(size(xa)) :: c,d,den
-    real(EP), dimension(size(xa)) :: ho
+    real(EP), dimension(:), intent(IN) :: xin
+    complex(EP), dimension(:), intent(in) :: yin
+    complex(EP) :: y, dy
 
-    n=size(xa)
-    c=ya
-    d=ya
-    ho=xa-x
-    ns = sum(minloc(abs(x-xa))) ! sum turns 1-element vector to a scalar
-    y=ya(ns)
-    ns=ns-1
-    ! TODO vectorize this loop
+    integer :: m,n,ns
+    complex(EP), dimension(size(xin)) :: c,d,den
+
+    n = size(xin)
+    ns = sum(minloc(xin))
+
+    c = yin
+    d = yin
+    y = yin(ns)
+
+    ns = ns-1
+
     do m=1,n-1
-       den(1:n-m)=ho(1:n-m)-ho(1+m:n)
+       den(1:n-m) = xin(1:n-m) - xin(1+m:n)
        if (any(abs(den(1:n-m)) < spacing(0.0))) then
           write(*,*) 'polint: calculation failure',abs(den(1:n-m))
           stop
        end if
-       den(1:n-m)=(c(2:n-m+1)-d(1:n-m))/den(1:n-m)
-       d(1:n-m)=ho(1+m:n)*den(1:n-m)
-       c(1:n-m)=ho(1:n-m)*den(1:n-m)
+
+       den(1:n-m) = (c(2:n-m+1) - d(1:n-m))/den(1:n-m)
+       d(1:n-m) = xin(1+m:n)*den(1:n-m)
+       c(1:n-m) = xin(1:n-m)*den(1:n-m)
+
        if (2*ns < n-m) then
-          dy=c(ns+1)
+          dy = c(ns+1)
        else
-          dy=d(ns)
-          ns=ns-1
+          dy = d(ns)
+          ns = ns-1
        end if
-       y=y+dy
+       y = y+dy
     end do
-  end subroutine polint
+  end function extraptozero
 end module integration
