@@ -58,6 +58,23 @@ work with my code).  If you are interested in using the program in
 Windows, but do not feel up to the task of compiling it yourself, let
 me know and I can probably provide you with an executable.
 
+Data
+------------------------------------------
+
+I am in the process of collecting unconfined pumping datasets for
+benchmarking and conducting a "beauty pagent" between the different 
+unconfined models.  I am currently working to include the following 
+datasets:
+
+Moench et al., 2001 (Cape Cod, Massachusets)
+
+
+Wenzel, 1942 (Grand Island, Nebraska)
+https://docs.google.com/spreadsheet/ccc?key=0AlJMuEYu7Z-5dGJfdzBibk4zNDB4UG9DN1FpQ0FnX1E
+
+I will make all the data available as they are cleaned/prepared
+for use in my inverse modeling exercise.
+
 Kris Kuhlman (klkuhlm@sandia.gov)
-March, 2012
+June, 2012
 
