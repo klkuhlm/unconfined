@@ -165,10 +165,12 @@ if mapcheckplot:
     plt.figure(5)
     plt.plot(d['r'],d['elev']-d['bot'],'r_')
     for well in d['id']:
-        thiswell = d['id'] == well
-        plt.annotate('%s%s' % (well,d[thiswell]['line'][0]),
-                     xy=(d[thiswell]['r'],d[thiswell]['elev']-d[thiswell]['wl']),
+        thiswell = d[d['id'] == well]
+        plt.annotate('%s%s' % (well,thiswell['line'][0]),
+                     xy=(thiswell['r'],thiswell['elev']-thiswell['wl']),
                      fontsize='xx-small')
+        plt.plot([thiswell['r'],thiswell['r']],thiswell['elev'] -
+                 np.array([thiswell['measpt'],thiswell['bot']]),'k-',linewidth=0.5)
     plt.plot(d['r'],d['elev']-d['wl'],'b_')
     plt.plot(d['r'],d['elev']-d['measpt'],'k_')
     ls83 = d[d['id'] == 83]['elev']
