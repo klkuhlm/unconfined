@@ -16,7 +16,7 @@ tlen = (t1-t0)*1440
 # column 2: drawdown (ft)
 
 individualplots = False
-drawdowncheck = False
+drawdowncheck = True
 mapcheckplot = True
 
 if drawdowncheck:
@@ -62,8 +62,9 @@ if drawdowncheck:
                 ax2.loglog((dt[pm][1:]-t0)*1440, (dt[pm][1:]-dt[pm][:-1])*1440,'rx')
                 ax2.set_ylabel('$\\Delta t$ (min)')
                 ax.set_xlabel('time since pumping began (min)')
+                ax.set_title(well)
             
-                plt.savefig(filename.replace('csv','png'))
+                plt.savefig(filename.replace('csv','eps'))
                 plt.close(1)
             else:
                 # most lines are one letter, except "SW"
@@ -76,6 +77,7 @@ if drawdowncheck:
     
     
     if not individualplots:
+        ax.axvline(tlen,color='black',linewidth=0.1)
         ax.set_ylabel('drawdown (ft)')
         ax.set_xlabel('time since pumping began (min)')
         plt.savefig('all-GI-data.eps')
@@ -156,18 +158,23 @@ if mapcheckplot:
     plt.colorbar(shrink=0.5)
     plt.axis('image')
     plt.grid()
-    plt.savefig('grand-island-contour-maps.png')
+    plt.savefig('grand-island-contour-maps.eps')
     plt.close(4)
 
     # check screen locations and distances
     plt.figure(5)
-    plt.semilogx(d['r'],d['elev']-d['bot'],'r_')
-    plt.semilogx(d['r'],d['elev']-d['wl'],'b_')
-    plt.semilogx(d['r'],d['elev']-d['measpt'],'k_')
+    plt.plot(d['r'],d['elev']-d['bot'],'r_')
+    for well in d['id']:
+        thiswell = d['id'] == well
+        plt.annotate('%s%s' % (well,d[thiswell]['line'][0]),
+                     xy=(d[thiswell]['r'],d[thiswell]['elev']-d[thiswell]['wl']),
+                     fontsize='xx-small')
+    plt.plot(d['r'],d['elev']-d['wl'],'b_')
+    plt.plot(d['r'],d['elev']-d['measpt'],'k_')
     ls83 = d[d['id'] == 83]['elev']
     plt.plot([1,1],[ls83,ls83-39.5],'k-',linewidth=5)
     plt.grid()
     plt.xlim([1,d['r'].max()])
     plt.xlabel('radial distance from well 83 (ft)')
     plt.ylabel('elevation')
-    plt.savefig('grand-island-screen-locations.png')
+    plt.savefig('grand-island-screen-locations.eps')
