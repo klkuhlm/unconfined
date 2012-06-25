@@ -97,42 +97,33 @@ if mapcheckplot:
     # col 6: distance from pumped well (ft)
     # col 7: initial water level (ft BMP)
 
-    fig = plt.figure(3)
-    fn = glob('grand-island*info*.csv')[0]
-    fh = open(fn,'rU')
-    
     ddt = np.dtype([('id','S2'),('line','S2'),
-                    ('srcd','f8'),('measpt','f8'),
-                    ('elev','f8'),('dist','f8'),
+                    ('bot','f8'),('measpt','f8'),
+                    ('elev','f8'),('r','f8'),
                     ('wl','f8')])
 
     # compute x & y coordinates (pumping well is zero)
     # for creating maps for checking, etc.
     xydt = np.dtype([('id','S2'),('x','f8'),('y','f8')])
 
-    d = np.genfromtxt(fh,dtype=ddt,delimiter=',',
-                  usecols=(0,1,3,4,5,6,7),skiprows=1,
-                  filling_values=np.NaN)
+    d = np.genfromtxt('grand-island-test-wenzel - info.csv',
+                      dtype=ddt,delimiter=',',
+                      usecols=(0,1,3,4,5,6,7),skiprows=1,
+                      filling_values=np.NaN)
 
-    xy = np.empty(d.shape,dtype=xydt)
-    
+    xy = np.empty(d.shape,dtype=xydt)    
     conv = np.pi/180.0
     xy['id'] = d['id']
-
-    xv = []
-    yv = []
 
     for well in d['id']:
         thiswell = xy['id'] == well
         lin = d[thiswell]['line'][0]
         ang = angles[lin]*conv
-        r = d[thiswell]['dist'][0]
+        r = d[thiswell]['r'][0]
         x = r*np.cos(ang)
         y = r*np.sin(ang)
         xy['x'][thiswell] = x
         xy['y'][thiswell] = y
-
-    #print xy
 
     buf = 50
     nx,ny = (40,40)
@@ -147,10 +138,14 @@ if mapcheckplot:
     ls = mlab.griddata(xy['x'],xy['y'],d['elev']-d['measpt'],X,Y)
     wt = mlab.griddata(xy['x'],xy['y'],d['elev']-d['wl'],X,Y)
 
-    plt.figure(4,figsize=(17,11))
+    plt.figure(4,figsize=(26,15))
     plt.subplot(122)
     plt.contourf(X,Y,ls)
     plt.plot(xy['x'],xy['y'],'k.')
+    for well in d['id']:
+        thiswell = d['id'] == well
+        plt.annotate('%s%s' % (well,d[thiswell]['line'][0]),
+                     xy=(xy[thiswell]['x'],xy[thiswell]['y']),fontsize='x-small')
     plt.colorbar(shrink=0.5)
     plt.axis('image')
     plt.grid()
@@ -164,3 +159,15 @@ if mapcheckplot:
     plt.savefig('grand-island-contour-maps.png')
     plt.close(4)
 
+    # check screen locations and distances
+    plt.figure(5)
+    plt.semilogx(d['r'],d['elev']-d['bot'],'r_')
+    plt.semilogx(d['r'],d['elev']-d['wl'],'b_')
+    plt.semilogx(d['r'],d['elev']-d['measpt'],'k_')
+    ls83 = d[d['id'] == 83]['elev']
+    plt.plot([1,1],[ls83,ls83-39.5],'k-',linewidth=5)
+    plt.grid()
+    plt.xlim([1,d['r'].max()])
+    plt.xlabel('radial distance from well 83 (ft)')
+    plt.ylabel('elevation')
+    plt.savefig('grand-island-screen-locations.png')
