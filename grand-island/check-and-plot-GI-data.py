@@ -15,7 +15,7 @@ tlen = (t1-t0)*1440
 # column 1: time
 # column 2: drawdown (ft)
 
-individualplots = False
+individualplots = True
 drawdowncheck = True
 mapcheckplot = True
 
@@ -93,13 +93,14 @@ if mapcheckplot:
     # col 0: well (number)
     # col 1: line (letter)
     # col 2: diameter (inches)
-    # col 3: screen depth (ft BMP)
-    # col 4: measuring point height (ft ALS)
-    # col 5: measuring point altitude (ft AMSL)
-    # col 6: distance from pumped well (ft)
-    # col 7: initial water level (ft BMP)
+    # col 3: screen length (ft)
+    # col 4: screen depth (ft BMP)
+    # col 5: measuring point height (ft ALS)
+    # col 6: measuring point altitude (ft AMSL)
+    # col 7: distance from pumped well (ft)
+    # col 8: initial water level (ft BMP)
 
-    ddt = np.dtype([('id','S2'),('line','S2'),
+    ddt = np.dtype([('id','S2'),('line','S2'),('screen','f8'),
                     ('bot','f8'),('measpt','f8'),
                     ('elev','f8'),('r','f8'),
                     ('wl','f8')])
@@ -110,7 +111,7 @@ if mapcheckplot:
 
     d = np.genfromtxt('grand-island-test-wenzel - info.csv',
                       dtype=ddt,delimiter=',',
-                      usecols=(0,1,3,4,5,6,7),skiprows=1,
+                      usecols=(0,1,3,4,5,6,7,8),skiprows=1,
                       filling_values=np.NaN)
 
     xy = np.empty(d.shape,dtype=xydt)    
@@ -163,14 +164,18 @@ if mapcheckplot:
 
     # check screen locations and distances
     plt.figure(5)
-    plt.plot(d['r'],d['elev']-d['bot'],'r_')
+    #plt.plot(d['r'],d['elev']-d['bot'],'r_')
     for well in d['id']:
         thiswell = d[d['id'] == well]
         plt.annotate('%s%s' % (well,thiswell['line'][0]),
                      xy=(thiswell['r'],thiswell['elev']-thiswell['wl']),
                      fontsize='xx-small')
-        plt.plot([thiswell['r'],thiswell['r']],thiswell['elev'] -
-                 np.array([thiswell['measpt'],thiswell['bot']]),'k-',linewidth=0.5)
+        if thiswell['screen'] == 0:
+            plt.plot(thiswell['r'],thiswell['elev']-thiswell['bot'],'k.')
+        else:
+            plt.plot([thiswell['r'],thiswell['r']],thiswell['elev'] -
+                     np.array([thiswell['bot']-thiswell['screen'],
+                               thiswell['bot']]),'k-',linewidth=1.5)
     plt.plot(d['r'],d['elev']-d['wl'],'b_')
     plt.plot(d['r'],d['elev']-d['measpt'],'k_')
     ls83 = d[d['id'] == 83]['elev']
