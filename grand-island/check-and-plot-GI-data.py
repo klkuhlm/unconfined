@@ -15,7 +15,7 @@ tlen = (t1-t0)*1440
 # column 1: time
 # column 2: drawdown (ft)
 
-individualplots = True
+individualplots = False
 drawdowncheck = True
 mapcheckplot = True
 
@@ -68,10 +68,14 @@ if drawdowncheck:
                 plt.close(1)
             else:
                 # most lines are one letter, except "SW"
-                if well[:-1].isdigit():
-                    line = well[-1]
+                if '83' in well:
+                    # pumping well doesn't have a "line" but is arbitrarily added 
+                    # to line A for calculations
+                    line = 'A'
+                elif 'SW' in well:
+                    line = 'SW'
                 else:
-                    line = well[-2:]
+                    line = well[-1:]
                 ax.loglog((dt[pm]-t0)*1440,dd[pm],'-',
                           color=colors[line],linewidth=0.25)
     
@@ -163,7 +167,7 @@ if mapcheckplot:
     plt.close(4)
 
     # check screen locations and distances
-    plt.figure(5)
+    plt.figure(5,figsize=(30,8))
     #plt.plot(d['r'],d['elev']-d['bot'],'r_')
     for well in d['id']:
         thiswell = d[d['id'] == well]
