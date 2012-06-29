@@ -125,12 +125,17 @@ if mapcheckplot:
     for well in d['id']:
         thiswell = xy['id'] == well
         lin = d[thiswell]['line'][0]
-        ang = angles[lin]*conv
-        r = d[thiswell]['r'][0]
-        x = r*np.cos(ang)
-        y = r*np.sin(ang)
-        xy['x'][thiswell] = x
-        xy['y'][thiswell] = y
+        if lin == 'SW':
+            # the ray comes from 84, not 83. Radial distance -> 83 is
+            # correct, but XY computed is not
+            pass
+        else:
+            ang = angles[lin]*conv
+            r = d[thiswell]['r'][0]
+            x = r*np.cos(ang)
+            y = r*np.sin(ang)
+            xy['x'][thiswell] = x
+            xy['y'][thiswell] = y
 
     buf = 50
     nx,ny = (40,40)
