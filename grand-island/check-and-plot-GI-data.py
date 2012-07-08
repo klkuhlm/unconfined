@@ -15,7 +15,7 @@ tlen = (t1-t0)*1440
 # column 1: time
 # column 2: drawdown (ft)
 
-individualplots = True
+individualplots = False
 drawdowncheck = True
 mapcheckplot = True
 
@@ -84,6 +84,7 @@ if drawdowncheck:
         ax.axvline(tlen,color='black',linewidth=0.1)
         ax.set_ylabel('drawdown (ft)')
         ax.set_xlabel('time since pumping began (min)')
+        ax.set_title('July 1931 Grand Island Test USGS WSP-887 (Wenzel, 1942)')
         plt.savefig('all-GI-data.eps')
         plt.close(2)
 
