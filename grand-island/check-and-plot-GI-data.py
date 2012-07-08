@@ -15,7 +15,7 @@ tlen = (t1-t0)*1440
 # column 1: time
 # column 2: drawdown (ft)
 
-individualplots = False
+individualplots = True
 drawdowncheck = True
 mapcheckplot = True
 
@@ -59,12 +59,12 @@ if drawdowncheck:
                 ax.axvline(tlen)
                 ax.set_ylabel('drawdown (ft)')
                 ax2 = ax.twinx()
-                ax2.loglog((dt[pm][1:]-t0)*1440, (dt[pm][1:]-dt[pm][:-1])*1440,'rx')
+                ax2.semilogx((dt[pm][1:]-t0)*1440, (dt[pm][1:]-dt[pm][:-1])*1440,'rx')
                 ax2.set_ylabel('$\\Delta t$ (min)')
                 ax.set_xlabel('time since pumping began (min)')
                 ax.set_title(well)
             
-                plt.savefig(filename.replace('csv','eps'))
+                plt.savefig(filename.replace('csv','png'))
                 plt.close(1)
             else:
                 # most lines are one letter, except "SW"
