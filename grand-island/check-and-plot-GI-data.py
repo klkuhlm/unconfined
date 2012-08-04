@@ -15,9 +15,9 @@ tlen = (t1-t0)*1440
 # column 1: time
 # column 2: drawdown (ft)
 
-individualplots = False
+individualplots = True
 drawdowncheck = True
-mapcheckplot = True
+mapcheckplot = False
 
 if drawdowncheck:
     if not individualplots:
