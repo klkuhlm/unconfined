@@ -78,7 +78,7 @@ contains
        mult(1:l%np) = exp(-l%timePar(2)*l%p)* &
             &  (1.0 - exp(-l%timePar(1)*l%p/2.0))/ &
             & ((1.0 + exp(-l%timePar(1)*l%p/2.0))*l%p)
-    case(:-1)
+    case(-100:-1)
        !! arbitrary piecewise constant pumping rate with n steps, from ti(1) to tf
        n = -l%timeType
        allocate(ti(n),Q(0:n))
@@ -93,6 +93,32 @@ contains
             & sum(Q(1:n) - Q(0:n-1))*exp(-tf*l%p(:)))/l%p(:)
 
        deallocate(ti,Q)
+
+    case(:-101)
+       !! piecewise linear pumping rate with n steps, from ti(1) to tf
+       !! no jumps in value (no vertical slopes)
+       n = -l%timeType - 100
+       allocate(ti(n),W(0:n+1),y(1:n),denom(1:n))
+
+       ! unpack initial times, pumping rates and final time
+       ti(1:n) = l%timePar(1:n)
+       tf = l%timePar(n+1)
+       y(1:n) = l%timePar(n+2:2*n+1)
+
+       ! compute slope between each pair of points
+       W(0) = 0.0
+       W(n+1) = 0.0
+       denom = [ti(2:n),tf] - ti(1:n)
+       if (any(abs(denom) < epsilon(1.0))) then
+          stop 'no vertical sloped lines in piecewise linear pumping rate'
+       end if
+       W(1:n) = (y(2:n+1) - y(1:n))/denom ! rise/run
+
+       mult(1:l%np) = (sum(spread(W(1:n) - W(0:n-1),2,l%np)*&
+            & exp(-outer(ti(1:n),p(1:l%np))),dim=1) - &
+            & sum(W(1:n) - W(0:n-1))*exp(-tf*p(:)))/p(:)**2
+
+       deallocate(ti,W,y,denom)
     end select
 
   end function lapTime
