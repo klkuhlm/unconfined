@@ -1,13 +1,13 @@
 Well Number,Line,Diameter (inches),screen length (ft),depth to bottom of well screen below measurement point (ft),distance of measuring point above land surface (ft),altitude of measuring point (ft),distance from pumped well 83 (ft),initial water level (ft below measuring point),,,,
-1,A,3,0,21.4,0.7,1814.59,24.9,4.3,,pumping rate,540,gallons/minute
-2,A,3,0,10.3,0.1,1815.66,59.9,5.39,,pumping start,7/29/1931,6:05:00
-3,A,3,0,10.1,0,1815.26,114.4,4.97,,pumping end,7/31/1931,6:04:00
-4,A,3,0,10.3,0.1,1814.63,164.2,4.33,,,,
-5,A,1,1.5,11.5,1.4,1815.83,229,5.53,,aquifer thickness,100,feet
-6,A,1,1.5,6.5,0.5,1812.35,354.1,2.07,,transmissivity,94278,gallons/min/ft
-7,A,3,0,10.2,0.2,1815.39,429.3,5.12,,specific yield,21.7,percent
-8,A,1,1.5,11.4,1.2,1815.52,478.9,5.25,,,,
-9,A,3,0,10.3,0.1,1814.97,604,4.72,,,,
+01,A,3,0,21.4,0.7,1814.59,24.9,4.3,,pumping rate,540,gallons/minute
+02,A,3,0,10.3,0.1,1815.66,59.9,5.39,,pumping start,7/29/1931,6:05:00
+03,A,3,0,10.1,0,1815.26,114.4,4.97,,pumping end,7/31/1931,6:04:00
+04,A,3,0,10.3,0.1,1814.63,164.2,4.33,,,,
+05,A,1,1.5,11.5,1.4,1815.83,229,5.53,,aquifer thickness,100,feet
+06,A,1,1.5,6.5,0.5,1812.35,354.1,2.07,,transmissivity,94278,gallons/min/ft
+07,A,3,0,10.2,0.2,1815.39,429.3,5.12,,specific yield,21.7,percent
+08,A,1,1.5,11.4,1.2,1815.52,478.9,5.25,,,,
+09,A,3,0,10.3,0.1,1814.97,604,4.72,,,,
 10,A,3,0,10.3,0.1,1814.73,754.6,4.48,,"3"" -> piezometers",,
 11,A,3,0,10.5,0.4,1814.05,903.8,3.82,,"1"" -> 18"" screen",,
 13,B,3,0,21.4,0.2,1814.84,29.9,4.53,,83 -> fully screened,,
