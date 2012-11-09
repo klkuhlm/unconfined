@@ -21,6 +21,9 @@ computesplinederiv = True
 drawdowncheck = True
 mapcheckplot = True
 
+# apply uniform min/max derivatives to all data
+ydmin,ydmax = (-0.2,1.0)
+
 if drawdowncheck:
     if not individualplots:
         fig = plt.figure(2)
@@ -63,8 +66,8 @@ if drawdowncheck:
                 ax.loglog(tv,dv,'r-')
                 ax.loglog(tv,dv,'k.')
 
-                if computesplinederiv:
-                    ppm = np.logical_and(dt > t0,dt < t1)
+                if computesplinederiv and '83' not in well:
+                    ppm = np.logical_and(dt >= t0,dt <= dt[np.argmax(dd)])
                     tpv = (dt[ppm]-t0)*1440
                     dpv = dd[ppm]
 
@@ -78,7 +81,8 @@ if drawdowncheck:
                     axd = ax.twinx()
                     ax.semilogx(tpv,spval[:,0],'b--')
                     axd.semilogx(tpv,spval[:,1],'g--')
-                    axd.set_ylabel('d s/d(ln(t)) (pumping only)')
+                    axd.set_ylabel('d s/d(ln(t)) no recovery')
+                    axd.set_ylim([ydmin,ydmax])
 
                 ax.axvline(tlen)
                 ax.set_ylabel('drawdown (ft)')
