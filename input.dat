@@ -3,7 +3,7 @@
 6.944D-1   2.889D-1               :: l/b, d/b (normalized depth to bottom/top of screened interval)
 0.1    0.1                       :: rw, rc (radius of well casing and tubing)
 1.0D0                        :: gamma (dimensionless wellbore skin)
-001  0.0D0  1.0D0            :: pumping well time behavior and parameters 
+1  0.0D0  1.0D0            :: pumping well time behavior and parameters 
 9.0                        :: b (initial saturated thickness)
 6.37D-5  4.458D-1                :: Kr,kappa (radial K and ratio Kz/Kr)
 5.67D-5  3.01D-1               :: Ss,Sy
