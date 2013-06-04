@@ -96,9 +96,11 @@ function pvalues(T::Float64, alpha::Float64, tol::Float64, M::Int)
 
 end 
 
-# WTF. can't raise a complex number to an integer negative power?
 # test function
-f(p) = p^(-4.0) 
+funcp(p) = p^(-4) 
+
+# exact transform
+funct(t) = t^3/6.0
 
 tol = 1.0E-8
 alpha = 1.0E-8
@@ -111,8 +113,8 @@ ft = zeros(Float64,length(t))
 for j = 1:length(t)
     p = pvalues(t[j]*2.0,alpha,tol,M)
     for i = 1:2*M+1
-        fp[i] = f(p[i])
+        fp[i] = funcp(p[i])
     end
     ft[j] = deHoog(t[j:j],t[j]*2.0,fp,alpha,tol,M)[1]
-    @printf("%2i %11.7f %11.7f %11.7f\n",j,t[j],t[j]^3.0/6,ft[j])
+    @printf("%2i %11.7f %11.7f %11.7f\n",j,t[j],funct(t[j]),ft[j])
 end
