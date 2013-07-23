@@ -37,18 +37,14 @@ contains
     integer, intent(in) :: num
     real(DP), dimension(num) :: v
     integer :: i
-    real(DP) :: rnum, range, sgn
+    real(DP) :: dx
 
     if (num == 1) then
-       ! convention puts a single point in the
-       ! middle of the interval
        v = [(lo + hi)/2.0]
     else
-       rnum = real(num - 1,DP)
-       range = abs(hi - lo)
-       sgn = sign(1.0_DP,hi-lo) ! if lo > high, count backwards
-       forall (i=0:num-1)
-          v(i+1) = lo + sgn*real(i,DP)*range/rnum
+       dx = (hi-lo)/(num-1)
+       forall (i=1:num)
+          v(i) = lo + (i-1)*dx
        end forall
     end if
   end function linspace
