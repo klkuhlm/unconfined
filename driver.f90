@@ -60,7 +60,7 @@ program Driver
   real(EP), allocatable :: totint(:), totintd(:), GLy(:)
   real(EP) :: totobs, totderiv, lob, hib, width, arg
   real(DP) :: tee
-  complex(EP) :: dy
+  !complex(EP) :: dy
   integer :: i, j, k, m, n, nn
   logical :: first
 
