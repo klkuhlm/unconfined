@@ -138,8 +138,8 @@ contains
     ! Moench M (number of alpha coefficients)
     read(19,*) f%beta, f%MoenchAlphaM
     backspace(19)
-    if (f%MoenchAlphaM < 1) then
-       write(*,*) 'ERROR: number of Moench alpha parameters must be >0',f%MoenchAlphaM
+    if (f%MoenchAlphaM < 0) then
+       write(*,*) 'ERROR: number of Moench alpha parameters must be >1',f%MoenchAlphaM
     end if
     allocate(f%MoenchAlpha(f%MoenchAlphaM),f%MoenchGamma(f%MoenchAlphaM))
     f%MoenchAlpha = -999.
@@ -227,9 +227,9 @@ contains
           stop
        end if
 
-       if (s%MNtype /= 0 .and. s%MNtype /= 2) then
+       if (s%MNtype < 0 .and. s%MNtype > 2) then
           write(*,*) 'ERROR: invalid choice for Mishra/Neuman solution type '&
-               & //'(naive=0,finite difference=2)',s%MNtype
+               & //'(naive=0,Malama=1,finite difference=2)',s%MNtype
           stop
        end if
     end if

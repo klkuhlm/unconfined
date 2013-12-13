@@ -100,6 +100,9 @@ contains
        case(0)
           ! naive implementation of paper (often doesnt work)
           fp(1:np,1:nz) = mishraNeuman2010(a,s%zD,s,lap%p,f,w)
+       case(1)
+          ! Malama (finiteness condition) version 
+          fp(1:np,1:nz) = mishraNeumanMalama(a,s%zD,s,lap%p,f,w)
        case(2)
           ! finite difference solution of ODE in vadose zone
           fp(1:np,1:nz) = mishraNeuman2010FD(a,s%zD,s,lap%p,f,w)
@@ -428,6 +431,46 @@ contains
 
 999 format(A,ES11.3E3,4(A,2('(',ES12.3E4,',',ES12.3E4,')')))
   end function mishraNeuman2010
+
+  function mishraNeumanMalama(a,zD,s,p,f,w) result(sD)
+    use constants, only : DP, EP
+    use types, only : well, formation, solution
+    implicit none
+
+    real(EP), intent(in) :: a
+    real(DP), dimension(:), intent(in) :: zD
+    complex(EP), dimension(:), intent(in) :: p
+    type(solution), intent(in) :: s
+    type(well), intent(in) :: w
+    type(formation), intent(in) :: f
+
+    complex(EP), dimension(size(p),size(zD)) :: sD, Delta0 
+    integer ::  np, nz
+
+    real(EP) :: beta0, vartheta, phiDa, phiDk, u0
+    complex(EP), dimension(size(p)) :: eta, etasq, eta1, u, v
+
+    np = size(p)
+    nz = size(zD)
+
+    beta0 = f%ak*f%b
+    phiDa = f%psia/f%b
+    phiDk = f%psik/f%b
+    vartheta = beta0*f%Sy/(f%Ss*f%b)*exp(-beta0*(phiDa - phiDk))
+    eta1(1:np) = sqrt((p(:)*vartheta + a**2)/f%kappa)
+
+    u0 = beta0/2.0_EP
+    v(1:np) = sqrt(1.0_EP + (eta1(:)/u0)**2)
+    u(1:np) = u0*(1.0_EP - v(:))
+
+    etasq(1:np) = (p(:) + a**2)/f%kappa
+    eta(1:np) = sqrt(etasq)
+    Delta0(1:np,1:nz) = spread(eta*sinh(eta) - u*cosh(eta),2,nz)
+
+    sD(1:np,1:nz) = 2.0_EP/spread(p*etasq*f%kappa,2,nz)* &
+         & (1.0_EP + cosh(spread(eta,2,nz)*spread(zD,1,np))/Delta0)
+
+  end function mishraNeumanMalama
 
   function mishraNeuman2010FD(a,zD,s,p,f,w) result(sD)
     use constants, only : DP, EP
