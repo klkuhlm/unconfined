@@ -1,0 +1,279 @@
+Generalities about input file:
+==============================
+
+1) units are unspecified, but must be consistent (given in square brackets, L=length, T=time)
+2) intput file is "free format" (aside from time behavior on line 6), there must be one or more spaces or tabs between numbers (no commas or quotation marks)
+3) everything to right of numbers is ignored (comments on right; nothing special about "::")
+4) logical variables can be "t" "T" "True" "true" "TrUe", or similar for false
+5) not all variables are used in all models (e.g., theis solution doesn't use things related to M/N or partial penetration)
+6) exponential format using "E" is single-precision, while "D" is double-precision
+7) output echos parameters used in a short header  
+
+input explained line-by line below:
+=====================================
+
+line 1 -------------------------------
+0  6  T  T  T    :: quiet?, model, dimensionless?, timeseries?, piezometer?
+--------------------------------------
+
+1.1) quiet output: integer => 0 means no output, 1 means some, 2 or more is "verbose"
+model choice: integer from 0 to 6 => 
+ 0 = Theis (confined fully penetrating)
+ 1 = Hantush (confined partially penetrating)
+ 2 = Hantush-type with wellbore storage
+ 3 = Moench 199? unconfined (like Boulton)
+ 4 = Malama 2011 fully penetrating (Neuman 72 with extra beta nonlinearity parameter)
+ 5 = Malama 2011 partially penetrating (Neuman 74 with " " " ")
+ 6 = Mishra/Neuman 2011 (includes vadose zone)
+
+1.2) dimensionless output?: logical => solution is computed in dimensionless space, should results be converted back to dimensional (F), or left in dimensionless format (T)?
+
+1.3) timeseries?: logical => solution is either computed as a timeseries (T, single location through time) or a grid of space locations (F, for making contour map) at a single time
+
+1.4) piezometer?: logical => are results at a point or integrated over some vertical range representing a monitoring well screen?  If piezometer (T) the locations are just computed at a point (note: piezometer is faster than a screened monitoring well).
+
+line 2 -------------------------------
+2.02D-2      :: Q 
+--------------------------------------
+
+2.1) Q: float => volumetric pumping rate [L^3/T]
+
+line 3 -------------------------------
+3.54D-1 7.76D-2  :: l/b, d/b 
+--------------------------------------
+
+3.1) l/b: float => depth [L] from water table to bottom of well screen, divided by aquifer thickness (always between 0 and 1, and always greater than d/b)
+
+3.2) d/b: float => depth [L] from water table to top of well screen, divided by aquifer thickness (always between 0 and 1, and always less than l/b)
+
+line 4 -------------------------------
+2.54D-2    2.54D-2   :: rw, rc
+--------------------------------------
+
+4.1) rw: float => radius [L] of pumping well casing
+
+4.2) rc: float => radius [L] of pumping well tubing at water level (used in wellbore storage)
+
+line 5 -------------------------------
+1.0D+0   :: gamma 
+--------------------------------------
+
+5.1) gamma: float => dimensionless wellbore skin factor (1.0 means no skin; parameter associated with wellbore storage)
+
+line 6 -------------------------------
+001  0.0D+0  1.0D+0  :: pumping well time behavior and two parameters [T] 
+--------------------------------------
+
+6.1) time behavior flag: 3-width integer =>  
+time behavior / parameters  (if tpar(2) not mentioned, it isn't used)
+==============================================
+ 1 = step on,              tpar(1)  = on time
+ 2 = finite pulse,         tpar(1:2) = on/off time
+ 3 = instan. pulse         tpar(1) = pulse time
+ 4 = stairs,               tpar(1) = time step (increasing Q by integer multiples
+                                     @ integer multiples tpar(1)); tpar(2) =off time.
+ 5 = + only square wave,   tpar(1) = 1/2 period of wave; tpar(2) = start time
+ 6 = cosine(tpar(1)*t),    tpar(1) = frequency multiplier; tpar(2) = start time
+ 7 = + only tri wave,      tpar(1) = 1/4 period of wave; tpar(2) = start time
+ 8 = +/- square wave,      tpar(1) = 1/2 period of wave; tpar(2) = start time
+ n<0 = arbitrary piecewise constant rate, comprised of n steps from tpar(1) to tfinal
+                tpar(1:n) = starting times of each step
+                tpar(n+1) = final time of last step
+                tpar(n+2:2*n+1) = strength at each of n steps
+ (is multiplied by constant strength too -- you probably want to set that to unity)
+
+6.2 and 6.3) time behavior parameters: float => (explained in table above) [T]
+
+line 7 -------------------------------
+5.182D+1    :: b 
+--------------------------------------
+
+7.1) b: float => initial aquifer saturated thickness [L]
+
+line 8 -------------------------------
+1.21D-3  5.3D-1   :: Kr,kappa 
+--------------------------------------
+
+8.1) Kr: float => horizontal hydrualic conductivity [L/T]
+
+8.2) kappa: float => dimensionless ratio of vertical to horizontal hydraulic conductivity (Kz/Kr)
+
+line 9 -------------------------------
+1.05D-4  2.8D-1 :: Ss,Sy 
+--------------------------------------
+
+9.1) Ss :float => specific storage [1/L]
+
+9.2) Sy :float => dimensionless specific yield
+
+line 10 ------------------------------
+0.0D0 0   ::  beta, # of Moench alphas, alphas 
+--------------------------------------
+
+10.1) beta: float => dimensionless Malama beta linearization parameter (0.0 means standard Neuman 72 or 74 solution)
+
+10.2-10.N) number of Moench alpha terms [each is 1/T]: integer greater or equal to  0 => if zero, no more parameters read after this number.  If this is 1, then 1 more parameter is read, if 2 two more are read, etc. 
+
+line 11 ------------------------------
+2.0D+0 3.0D-1   2.0D-2 2.0D-3  5.8D+0  2  10    :: M/N  ac,ak,  psia,psik,  L, M/N type, FD order
+--------------------------------------
+
+Mishra/Neuman solution parameters
+11.1)  ac: float => capacity sorptive number [1/L]
+
+11.2)  ak: float => conductivity sorptive number [1/L]
+
+11.3)  psia: float => air-entry pressure head [L]
+
+11.4)  psik: float => pressure head associated with saturated hydraulic conductivity [L]
+
+11.5)  L: float => thickness of vadose zone [L]
+
+11.6)  MNtype: integer => type of M/N solution (2 is the best choice for now)
+
+0 = naive implementation of M/N from equations in paper (often doesn't work at intermediate time)
+1 = Malama simplification (fully penetrating case only)
+2 = finite difference solution of ODE in vadoes zone (works pretty well!)
+
+11.7) MNorder: integer => number of grid nodes representing vadose zone when MNtype=2 (10 works ok, unless you have a really huge vadose zone; L>>b)
+
+line 12 ------------------------------
+10 1.0D-7  1.0D-8           :: deHoog invlap;  M,alpha,tol
+--------------------------------------
+
+parameters for de Hoog, Knight & Stokes inverse Laplace transform algorithm
+12.1) M: integer => 2M+1 terms used in approximation.  (10 is pretty good usually, never more than 50)
+
+12.2) alpha: float => shift associated with right-most pole in Laplace space.  If pumping begins at t=0, this should be a small number near (but not equal to) zero.  
+
+12.3) tol: float => tolerance associated with algorithm.  Usually alpha/10.
+
+line 13 ------------------------------
+7  5       :: tanh-sinh quad;  2^k-1 order, # extrapollation steps
+--------------------------------------
+
+parameters for tanh-sinh (double-exponential) quadrature, associated with inverse Hankel transform
+13.1) order: integer => order of integration (2^order-1 abcissa will be used).  From 6-10 are good values.
+
+13.2) # extrapolation steps: integer => Richardson extrapolation is performed, to approximate numerical integration as stepsize -> 0. This is number of extrapolation steps (must be less than order). 
+
+line 14 ------------------------------
+2  2  8  30   :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
+--------------------------------------
+
+parameters for Gauss-Lobatto quadrature, associated with inverse Hankel transform
+14.1) min split: integer =>  minimum number of Bessel function zero to split between G-L and tanh-sinh approaches for integration (should generally be around 1)
+
+14.2) max split: integer => maximum  number of Bessel function zero to split between G-L and tanh-sinh approaches for integration (should generally be same as min)
+
+14.3) number of zeros to integrate: integer => number of zeros of Bessel function to integrate out beyond split, to approximate infinite Hankel integral.  Larger is better, but there are numerical issues for very large values of this for some methods.
+
+14.4) number of abcissa to integrate: integer => number of points to integrate between each zero (10-50 is usually good)
+
+line 15 ------------------------------
+timedata.dat  15.5  :: time data file (default t otherwise)
+--------------------------------------
+
+15.1) filename to read list of times from (timeseries = True)
+
+15.2) tval: float => value of time [T] to use for contour map output (timeseries = False)
+
+line 16 ------------------------------
+spacedata.dat  2.5D0   :: r data file (default r otherwise)
+--------------------------------------
+
+16.1) filename to read list of r values from (timeseries = False)
+
+16.2) rval: float => radial distance [L] to use for timeseris output (timeseries = True)
+
+line 17 ------------------------------
+0.5  0.0D0  3  2.54D-2  20.0      :: top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
+--------------------------------------
+
+if computing contour map, these values aren't used at all
+Z is computed up from the bottom of the aquifer (not down from the water table like l and d)
+17.1) Ztop: float => depth [L] to top of observation well screen (or piezometer location) from top of aquifer
+
+17.2) Zbot: float => depth [L] to bottom of observation well (not used in piezometer) from top of aquifer
+
+17.3) order: integer => order of integration (trapezoid rule) across observation well screen (must be greater than or equal to 1)
+
+17.4) rwobs: float => observation well radius [L] (only used in wellbore storage solution)
+
+17.5) sF: float => dimensionless monitoring well shape factor (only used in wellbore storage solution)
+
+line 18 ------------------------------
+results.out
+--------------------------------------
+
+18.1) filename to write results 
+
+
+
+
+############################################
+time input file
+
+Times are either read directly from this file, a single value on a row, or are computed as being logarithmically spaced across log-cycles.  This is useful, since most well-testing plots have a logarithmic time axis.
+
+line T1 ++++++++++++++++++++++++++++++
+T   100    :: compute times?, if not # times to read from this file
+++++++++++++++++++++++++++++++++++++++
+
+T1.1) compute times?: logical => if True, compute times (don't read times directly from this file)
+
+T1.2) nTimesFile: integer => if not computing times, this is the number of times which must be read further down in this file
+
+line T2 ++++++++++++++++++++++++++++++
+1   7   50   :: minlogt (integer), maxlogt (integer), # times for log-spaced data
+++++++++++++++++++++++++++++++++++++++
+
+T2.1) minlogt: integer => minimum log(t) (e.g., -2 is 0.01 and -5 is 1.0E-5)
+
+T2.2) maxlogt: integer => maximum log(t) 
+
+T2.3) nTimesCalc: integer => number of times log-spaced uniformly between minlogt and maxlogt (like logspace function in matlab)
+
+lines T3-TN +++++++++++++++++++++++++++++
+1.0000e-04    :: beginning of time vector read from file (one time per row)
+1.1498e-04
+...
+++++++++++++++++++++++++++++++++++++++
+
+
+
+
+############################################
+space input file
+
+to compute a contour map of results (a cartesian grid of R and Z), either R & Z values are specified directly in this file (as two rows of data), or data are uniformly linearly spaced between endpoints. 
+
+line S1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+T  100  100     :: compute space locs?, if not # R and # Z to read from this file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+S1.1) compute spaces?: logical => if True, compute space location (don't read values directly from this file)
+
+S1.2) nRvalsFile: integer => number of radial distances to read from this file
+
+S1.3) nZvalsFile: integer => number of vertical distances to read from this file
+
+lines S2-3 %%%%%%%%%%%%%%%%%%%%%%%%%%%
+0.75  1.0D+4  30     :: minR, maxR, # r in linear-spaced vector
+0.0   1.0D+1  20     :: minZ, maxZ, # z in linear-space vector
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+S2-3.1) min: float => low-end R or Z value [L]
+
+S2-3.2) max: float => high-end R or Z value [L]
+
+S2-3.3) num: integer => number of R or Z values to space uniformly from min to max (like linspace in Matlab).
+
+
+lines S4-N %%%%%%%%%%%%%%%%%%%%%%%%%%%
+2.5000e-02 1.0586e+00 2.0922e+00  ...
+0.0000e+00 1.1111e-01 2.2222e-01  ...
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+R values are listed on one row
+Z values are listed on the next row
