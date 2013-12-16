@@ -80,7 +80,7 @@ contains
           udp(1:np,1:nz) = theis(a,lap%p,nz)
           udp(1:np,nz+1) = udp(1:np,nz)
        else
-          udp(1:np,1:nz+1) = hantush(a,[s%zD,1.0],s,lap%p,f,w)
+          udp(1:np,1:nz+1) = hantush(a,[s%zD,1.0_DP],s,lap%p,f,w)
        end if
 
        where (spread(real(eta) < MAXEXP,2,nz))
@@ -242,7 +242,7 @@ contains
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
 
     do i=1,np
-       call cbesk(z=cmplx(xi(i),kind=DP),fnu=0.0,kode=kode,&
+       call cbesk(z=cmplx(xi(i),kind=DP),fnu=0.0_DP,kode=kode,&
             & n=num,cy=K(0:1,i),nz=nzero,ierr=ierr)
        if (ierr > 0 .and. ierr /= 3) then
           print *, 'ERROR: CBESK z=',xi(i),&
@@ -337,7 +337,7 @@ contains
     beta(3) = f%akD
 
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
-    sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
+    sH(1:np,1:nz+1) = hantush(a,[zD,1.0_DP],s,p,f,w)
 
     B1(1:np) = p(:)*beta(0)*exp(-beta(2))/f%kappa
     B2 = (a**2)/f%kappa
@@ -524,7 +524,7 @@ contains
     beta(3) = f%akD       ! ak*b
 
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
-    sH(1:np,1:nz+1) = hantush(a,[zD,1.0],s,p,f,w)
+    sH(1:np,1:nz+1) = hantush(a,[zD,1.0_DP],s,p,f,w)
 
     B1(1:n,1:np) = spread(p(:)*beta(0)*exp(-beta(2))/f%kappa,1,n)
     B2 = (a**2)/f%kappa
