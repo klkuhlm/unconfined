@@ -11,6 +11,7 @@ software obtained elsewhere (e.g., MS-Excel, Matplotlib, or gnuplot).
 The code is accurate and relatively fast, using OpenMP to execute in
 parallel on a multi-processor computer.
 
+The input file format and input parameters are briefly explained in the text file input-explanation.txt
 
 The solutions implemented include:
 ------------------------------------------
