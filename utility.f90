@@ -112,24 +112,24 @@ contains
     complex(EP),dimension(size(a,2)) :: m
     integer :: i,np,n
 
-    n = size(a,1)
-    np = size(a,2)
+    n = size(a,2)
+    np = size(a,1)
 
     ! Make copies of the b and v variables so that they are unaltered by this sub
-    bp(1,1:np) = b(1,:)
-    vp(1,1:np) = v(1,:)
+    bp(1:np,1) = b(:,1)
+    vp(1:np,1) = v(:,1)
 
     !The first pass (setting coefficients):
     firstpass: do i = 2,n
-       m(1:np) = a(i,:)/bp(i-1,:)
-       bp(i,1:np) = b(i,:) - m(:)*c(i-1,:)
-       vp(i,1:np) = v(i,:) - m(:)*vp(i-1,:)
+       m(1:np) = a(:,i)/bp(:,i-1)
+       bp(1:np,i) = b(:,i) - m(:) *c(:,i-1)
+       vp(1:np,i) = v(:,i) - m(:)*vp(:,i-1)
     end do firstpass
 
-    x(n,1:np) = vp(n,:)/bp(n,:)
+    x(1:np,n) = vp(:,n)/bp(:,n)
     !The second pass (back-substition)
     backsub:do i = n-1, 1, -1
-       x(i,1:np) = (vp(i,:) - c(i,:)*x(i+1,:))/bp(i,:)
+       x(1:np,i) = (vp(:,i) - c(:,i)*x(:,i+1))/bp(:,i)
     end do backsub
 
   end subroutine solve_tridiag
