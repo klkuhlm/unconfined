@@ -312,7 +312,7 @@ contains
     real(DP), dimension(0:3) :: beta
     complex(EP) :: arg1
     complex(EP), dimension(size(p)) :: arg2, B1, delta1, delta2
-    complex(EP), dimension(2,2,size(p)) :: aa
+    complex(EP), dimension(size(p),2,2) :: aa
     complex(EP), dimension(size(p)) :: eta
     complex(EP), dimension(size(p),2) :: J,Y
 
@@ -355,7 +355,6 @@ contains
        if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
           print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
                &' i,ierr,nz:',i,ierr,nzero
-
        else
           J(i,1:2) = tmp(1:2)
        end if
@@ -373,12 +372,12 @@ contains
     arg1 = real(beta(3),EP) + nuep*beta(1)
     arg2(1:np) = beta(1)*phiep(1:np)
 
-    aa(1,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
-    aa(1,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
+    aa(1:np,1,1) = arg1*J(:,1) - arg2(:)*J(:,2)
+    aa(1:np,1,2) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
     if (s%quiet > 1) then
        write(*,998) 'zD=LD phi:',phiep(1:NPRINT),'J:',J(1:NPRINT,1),&
-            & 'Y:',Y(1:NPRINT,1),'a(1,1)',aa(1,1,1:NPRINT),'a(1,2)',aa(1,2,1:NPRINT)
+            & 'Y:',Y(1:NPRINT,1),'a(1,1)',aa(1:NPRINT,1,1),'a(1,2)',aa(1:NPRINT,1,2)
     end if
 
 998 format(5(A,2('(',ES12.3E4,',',ES12.3E4,')')))
@@ -408,16 +407,16 @@ contains
     end do
 
     arg2(1:np) = beta(1)*phiep(1:np)
-    aa(2,1,1:np) = arg1*J(:,1) - arg2(:)*J(:,2)
-    aa(2,2,1:np) = arg1*Y(:,1) - arg2(:)*Y(:,2)
+    aa(1:np,2,1) = arg1*J(:,1) - arg2(:)*J(:,2)
+    aa(1:np,2,2) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
     if (s%quiet > 1) then
        write(*,998) 'zD=0  phi:',phiep(1:NPRINT),'J:',J(1:NPRINT,1),&
-            &'Y:',Y(1:NPRINT,1),'a(2,1)',aa(2,1,1:NPRINT),'a(2,2)',aa(2,2,1:NPRINT)
+            &'Y:',Y(1:NPRINT,1),'a(2,1)',aa(1:NPRINT,2,1),'a(2,2)',aa(1:NPRINT,2,2)
     end if
 
-    delta2(1:np) = aa(1,1,:)*aa(2,2,:) - aa(1,2,:)*aa(2,1,:)
-    delta1(1:np) = (aa(1,1,:)*Y(:,1) - aa(1,2,:)*J(:,1))/delta2(:)* &
+    delta2(1:np) = aa(:,1,1)*aa(:,2,2) - aa(:,1,2)*aa(:,2,1)
+    delta1(1:np) = (aa(:,1,1)*Y(:,1) - aa(:,1,2)*J(:,1))/delta2(:)* &
          & 2.0*eta(:)*sinh(eta(:)) - cosh(eta(:))
 
     sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(1:np),2,nz)*&
@@ -453,7 +452,7 @@ contains
     np = size(p)
     nz = size(zD)
 
-    beta0 = f%ak*f%b
+    beta0 = f%ak*f%b  ! assumes ac == ak in Malama formulation
     phiDa = f%psia/f%b
     phiDk = f%psik/f%b
     vartheta = beta0*f%Sy/(f%Ss*f%b)*exp(-beta0*(phiDa - phiDk))
@@ -475,7 +474,7 @@ contains
     elsewhere
        ! saturated zone solution
        sD(1:np,1:nz) = 2.0_EP/spread(p*etasq*f%kappa,2,nz)* &
-            & (1.0_EP + cosh(spread(eta,2,nz)*spread(zD,1,np))/Delta0)
+            & (1.0_EP + spread(u,2,nz)*cosh(spread(eta,2,nz)*spread(zD,1,np))/Delta0)
     end where
     
   end function mishraNeumanMalama

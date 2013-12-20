@@ -25,8 +25,8 @@
 
 DEBUG = -O0 -g -Wall -Wextra -fcheck=all -fno-realloc-lhs -std=f2008 -fall-intrinsics
 OMP = -fopenmp
-PERF = -Ofast -mtune=native
-DEFAULTS = -fdefault-real-8 -fdefault-integer-8
+PERF = -Ofast -flto -mtune=native
+##DEFAULTS = -fdefault-real-8 -fdefault-integer-8
 F90 = gfortran
 CPP = -cpp
 FREE = -free

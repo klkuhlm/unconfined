@@ -109,7 +109,7 @@ contains
     complex(EP),dimension(:,:),intent(in) :: a,b,c,v
     complex(EP),dimension(size(a,1),size(a,2)),intent(out) :: x
     complex(EP),dimension(size(a,1),size(a,2)) :: bp,vp
-    complex(EP),dimension(size(a,2)) :: m
+    complex(EP),dimension(size(a,1)) :: m
     integer :: i,np,n
 
     n = size(a,2)
