@@ -22,5 +22,6 @@ if(zD>1.0)
     sD = A12.*exp(u*(zD-1.0));
 else
     %Saturated zone flow solution
-    sD = (2./(kappa*p.*eta.^2)).*(1.0 + u.*cosh(eta*zD)./Delta);
+    A12 = 2./(kappa*p.*eta.^2);
+    sD = A12.*(1.0 + u.*cosh(eta*zD)./Delta);
 end

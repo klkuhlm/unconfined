@@ -39,12 +39,12 @@ line 2 -------------------------------
 2.1) Q: float => volumetric pumping rate [L^3/T]
 
 line 3 -------------------------------
-3.54D-1 7.76D-2  :: l/b, d/b 
+3.54D-1 7.76D-2  :: l, d 
 --------------------------------------
 
-3.1) l/b: float => depth [L] from water table to bottom of well screen, divided by aquifer thickness (always between 0 and 1, and always greater than d/b)
+3.1) l: float => depth [L] from water table to bottom of well screen (always between 0 and b, and always greater than d)
 
-3.2) d/b: float => depth [L] from water table to top of well screen, divided by aquifer thickness (always between 0 and 1, and always less than l/b)
+3.2) d: float => depth [L] from water table to top of well screen (always between 0 and b, and always less than l)
 
 line 4 -------------------------------
 2.54D-2    2.54D-2   :: rw, rc

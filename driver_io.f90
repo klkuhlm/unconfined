@@ -152,6 +152,38 @@ contains
     ! unsaturated zone thickness (length)
     read(19,*) f%ac, f%ak, f%psia, f%psik, f%usL, s%MNtype, s%order
 
+    ! ## account for differences between Malama's implementation and original ##
+    ! reset variables here (even though not used), so the writing of these to 
+    ! output file headers and echoing input to screen properly shows
+    ! what they are effectively assumed to be.
+    ! (so you hopefully can notice this even with s%quiet = 0)
+    if (s%MNtype == 1) then
+       if (abs(f%ac - f%ak) > epsilon(1.0)) then
+          if (s%quiet > 0) then
+             write(*,'(A)') 'WARNING1: Mishra-Neuman implementation '//&
+                  & '1 assumes ac=ak: using ak (ignoring ac)'
+             write(*,'(2(A,'//RFMT//'))') 'WARNING1: you gave ac=',f%ac,' ak=',f%ak
+          endif
+          f%ac = f%ak
+       end if
+       if (abs(w%l - f%b) > epsilon(1.0)) then
+          if (s%quiet > 0) then
+             write(*,'(A)') 'WARNING2: Mishra-Neuman implementation '//&
+                  & '1 assumes pumping well screen goes to bottom of formation (l=b)'
+             write(*,'(2(A,'//RFMT//'))') 'WARNING2: you gave l=',w%l,' b=',f%b
+          endif
+          w%l = f%b
+       end if
+       if (w%d > epsilon(1.0)) then
+          if (s%quiet > 0) then
+             write(*,'(A)') 'WARNING3: Mishra-Neuman implementation '//&
+                  & '1 assumes pumping well screen goes to top of formation (d=0)'
+             write(*,'(A,'//RFMT//')') 'WARNING3: you gave d=',w%d
+          endif
+          w%d = 0.0
+       end if
+    end if
+    
     ! ## echo check parameters #####
 
     if (s%quiet > 1) then
@@ -673,11 +705,13 @@ contains
        write(*,fmt) '# Moench Delayed Yield (alpha):: ',f%MoenchAlphaM,f%MoenchAlpha(:)
     elseif(s%model == 6) then
        ! mishra/neuman solution
-       write(unit,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ad,psia,psik,b1 ::',&
+       write(unit,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ak,psia,psik,b1 ::',&
             & f%ac,f%ak,f%psia,f%psik,f%b1
        if (s%MNtype == 2) then
           write(unit,'(A,I0,1X,'//RFMT//')') '# Mishra/Neuman FD order,h ::',&
                & s%order,f%usL/(s%order-1)
+       elseif (s%MNtype == 1) then
+          write(unit, '(A'//RFMT//')') '# NB: Mishra/Neuman implementation "1" assumes ac=ak and fully penetrating pumping well'
        end if
 
     end if

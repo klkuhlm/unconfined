@@ -452,7 +452,7 @@ contains
     np = size(p)
     nz = size(zD)
 
-    beta0 = f%ak*f%b  ! assumes ac == ak in Malama formulation
+    beta0 = f%ak*f%b  ! assume ac == ak in Malama formulation
     phiDa = f%psia/f%b
     phiDk = f%psik/f%b
     vartheta = beta0*f%Sy/(f%Ss*f%b)*exp(-beta0*(phiDa - phiDk))
