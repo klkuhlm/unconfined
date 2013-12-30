@@ -35,7 +35,7 @@ PERFLDFLAGS = $(PERF)
 
 EXTERNAL = cbessel.o
 HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o
-OBJS =  constants.o $(EXTERNAL) types.o invlap.o utility.o $(HILEV)
+OBJS =  constants.o $(EXTERNAL) types.o utility.o invlap.o  $(HILEV)
 
 MAIN = driver.o
 

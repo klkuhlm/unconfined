@@ -23,7 +23,7 @@
 module utility
   implicit none
   private
-  public :: logspace, linspace, is_finite, operator(.X.), solve_tridiag
+  public :: logspace, linspace, is_finite, operator(.X.), solve_tridiag, fac
 
   interface operator(.X.)
      module procedure outerprod_zd, outerprod_dz, outerprod_dd, outerprod_zz
@@ -134,6 +134,15 @@ contains
 
   end subroutine solve_tridiag
 
+  function fac(n) result(z)
+    use constants, only : EP
+    integer, intent(in) :: n
+    real(EP) :: z
+    
+    z = gamma(real(n+1,EP))
+
+  end function fac
+  
 end module utility
 
 

@@ -29,13 +29,23 @@ module types
 
   ! Inverse Laplace Transform parameters
   type :: invLaplace
+     
+     integer :: method = -999
+     ! 0 = deHoog, Knight & Stokes
+     ! 1 = Stehfest
+
+     ! dehoog-specific parameters
      ! abcissa of convergence, LT tolerance
      real(DP) :: alpha = -999., tol = -999.
 
-     ! number of Fourier series terms
+     ! 2M+1 Fourier series terms (deHoog)
+     ! M terms in Stehfest 
      integer :: M = -999
 
-     ! length of solution vector (2*M+1)
+     ! stehfest-specific salzer summation weights 
+     real(EP), allocatable :: V(:)
+
+     ! length of solution vector (2*M+1 or M)
      integer :: np = -999
 
      complex(EP), allocatable :: p(:)
