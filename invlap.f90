@@ -207,7 +207,6 @@ contains
     end do
 
   end subroutine stehfest_salzer_weights
-  
 
   function stehfest_pvalues(t,lap) result(p)
     use constants, only : EP, DP, LN2
@@ -224,7 +223,6 @@ contains
     
   end function stehfest_pvalues
   
-
   function stehfest_calct(t,fp,lap) result(ft)
     use constants, only : DP, LN2
     use types, only : invLaplace
