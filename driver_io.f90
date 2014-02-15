@@ -517,8 +517,8 @@ contains
 
     ! characteristic length / time / head
     s%Lc = f%b
-    s%Tc = f%b**2/(f%Kr/f%Ss)
-    s%Hc = w%Q/(4.0*PI*f%Kr*f%b)
+    s%Tc = s%Lc**2/(f%Kr/f%Ss)
+    s%Hc = w%Q/(4*PI*f%Kr*f%b)
 
     ! compute derived or dimensionless properties
     f%sigma = f%Sy/(f%Ss*f%b) ! this is the inverse of Neuman's (1972 & 1974) "sigma"
@@ -606,7 +606,7 @@ contains
        write(*,'(A,4('//RFMT//',1X))') 'Mishra&Neuman acD,akD, psiaD,psikD :: ', &
             & f%acD,f%akD,f%psiaD,f%psikD
        write(*,'(A,3('//RFMT//',1X),2(I0,1X))') &
-            & 'Mishra&Neuman LD, lambdaD, b1, MN type, MN order:: ',&
+            & 'Mishra&Neuman LD, lambdaD, b1, MN type {0,1,2}, MN finite difference order:: ',&
             & f%usLD, f%lambdaD, f%b1, s%MNtype, s%order
     end if
 
@@ -641,7 +641,7 @@ contains
 
   end subroutine read_input
 
-  subroutine write_timeseries_header(w,f,s,lap,h,gl,ts,unit)
+  subroutine write_timeseries_header(w,f,s,lap,h,gl,ts,U)
     use constants, only : RFMT, EP
     use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
 
@@ -652,86 +652,88 @@ contains
     type(well), intent(in) :: w
     type(formation), intent(in) :: f
     type(solution), intent(in) :: s
-    integer, intent(in) :: unit
+    integer, intent(in) :: U
     integer :: ioerr
     character(32) :: fmt
 
-    open (unit=unit, file=s%outFileName, status='replace', action='write', iostat=ioerr)
+    open (unit=U, file=s%outFileName, status='replace', action='write', iostat=ioerr)
     if (ioerr /= 0) then
        write(*,'(A)') 'cannot open output file '//trim(s%outFileName)//' for writing'
        stop
     end if
 
     ! echo input parameters at head of output file
-    write(unit,'(A)') '# -*-auto-revert-*-'
-    write(unit,'(A,I0,1X,A,I0)') '# model, EP :: ',s%model,trim(s%modelDescrip(s%model))//', ',EP
-    write(unit,'(A,3(L1,1X))') '# dimensionless?, timeseries?, piezometer? :: ', &
+    write(U,'(A)') '# -*-auto-revert-*-'
+    write(U,'(A,I0,1X,A,I0)') '# model, EP :: ',s%model,trim(s%modelDescrip(s%model))//', ',EP
+    write(U,'(A,3(L1,1X))') '# dimensionless?, timeseries?, piezometer? :: ', &
          & s%dimless, s%timeseries, s%piezometer
-    write(unit,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
+    write(U,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
          & w%Q
-    write(unit,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
+    write(U,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
          & f%b
-    write(unit,'(A,2('//RFMT//',1X))') '# l,d (screen bot & top) :: ',&
+    write(U,'(A,2('//RFMT//',1X))') '# l,d (screen bot & top) :: ',&
          & w%l, w%d
-    write(unit,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
+    write(U,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
          & w%rw, w%rc
-    write(unit,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
-    write(unit,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
-    write(unit,'(A,'//RFMT//')') '# gamma :: ',f%gamma
+    write(U,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
+    write(U,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
+    write(U,'(A,'//RFMT//')') '# gamma :: ',f%gamma
     fmt = '(A,I0,A,    ('//RFMT//',1X))     '
     write(fmt(9:12),'(I4.4)') size(lap%timePar)
-    write(unit,fmt) '# pumping well time behavior :: ',lap%timeType, &
+    write(U,fmt) '# pumping well time behavior :: ',lap%timeType, &
          & trim(lap%timeDescrip(lap%timeType)), lap%timePar
-    write(unit,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
+    write(U,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
-    write(unit,'(A,2(I0,1X))') '# tanh-sinh: k, n extrapolation steps :: ',&
+    write(U,'(A,2(I0,1X))') '# tanh-sinh: k, n extrapolation steps :: ',&
          & ts%k, ts%R
-    write(unit,'(A,4(I0,1X))') '# GLquad: J0 split, n 0-accel, GL-order :: ',&
+    write(U,'(A,4(I0,1X))') '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
     if(s%piezometer) then
-       write(unit,'(A,4('//RFMT//',1X))') '# point obs well r,rD,z,zD :: ',s%r(1),s%rD(1),s%z(1),s%zD(1)
+       write(U,'(A,4('//RFMT//',1X))') '# point obs well r,rD,z,zD :: ',&
+            &s%r(1),s%rD(1),s%z(1),s%zD(1)
     else
-       write(unit,'(A,3('//RFMT//',1X),I0)') '# screened obs well r,zTop,zBot,zOrd :: ',&
+       write(U,'(A,3('//RFMT//',1X),I0)') '# screened obs well r,zTop,zBot,zOrd :: ',&
             & s%r(1), s%zTop, s%zBot, s%zOrd
-       write(unit,'(A,2('//RFMT//',1X))') '# screened obs well rW, shape factor :: ',&
+       write(U,'(A,2('//RFMT//',1X))') '# screened obs well rW, shape factor :: ',&
             & s%rwobs, s%sF
     end if
     if(s%model == 4 .or. s%model == 5) then
        ! malama solutions
-       write(unit,'(A,'//RFMT//')') '# Malama beta linearization parameter :: ',f%beta
+       write(U,'(A,'//RFMT//')') '# Malama beta linearization parameter :: ',f%beta
     elseif(s%model == 3) then
        fmt = '(A,I0,    (1X,'//RFMT//'))       '
        write(fmt(7:10),'(I4.4)') f%MoenchAlphaM
        write(*,fmt) '# Moench Delayed Yield (alpha):: ',f%MoenchAlphaM,f%MoenchAlpha(:)
     elseif(s%model == 6) then
        ! mishra/neuman solution
-       write(unit,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ak,psia,psik,b1 ::',&
+       write(U,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ak,psia,psik,b1 ::',&
             & f%ac,f%ak,f%psia,f%psik,f%b1
        if (s%MNtype == 2) then
-          write(unit,'(A,I0,1X,'//RFMT//')') '# Mishra/Neuman FD order,h ::',&
+          write(U,'(A,I0,1X,'//RFMT//')') '# Mishra/Neuman FD order,h ::',&
                & s%order,f%usL/(s%order-1)
        elseif (s%MNtype == 1) then
-          write(unit, '(A'//RFMT//')') '# NB: Mishra/Neuman implementation "1" assumes ac=ak and fully penetrating pumping well'
+          write(U, '(A'//RFMT//')') "# NB: Malama's Mishra/Neuman implementation (1) "//&
+               &"assumes ac=ak and fully penetrating pumping well without wellbore storage"
        end if
 
     end if
 
-    write(unit,'(A,I0)') '# times :: ',s%nt
-    write(unit,'(A,2('//RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
+    write(U,'(A,I0)') '# times :: ',s%nt
+    write(U,'(A,2('//RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
     if (s%dimless) then
-       write (unit,'(A,/,A,/,A)') '#','#     t_D          '//&
+       write (U,'(A,/,A,/,A)') '#','#     t_D          '//&
             & trim(s%modelDescrip(s%model))//'         t*dh/d(log(t))', &
             & '#-------------------------------------------------------------'
     else
-       write(unit,'(A,1'//RFMT//')') '# characteristic head ::',s%Hc
-       write (unit,'(A,/,A,/,A)') '#','#     t            '//&
+       write(U,'(A,1'//RFMT//')') '# characteristic head ::',s%Hc
+       write (U,'(A,/,A,/,A)') '#','#     t            '//&
             & trim(s%modelDescrip(s%model))//'         t*dh/d(log(t))', &
             & '#-------------------------------------------------------------'
     end if
 
   end subroutine write_timeseries_header
 
-  subroutine write_contour_header(w,f,s,lap,h,gl,ts,unit)
+  subroutine write_contour_header(w,f,s,lap,h,gl,ts,U)
     use constants, only : RFMT, EP
     use types, only : invLaplace, invHankel, GaussLobatto, tanhSinh, well, formation, solution
 
@@ -742,71 +744,76 @@ contains
     type(well), intent(in) :: w
     type(formation), intent(in) :: f
     type(solution), intent(in) :: s
-    integer, intent(in) :: unit
+    integer, intent(in) :: U
     integer :: ioerr
     character(32) :: fmt
 
-    open (unit=unit, file=s%outFileName, status='replace', action='write', iostat=ioerr)
+    open (unit=U, file=s%outFileName, status='replace', action='write', iostat=ioerr)
     if (ioerr /= 0) then
        write(*,'(A)') 'cannot open output file '//trim(s%outFileName)//' for writing'
        stop
     end if
 
     ! echo input parameters at head of output file
-    write(unit,'(A)') '# -*-auto-revert-*-'
-    write(unit,'(A,I0,1X,A,I0)') '# model, EP :: ',s%model,trim(s%modelDescrip(s%model))//', ',EP
-    write(unit,'(A,2(L1,1X))') '# dimensionless?, timeseries? :: ', &
+    write(U,'(A)') '# -*-auto-revert-*-'
+    write(U,'(A,I0,1X,A,I0)') '# model, EP :: ',s%model,trim(s%modelDescrip(s%model))//', ',EP
+    write(U,'(A,2(L1,1X))') '# dimensionless?, timeseries? :: ', &
          & s%dimless, s%timeseries
-    write(unit,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
+    write(U,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
          & w%Q
-    write(unit,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
+    write(U,'(A,'//RFMT//')') '# b (initial sat thickness) :: ', &
          & f%b
-    write(unit,'(A,2('//RFMT//',1X))') '# l,d (screen bot & top) :: ',&
+    write(U,'(A,2('//RFMT//',1X))') '# l,d (screen bot & top) :: ',&
          & w%l, w%d
-    write(unit,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
+    write(U,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
          & w%rw, w%rc
-    write(unit,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
-    write(unit,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
-    write(unit,'(A,'//RFMT//')') '# gamma :: ',f%gamma
+    write(U,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
+    write(U,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
+    write(U,'(A,'//RFMT//')') '# gamma :: ',f%gamma
     fmt = '(A,I0,A,    ('//RFMT//',1X))     '
     write(fmt(9:12),'(I4.4)') size(lap%timePar)
-    write(unit,fmt) '# pumping well time behavior :: ',lap%timeType, &
+    write(U,fmt) '# pumping well time behavior :: ',lap%timeType, &
          & trim(lap%timeDescrip(lap%timeType)), lap%timePar
-    write(unit,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
+    write(U,'(A,I0,2('//RFMT//',1X))') '# deHoog M, alpha, tol :: ',&
          & lap%M, lap%alpha, lap%tol
-    write(unit,'(A,2(I0,1X))') '# tanh-sinh: k, n extrapolation steps :: ',&
+    write(U,'(A,2(I0,1X))') '# tanh-sinh: k, n extrapolation steps :: ',&
          & ts%k, ts%R
-    write(unit,'(A,4(I0,1X))') '# GLquad: J0 split, n 0-accel, GL-order :: ',&
+    write(U,'(A,4(I0,1X))') '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
     fmt = '(A,I0,1X,    ('//RFMT//',1X))    '
     write(fmt(10:13),'(I4.4)') s%nr
-    write(unit,fmt) '# num r locations, rlocs :: ',s%nr, s%r(:)
+    write(U,fmt) '# num r locations, rlocs :: ',s%nr, s%r(:)
     write(fmt(10:13),'(I4.4)') s%nz
-    write(unit,fmt) '# num z locations, zlocs :: ',s%nz, s%z(:)
-    write(unit,'(A,2('//RFMT//',1X))') '# time, tD :: ',s%t(1),s%tD(1)
+    write(U,fmt) '# num z locations, zlocs :: ',s%nz, s%z(:)
+    write(U,'(A,2('//RFMT//',1X))') '# time, tD :: ',s%t(1),s%tD(1)
 
     if(s%model == 4 .or. s%model == 5) then
        ! malama solutions
-       write(unit,'(A,'//RFMT//')') '# Malama beta linearization parameter :: ',f%beta
+       write(U,'(A,'//RFMT//')') '# Malama beta linearization parameter :: ',f%beta
     elseif(s%model == 3) then
        fmt = '(A,I0,    (1X,'//RFMT//'))       '
        write(fmt(7:10),'(I4.4)') f%MoenchAlphaM
        write(*,fmt) '# Moench Delayed Yield (alpha):: ',f%MoenchAlphaM,f%MoenchAlpha(:)
     elseif(s%model == 6) then
        ! mishra/neuman solution
-       write(unit,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ad,psia,psik,b1 ::',&
+       write(U,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ak,psia,psik,b1 ::',&
             & f%ac,f%ak,f%psia,f%psik,f%b1
-       write(unit,'(A,I0,1X,'//RFMT//')') '# Mishra/Neuman FD order,h ::',&
-            & s%order,f%usL/(s%order-1)
+       if (s%MNtype == 2) then
+          write(U,'(A,I0,1X,'//RFMT//')') '# Mishra/Neuman FD order,h ::',&
+               & s%order,f%usL/(s%order-1)
+       elseif (s%MNtype == 1) then
+          write(U, '(A'//RFMT//')') "# NB: Malama's Mishra/Neuman implementation (1) '//&
+               &'assumes ac=ak and fully penetrating pumping well without wellbore storage"
+       end if
     end if
 
     if (s%dimless) then
-       write (unit,'(A,/,A,/,A)') '#','#     z_D           r_D      '&
+       write (U,'(A,/,A,/,A)') '#','#     z_D           r_D      '&
             & //'     '// trim(s%modelDescrip(s%model))//'          t*dh/d(log(t))', &
             & '#----------------------------------------------------------------------------'
 
     else
-       write (unit,'(A,/,A,/,A)') '#','#      z            r        '&
+       write (U,'(A,/,A,/,A)') '#','#      z            r        '&
             & //'     '// trim(s%modelDescrip(s%model))//'          t*dh/d(log(t))', &
             & '#----------------------------------------------------------------------------'
     end if

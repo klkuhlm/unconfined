@@ -1,6 +1,6 @@
 tic
 clear all;
-% params (used in later routines)
+% params (used in later dehoog routine)
 % 1   kappa (Kz/Kr)
 % 2   theta (Sy*ac/Ss)
 % 3   bD1 (b1/b2) dimensionless unsat zone thickness
@@ -17,7 +17,7 @@ clear all;
 %              Kr      kappa    Ss      Sy      ac     phia     phik
 params = log([1.0E-4, 1.0E+0, 1.0E-4, 3.0E-1, 5.0E-1, 2.5E-2, 2.0E-2, ...
 	      1.0E+0, 1.0E-3, 1.0E+0, 1.0E+0]);
-%              8         9       10    11  
+%              8 N/A   9 N/A   10 N/A   11 N/A  
    
 
 times = logspace(-2.5,6,100); %Time vector

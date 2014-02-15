@@ -187,7 +187,7 @@ spacedata.dat  2.5D0   :: r data file (default r otherwise)
 16.2) rval: float => radial distance [L] to use for timeseris output (timeseries = True)
 
 line 17 ------------------------------
-0.5  0.0D0  3  2.54D-2  20.0      :: top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
+0.5  0.0D0  3  2.54D-2  20.0      :: top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer), rwobs, sF
 --------------------------------------
 
 if computing contour map, these values aren't used at all
@@ -198,9 +198,9 @@ Z is computed up from the bottom of the aquifer (not down from the water table l
 
 17.3) order: integer => order of integration (trapezoid rule) across observation well screen (must be greater than or equal to 1)
 
-17.4) rwobs: float => observation well radius [L] (only used in wellbore storage solution)
+17.4) rwobs: float => observation well radius [L] (only used in Hantush wellbore storage solution)
 
-17.5) sF: float => dimensionless monitoring well shape factor (only used in wellbore storage solution)
+17.5) sF: float => dimensionless monitoring well shape factor (only used in Hantush wellbore storage solution)
 
 line 18 ------------------------------
 results.out

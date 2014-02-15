@@ -466,21 +466,22 @@ contains
     eta(1:np) = sqrt(etasq)
     Delta0(1:np,1:nz) = spread(eta*sinh(eta) - u*cosh(eta),2,nz)
 
-    where(spread(zd > 1.0,1,np))
-       ! unsaturated zone solution
-       sD(1:np,1:nz) = 2.0_EP*spread(sinh(eta),2,nz)/&
-            & (spread(p*eta*f%kappa,2,nz)*Delta0)*&
-            & exp(spread(u,2,nz)*spread(zD - 1.0_EP,1,np))
-    elsewhere
-       ! saturated zone solution
-       sD(1:np,1:nz) = 2.0_EP/spread(p*etasq*f%kappa,2,nz)* &
-            & (1.0_EP + spread(u,2,nz)*cosh(spread(eta,2,nz)*spread(zD,1,np))/Delta0)
+!!$    where(spread(zd > 1.0,1,np))
+!!$       ! unsaturated zone solution
+!!$       sD(1:np,1:nz) = 2.0_EP*spread(sinh(eta),2,nz)/&
+!!$            & (spread(p*eta*f%kappa,2,nz)*Delta0)*&
+!!$            & exp(spread(u,2,nz)*spread(zD - 1.0_EP,1,np))
+!!$    elsewhere
+
+    ! saturated zone solution
+    sD(1:np,1:nz) = 2.0_EP/spread(p*etasq*f%kappa,2,nz)* &
+         & (1.0_EP + spread(u,2,nz)*cosh(spread(eta,2,nz)*spread(zD,1,np))/Delta0)
 
        ! average solution (fully penetrating observation well) for testing
-       !sD(1:np,1:nz) = 2.0_EP/spread(p*etasq*f%kappa,2,nz)* &
-       !     & (1.0_EP + spread(u*sinh(eta)/eta,2,nz)/Delta0)
-    end where
-    
+!!$    sD(1:np,1:nz) = 2.0_EP/spread(p*etasq*f%kappa,2,nz)* &
+!!$         & (1.0_EP + spread(u*sinh(eta)/eta,2,nz)/Delta0)
+!!$    end where
+       
   end function mishraNeumanMalama
 
   function mishraNeuman2010FD(a,zD,s,p,f,w) result(sD)
