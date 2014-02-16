@@ -1,5 +1,5 @@
 !
-! Copyright (c) 2012 Kristopher L. Kuhlman (klkuhlm at sandia dot gov)
+! Copyright (c) 2012-2014 Kristopher L. Kuhlman (klkuhlm at sandia dot gov)
 !
 ! Permission is hereby granted, free of charge, to any person obtaining a copy
 ! of this software and associated documentation files (the "Software"), to deal
