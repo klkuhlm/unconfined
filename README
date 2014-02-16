@@ -11,7 +11,8 @@ software obtained elsewhere (e.g., MS-Excel, Matplotlib, or gnuplot).
 The code is accurate and relatively fast, using OpenMP to execute in
 parallel on a multi-processor computer.
 
-The input file format and input parameters are briefly explained in the text file input-explanation.txt
+The input file format and input parameters are briefly explained in
+the text file input-explanation.txt
 
 The solutions implemented include:
 ------------------------------------------
@@ -19,6 +20,21 @@ The solutions implemented include:
 penetrating well.
 http://dx.doi.org/10.1029/2009WR008899
 http://dx.doi.org/10.1029/2010WR010177
+
+NB: The Mishra & Neuman solutions given in the WRR papers are somewhat
+ill-behaved.  My code implements them in a couple different ways.
+
+1a) One approach to solve M/N follows the Malama (2014) simplified
+formulation -- replacing the no-flow boundary condition at the land
+surface with a "finiteness" boundary condition.  This solution has
+only been derived so far for the fully penetrating no wellbore storage
+case.
+
+1b) A second approach to solve M/N discritizes the vadose zone using
+finite differences (in Laplace-Hankel space).  This approach works and
+can be used as a "check" on the algebra and mathematics in the
+closed-form Laplace-space approaches.  This allows partial
+penetration, but no wellbore storage for now.
 
 2) Malama (2011) : Alternative linearization of the
 moving water table boundary condition.  Basically an improvement on
@@ -51,13 +67,12 @@ typing:
 
 make
 
-On MS-Windows, you will either need to use Cygwin to create a
-Linux-like environment to build in, you will have to use mingw to
-compile at the windows command prompt, or you will have to use a native
-windows compiler like the Intel Fortran compiler (which is known to
-work with my code).  If you are interested in using the program in
-Windows, but do not feel up to the task of compiling it yourself, let
-me know and I can probably provide you with an executable.
+On MS-Windows, you will need the mingw compilation environment (OpenMP
+doesn't work under mingw, though -- so single thread only) or the
+Intel Fortran compiler (which works and provides OpenMP as well).  I
+have recently compiled it (Dec 2013) with the free mingw toolchain,
+and can either provide assistance setting this up, or provide you with
+a binary.
 
 Data
 ------------------------------------------
@@ -75,5 +90,5 @@ I will make all the data available as they are cleaned/prepared
 for use in my inverse modeling exercise.
 
 Kris Kuhlman (klkuhlm@sandia.gov)
-June, 2012
+February, 2014
 
