@@ -138,8 +138,11 @@ contains
     ! Moench M (number of alpha coefficients)
     read(19,*) f%beta, f%MoenchAlphaM
     backspace(19)
-    if (f%MoenchAlphaM < 0) then
-       write(*,*) 'ERROR: number of Moench alpha parameters must be >1',f%MoenchAlphaM
+    if (s%model == 3) then
+       if (f%MoenchAlphaM < 1) then 
+          write(*,*) 'ERROR: number of Moench alphas must be >1 for model==3',f%MoenchAlphaM
+          stop 777
+       end if
     end if
     allocate(f%MoenchAlpha(f%MoenchAlphaM),f%MoenchGamma(f%MoenchAlphaM))
     f%MoenchAlpha = -999.
@@ -160,24 +163,24 @@ contains
     if (s%MNtype == 1) then
        if (abs(f%ac - f%ak) > epsilon(1.0)) then
           if (s%quiet > 0) then
-             write(*,'(A)') 'WARNING1: Mishra-Neuman implementation '//&
-                  & '1 assumes ac=ak: using ak (ignoring ac)'
+             write(*,'(A)') "WARNING1: Malama's Mishra-Neuman implementation "//&
+                  & 'assumes ac=ak: using ak (ignoring ac)'
              write(*,'(2(A,'//RFMT//'))') 'WARNING1: you gave ac=',f%ac,' ak=',f%ak
           endif
           f%ac = f%ak
        end if
        if (abs(w%l - f%b) > epsilon(1.0)) then
           if (s%quiet > 0) then
-             write(*,'(A)') 'WARNING2: Mishra-Neuman implementation '//&
-                  & '1 assumes pumping well screen goes to bottom of formation (l=b)'
+             write(*,'(A)') "WARNING2: Malama's Mishra-Neuman implementation "//&
+                  & 'assumes pumping well screen goes to bottom of formation (l=b)'
              write(*,'(2(A,'//RFMT//'))') 'WARNING2: you gave l=',w%l,' b=',f%b
           endif
           w%l = f%b
        end if
        if (w%d > epsilon(1.0)) then
           if (s%quiet > 0) then
-             write(*,'(A)') 'WARNING3: Mishra-Neuman implementation '//&
-                  & '1 assumes pumping well screen goes to top of formation (d=0)'
+             write(*,'(A)') "WARNING3: Malma's Mishra-Neuman implementation "//&
+                  & 'assumes pumping well screen goes to top of formation (d=0)'
              write(*,'(A,'//RFMT//')') 'WARNING3: you gave d=',w%d
           endif
           w%d = 0.0
@@ -232,12 +235,12 @@ contains
        stop
     end if
 
-    if (any([f%b,f%Kr,f%Ss] < spacing(0.0))) then
+    if (any([f%b,f%Kr,f%Ss] <= 0.0)) then
        write(*,*) 'ERROR: zero or negative aquifer parametrs:',[f%b,f%Kr,f%Ss]
        stop
     end if
 
-    if(s%model > 2 .and. any([f%kappa,f%Sy] < spacing(0.0))) then
+    if(s%model > 2 .and. any([f%kappa,f%Sy] <= 0.0)) then
        write(*,*) 'ERROR: zero or negative unconfined aquifer parameters:', &
             &  [f%kappa,f%Sy]
        stop
@@ -361,11 +364,11 @@ contains
           stop
        end if
 
-       if (s%rwobs < spacing(1.0)) then
+       if (s%rwobs <= 0.0) then
           write(*,*) 'ERROR: monitoring well radius must be >0',s%rwobs
           stop 668
        end if
-       if (s%sF < spacing(1.0)) then
+       if (s%sF <= 0.0) then
           write(*,*) 'ERROR: monitoring well shape factor must be >0',s%sF
           stop 669
        end if
@@ -428,7 +431,7 @@ contains
              end if
           end do
           close(22)
-          if(any(s%t < spacing(0.0))) then
+          if(any(s%t < 0.0)) then
              write(*,*) 'ERROR t must be > 0:',s%t
              stop
           end if
@@ -440,7 +443,7 @@ contains
        allocate(s%t(1), s%tD(1), h%sv(1))
        s%tD = -999.
        h%sv = -999
-       if (tval > spacing(0.0)) then
+       if (tval >= 0.0) then
           s%t(1) = tval
        else
           write(*,*) 'ERROR: t must be >0',tval
@@ -557,11 +560,11 @@ contains
     allocate(s%zLay(size(s%zD)))
     s%zLay = -999
 
-    where(s%zD(:) < spacing(1.0) .or. s%zD(:) < (1.0-w%lD))
+    where(s%zD(:) <= 0.0 .or. s%zD(:) < (1.0-w%lD))
        ! below well screen (or at bottom of aquifer zD==0)
        s%zLay = 1
     elsewhere
-       where((s%zD(:)-1.0) > spacing(1.0) .or. s%zD(:) < (1.0-w%dD))
+       where((s%zD(:)-1.0) >= 0.0 .or. s%zD(:) < (1.0-w%dD))
           ! beside/next-to well screen
           s%zLay = 2
        elsewhere

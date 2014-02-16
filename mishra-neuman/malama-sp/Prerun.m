@@ -20,7 +20,7 @@ params = log([1.0E-4, 1.0E+0, 1.0E-4, 3.0E-1, 5.0E-1, 2.5E-2, 2.0E-2, ...
 %              8 N/A   9 N/A   10 N/A   11 N/A  
    
 
-times = logspace(-2.5,6,100); %Time vector
+times = logspace(-2.5,6,100); %Time vector (minutes)
 mishraneuman(params,times);%Run forward model
 
 h0=load('mishra.txt');

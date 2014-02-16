@@ -101,8 +101,8 @@ contains
           ! naive implementation of paper (often doesnt work)
           fp(1:np,1:nz) = mishraNeuman2010(a,s%zD,s,lap%p,f,w)
        case(1)
-          ! Malama (finiteness condition) version 
-          fp(1:np,1:nz) = mishraNeumanMalama(a,s%zD,s,lap%p,f,w)
+          ! Malama (finiteness condition @ water table) version 
+          fp(1:np,1:nz) = mishraNeumanMalama(a,s%zD,lap%p,f)
        case(2)
           ! finite difference solution of ODE in vadose zone
           fp(1:np,1:nz) = mishraNeuman2010FD(a,s%zD,s,lap%p,f,w)
@@ -251,7 +251,7 @@ contains
     end do
 
     A0(1:np) = 2.0/(p(:)*CDw*K(0,:) + xi(:)*K(1,:))
-    uDf(1:np) = A0(:)/(p*(p + a**2)*(p*tDb + 1.0_EP))
+    uDf(1:np) = A0(:)/((p + a**2)*(p*tDb + 1.0_EP))  !!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     where (zLay == 3)
        g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zd(:)))
@@ -431,23 +431,22 @@ contains
 999 format(A,ES11.3E3,4(A,2('(',ES12.3E4,',',ES12.3E4,')')))
   end function mishraNeuman2010
 
-  function mishraNeumanMalama(a,zD,s,p,f,w) result(sD)
+  function mishraNeumanMalama(a,zD,p,f) result(sD)
     use constants, only : DP, EP
     use types, only : well, formation, solution
+    use utility, only : operator(.X.)
     implicit none
 
     real(EP), intent(in) :: a
     real(DP), dimension(:), intent(in) :: zD
     complex(EP), dimension(:), intent(in) :: p
-    type(solution), intent(in) :: s
-    type(well), intent(in) :: w
     type(formation), intent(in) :: f
 
-    complex(EP), dimension(size(p),size(zD)) :: sD, Delta0 
+    complex(EP), dimension(size(p),size(zD)) :: sD
     integer ::  np, nz
 
     real(EP) :: beta0, vartheta, phiDa, phiDk, u0
-    complex(EP), dimension(size(p)) :: eta, etasq, eta1, u, v
+    complex(EP), dimension(size(p)) :: eta, etasq, eta1, u, v, Delta0 
 
     np = size(p)
     nz = size(zD)
@@ -458,13 +457,13 @@ contains
     vartheta = beta0*f%Sy/(f%Ss*f%b)*exp(-beta0*(phiDa - phiDk))
     eta1(1:np) = sqrt((p(:)*vartheta + a**2)/f%kappa)
 
-    u0 = beta0/2.0_EP
-    v(1:np) = sqrt(1.0_EP + (eta1(:)/u0)**2)
-    u(1:np) = u0*(1.0_EP - v(:))
+    u0 = beta0/2.0
+    v(1:np) = sqrt(1.0 + (eta1(:)/u0)**2)
+    u(1:np) = u0*(1.0 - v(:))
 
     etasq(1:np) = (p(:) + a**2)/f%kappa
-    eta(1:np) = sqrt(etasq)
-    Delta0(1:np,1:nz) = spread(eta*sinh(eta) - u*cosh(eta),2,nz)
+    eta(1:np) = sqrt(etasq(:))
+    Delta0(1:np) = eta(:)*sinh(eta(:)) - u(:)*cosh(eta(:))
 
 !!$    where(spread(zd > 1.0,1,np))
 !!$       ! unsaturated zone solution
@@ -474,14 +473,13 @@ contains
 !!$    elsewhere
 
     ! saturated zone solution
-    sD(1:np,1:nz) = 2.0_EP/spread(p*etasq*f%kappa,2,nz)* &
-         & (1.0_EP + spread(u,2,nz)*cosh(spread(eta,2,nz)*spread(zD,1,np))/Delta0)
+    sD(1:np,1:nz) = 2.0/spread(f%kappa*etasq,2,nz)* &   
+         & (1.0 + spread(u/Delta0,2,nz)*cosh(eta .X. zD))
 
-       ! average solution (fully penetrating observation well) for testing
-!!$    sD(1:np,1:nz) = 2.0_EP/spread(p*etasq*f%kappa,2,nz)* &
-!!$         & (1.0_EP + spread(u*sinh(eta)/eta,2,nz)/Delta0)
-!!$    end where
-       
+!!$       ! average solution (fully penetrating observation well) for testing
+!!$    sD(1:np,1:nz) = 2.0/spread(p*etasq*f%kappa,2,nz)* &
+!!$         & (1.0 + spread(u*sinh(eta)/(eta*Delta0),2,nz))
+
   end function mishraNeumanMalama
 
   function mishraNeuman2010FD(a,zD,s,p,f,w) result(sD)
