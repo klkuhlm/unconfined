@@ -11,8 +11,7 @@ software obtained elsewhere (e.g., MS-Excel, Matplotlib, or gnuplot).
 The code is accurate and relatively fast, using OpenMP to execute in
 parallel on a multi-processor computer.
 
-The input file format and input parameters are briefly explained in
-the text file input-explanation.txt
+The input parameters are explained in input-explanation.txt
 
 The solutions implemented include:
 ------------------------------------------
@@ -22,19 +21,24 @@ http://dx.doi.org/10.1029/2009WR008899
 http://dx.doi.org/10.1029/2010WR010177
 
 NB: The Mishra & Neuman solutions given in the WRR papers are somewhat
-ill-behaved.  My code implements them in a couple different ways.
+ill-behaved.  My code implements them in three different ways.
 
 1a) One approach to solve M/N follows the Malama (2014) simplified
-formulation -- replacing the no-flow boundary condition at the land
-surface with a "finiteness" boundary condition.  This solution has
-only been derived so far for the fully penetrating no wellbore storage
-case.
+  formulation -- replacing the no-flow boundary condition at the land
+  surface with a "finiteness" boundary condition.  This solution has
+  only been derived so far for the fully penetrating no wellbore storage
+  case.
 
 1b) A second approach to solve M/N discritizes the vadose zone using
-finite differences (in Laplace-Hankel space).  This approach works and
-can be used as a "check" on the algebra and mathematics in the
-closed-form Laplace-space approaches.  This allows partial
-penetration, but no wellbore storage for now.
+  finite differences (in Laplace-Hankel space).  This approach works and
+  can be used as a "check" on the algebra and mathematics in the
+  closed-form Laplace-space approaches.  This allows partial
+  penetration, but no wellbore storage for now.
+  
+1c) The third approach to solving M/N implements the solution listed
+  in their paper directly (and naively). This approach fails for some
+  combinations of parameters, and is often suffers from severe cancell-
+  ation in the transition region, between early and late time.
 
 2) Malama (2011) : Alternative linearization of the
 moving water table boundary condition.  Basically an improvement on
@@ -82,9 +86,16 @@ benchmarking and conducting a "beauty pagent" between the different
 unconfined models.  I am currently working to include the following 
 datasets:
 
-Moench et al., 2001 (Cape Cod, Massachusets)
-Wenzel, 1942 (Grand Island, Nebraska)
-Bevan, 2002 (Borden, Ontario)
+Moench et al., 2001 (Cape Cod, Massachusets); available from the 
+authors electronically, and in a USGS report.
+
+Wenzel, 1942 (Grand Island, Nebraska); available form a very old
+USGS report.  I have entered this data into spreadsheet form. The 
+spreadsheets are available for anyone to view on Google docs at:
+
+https://docs.google.com/spreadsheet/ccc?key=0AlJMuEYu7Z-5dGJfdzBibk4zNDB4UG9DN1FpQ0FnX1E&usp=sharing
+
+Bevan, 2002 (Borden, Ontario); obtained electronically from the authors.
 
 I will make all the data available as they are cleaned/prepared
 for use in my inverse modeling exercise.
