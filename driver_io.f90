@@ -118,7 +118,7 @@ contains
        read(19,*) lap%timeType,lap%timePar(:)
     else
        ! arbitrarily long piecewise-constant time behavior
-       allocate(lap%timePar(-2*lap%timeType+1))
+       allocate(lap%timePar(-2*mod(lap%timeType,100)+1))
        lap%timePar = -999.
        read(19,*) lap%timeType,lap%timePar(:)
     end if

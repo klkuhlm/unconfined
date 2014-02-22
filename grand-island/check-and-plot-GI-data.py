@@ -7,8 +7,11 @@ from glob import glob
 
 files = sorted(glob("grand-island-test-wenzel-*.csv"))
 
+# pumping start and end times
 t0 = pylab.datestr2num('07/29/1931 06:05:00')
 t1 = pylab.datestr2num('07/31/1931 06:04:00')
+
+print 'test length in seconds:', (t1-t0)*1440*60
 
 tlen = (t1-t0)*1440
 
@@ -20,6 +23,7 @@ individualplots = True
 computesplinederiv = True
 drawdowncheck = True
 mapcheckplot = True
+saveMetricDecimalData = True
 
 # apply uniform min/max derivatives to all data
 ydmin,ydmax = (-0.2,1.0)
@@ -61,6 +65,16 @@ if drawdowncheck:
                 tv = (dt[pm]-t0)*1440
                 dv = dd[pm]
 
+                if saveMetricDecimalData:
+                    # save tab-delimited file with 
+                    # elapsed time in seconds
+                    # and drawdown in meters
+
+                    fh = open('out-'+filename.replace('.csv','-metric.dat'),'w')
+                    for ttt,ddd in zip(tv*60,dv*0.3048):
+                        fh.write('%.0f\t%.4f\n' % (ttt,ddd))
+                    fh.close()
+
                 fig = plt.figure(1)
                 ax = fig.add_subplot(1,1,1)
                 ax.loglog(tv,dv,'r-')
@@ -72,7 +86,7 @@ if drawdowncheck:
                     dpv = dd[ppm]
 
                     nd = dpv.shape[0]
-                    factor = nd*70
+                    factor = nd*20
                     sp = spline(np.log(tpv),dpv,s=np.linalg.norm(dv)/factor)
                     
                     spval = np.empty((nd,2))
@@ -118,6 +132,11 @@ if drawdowncheck:
         plt.close(2)
 
 if mapcheckplot:
+
+    if saveMetricDecimalData:
+        fh = open('grand-island-test-wenzel-metric-info.csv','w')
+        fh.write('#well,z_bot(m),z_top(m),r(m),rw_obs(m)\n')
+        b = 100.0*0.3048  # aquifer thickness in meters
 
     # angle line makes on map (east=0 & 360, north=90, west=180, south=270)
     # computed from map in Wenzel 
@@ -188,6 +207,32 @@ if mapcheckplot:
         thiswell = d['id'] == well
         plt.annotate('%s%s' % (well,d[thiswell]['line'][0]),
                      xy=(xy[thiswell]['x'],xy[thiswell]['y']),fontsize='x-small')
+
+        if saveMetricDecimalData:
+            
+            # columns
+            # 0) well name
+            # 1) z elevation of bottom of obs well (from bottom of aquifer - 100 ft thick)
+            # 2) z elevation of top of obs well (from bottom of aquifer - 100 ft thick)
+            # 3) radial distance to obs well from pumping well
+            # 4) radius of observation well
+
+            # saturated thickness assumed constant everywhere 
+            # zbot = thickness - depth_of_bottom_below_water_table
+            zbot = b - (d[thiswell]['bot'] - d[thiswell]['wl'])*0.3048
+            ztop = zbot + d[thiswell]['screen']*0.3048 
+
+            if d[thiswell]['screen'] < 1.0:
+                rwobs = 0.25*0.3048/2  # 3" diameter piezometer
+            elif d[thiswell]['screen'] > 35.0:
+                rwobs = 2*0.3048/2  # 2' diameter pumping well
+            else:
+                rwobs = 0.3048/12/2 # 1" diameter screened well
+
+            fh.write('%s%s,%.4f,%.4f,%.4f,%.4f\n' % 
+                     (well,d[thiswell]['line'][0],zbot,ztop,
+                      d[thiswell]['r']*0.3048,rwobs))
+
     plt.colorbar(shrink=0.5)
     plt.axis('image')
     plt.grid()
@@ -210,8 +255,11 @@ if mapcheckplot:
                      xy=(thiswell['r'],thiswell['elev']-thiswell['wl']),
                      fontsize='xx-small')
         if thiswell['screen'] == 0:
+            # 3" piezometer (point observation)
             plt.plot(thiswell['r'],thiswell['elev']-thiswell['bot'],'k.')
         else:
+            # 1" observtion well w/ 18" screened interval
+            # with bottom of screen at indicated depth
             plt.plot([thiswell['r'],thiswell['r']],thiswell['elev'] -
                      np.array([thiswell['bot']-thiswell['screen'],
                                thiswell['bot']]),'k-',linewidth=1.5)
