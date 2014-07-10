@@ -159,10 +159,10 @@ module types
      real(DP) :: beta = -999.
 
      real(DP), allocatable :: MoenchAlpha(:), MoenchGamma(:)
-     integer :: MoenchAlphaM = -999
+     integer :: MoenchM = -999
 
      ! computed aquifer parameters
-     real(DP) :: sigma = -999.  ! Sy/(Ss*b)
+     real(DP) :: MalamaSigma = -999.  ! Sy/(Ss*b) <NB: 1/sigma compared to Moench/Neuman>
      real(DP) :: alphaD = -999. ! kappa/sigma
      real(DP) :: betaD = -999., usLD = -999.
      real(DP) :: akD = -999., acD = -999., lambdaD = -999.

@@ -34,7 +34,6 @@ contains
   function lapTime(l) result(mult)
     use constants, only: EP
     use types, only : invLaplace
-    use utility, only : operator(.X.)
     implicit none
 
     type(invLaplace), intent(in) :: l
@@ -116,7 +115,7 @@ contains
        W(1:n) = (y(2:n+1) - y(1:n))/denom ! rise/run
 
        mult(1:l%np) = (sum(spread(W(1:n) - W(0:n-1),2,l%np)*&
-            & exp(-ti(1:n) .X. l%p(1:l%np)),dim=1) - &
+            & exp(spread(-ti,2,l%np)*spread(l%p,1,n)),dim=1) - &
             & sum(W(1:n) - W(0:n-1))*exp(-tf*l%p))/l%p**2
 
        deallocate(ti,W,y,denom)

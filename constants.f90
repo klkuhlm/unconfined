@@ -24,12 +24,25 @@ module constants
 
   public
 
-  ! real with range 300 orders of mag, 15 sig figs (8 on both g95 & ifort)
+  ! real with range 300 orders of mag, 15 sig figs (8 on gfortran, g95 & ifort)
   integer, parameter :: DP = selected_real_kind(p=15,r=300)
 
-  !! extended range internal variables (10 on g95, 10 on gfortran, 16 on ifort)
-  !!integer, parameter :: EP = selected_real_kind(r=3000)
+  ! changing the definition of EP ("extended precision") to one of the
+  ! following 3 options will allow the code to run faster or be more
+  ! precise.
+
+  ! 1) Setting EP=8 or DP (double precision) is the fastest.
   integer, parameter :: EP = DP
+
+  ! 2) Setting EP=10 has a bit more precision but quad-precision range
+  ! (implemented in hardward on intel/amd chipsets with 80-bit
+  ! registers).
+
+  !! extended range internal variables (10 on g95, 10 on gfortran, 16 on ifort)
+  !! integer, parameter :: EP = selected_real_kind(r=3000)
+  
+  ! 3) Setting EP=16 is full quad-precision range and precision, but
+  ! is very slow (implemented in software)
 
   !! full quad precision (only on gfortran >= 4.6 and ifort)
   !!integer, parameter :: EP = selected_real_kind(p=33,r=3000)
@@ -37,6 +50,7 @@ module constants
   !! 3.141592653589793238462643383279503_EP
   real(DP), parameter :: PI =    4.0_DP*atan(1.0_DP)
   real(DP), parameter :: LN2 = log(2.0_DP)
+
   real(EP), parameter :: PIEP =  4.0_EP*atan(1.0_EP)
   real(EP), parameter :: INVPIEP = 0.25_EP/atan(1.0_EP)
   real(EP), parameter :: TWOPIEP = 8.0_EP*atan(1.0_EP)
@@ -58,5 +72,8 @@ module constants
   character(9) :: RFMT = 'ES14.07E2'    ! format for general output
   character(9) :: HFMT = 'ES24.15E4'    ! format for results
   character(9) :: SFMT = 'ES09.03E2'    ! short format for long (+ only) vectors
+
+  ! NB: changing these formats will mess with column alignment in
+  ! output (but this is just an astetic)
 
 end module constants

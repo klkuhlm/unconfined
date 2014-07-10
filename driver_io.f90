@@ -72,6 +72,9 @@ contains
     if(ioerr /= 0) then
        write(*,*) 'ERROR opening main input file '//trim(inputFileName)//&
             & ' for reading'
+       if (inputFileName(1:9) == 'input.dat') then
+          write(*,*) 'specify desired input filename at commandline (input.dat is default if none given)'
+       end if
        stop
     end if
 
@@ -89,7 +92,7 @@ contains
        do i=0,6
           write(*,'(I0,1X,A)') i,trim(s%modelDescrip(i))
        end do
-       write(*,'(A)') 'Malama models with beta=0 correspond to Neuman 72/74'
+       write(*,'(A)') 'Malama models with beta=0 correspond to Neuman 1972/1974'
        stop
     end if
 
@@ -136,18 +139,18 @@ contains
 
     ! Malama linearization beta parameter
     ! Moench M (number of alpha coefficients)
-    read(19,*) f%beta, f%MoenchAlphaM
+    read(19,*) f%beta, f%MoenchM
     backspace(19)
     if (s%model == 3) then
-       if (f%MoenchAlphaM < 1) then 
-          write(*,*) 'ERROR: number of Moench alphas must be >1 for model==3',f%MoenchAlphaM
+       if (f%MoenchM < 1) then 
+          write(*,*) 'ERROR: number of Moench alphas must be >= 1 for model==3',f%MoenchM
           stop 777
        end if
     end if
-    allocate(f%MoenchAlpha(f%MoenchAlphaM),f%MoenchGamma(f%MoenchAlphaM))
+    allocate(f%MoenchAlpha(f%MoenchM),f%MoenchGamma(f%MoenchM))
     f%MoenchAlpha = -999.
     f%MoenchGamma = -999.
-    read(19,*) f%beta, f%MoenchAlphaM, f%MoenchAlpha(:)
+    read(19,*) f%beta, f%MoenchM, f%MoenchAlpha(:)
 
     ! Mishra/Neuman unsaturated model parameters
     ! capacity & conductivity sorptive numbers (1/length)
@@ -211,12 +214,12 @@ contains
        write(*,'(A,'//RFMT//')') 'b (initial aquier sat thickness):: ',f%b
        write(*,'(A,2('//RFMT//',1X))') 'l,d (screen bot&top measured from above):: ', w%l, w%d
        write(*,'(A,2('//RFMT//',1X))') 'rw,rc (well and casing radii):: ', w%rw, w%rc
-       write(*,'(A,3('//RFMT//',1X))') 'Kr,kappa,gamma:: ', f%Kr, f%kappa, f%gamma
+       write(*,'(A,3('//RFMT//',1X))') 'Kr,kappa (Kz/Kr),gamma (dimless skin):: ', f%Kr, f%kappa, f%gamma
        write(*,'(A,2('//RFMT//',1X))') 'Ss,Sy:: ', f%Ss, f%Sy
        if (s%model == 3) then
           fmt = '(A,I0,    (1X,'//RFMT//'))                  '
-          write(fmt(7:10),'(I4.4)') f%MoenchAlphaM
-          write(*,fmt) 'alpha (Moench Delayed Yield):: ',f%MoenchAlphaM,f%MoenchAlpha(:)
+          write(fmt(7:10),'(I4.4)') f%MoenchM
+          write(*,fmt) 'alpha (Moench Delayed Yield):: ',f%MoenchM,f%MoenchAlpha(:)
        elseif (s%model == 4 .or. s%model == 5) then
           write(*,'(A,'//RFMT//')') 'beta (Malama linearization factor):: ',f%beta
        elseif (s%model == 6) then
@@ -224,7 +227,7 @@ contains
                & '(neg air-entry & sat. pressures):: ', f%ac,f%ak,f%psia,f%psik
           write(*,'(A,I0)') 'Mishra&Neuman type of solution (0=naive,2=FD)::',s%MNtype
           write(*,'(A,'//RFMT//')') 'unsaturated zone thickness:: ',f%usL
-          write(*,'(A,I0,'//RFMT//')') 'unsaturated zone FD order, FD h:: ',&
+          write(*,'(A,I0,'//RFMT//')') 'vadose zone finite-difference order, finite-difference grid spacing:: ',&
                & s%order,f%usL/(s%order-1)
        end if
     end if
@@ -296,7 +299,7 @@ contains
     ! ## checking of numerical parameters #####
 
     if (lap%M < 2) then
-       write(*,*)  'ERROR: deHoog # FS terms must be >= 1 M=',lap%M
+       write(*,*)  'ERROR: deHoog number of Fourier Series terms must be >= 1 M=',lap%M
        stop
     end if
 
@@ -307,7 +310,7 @@ contains
     end if
 
     if(ts%k - ts%R < 2) then
-       write(*,'(2(A,I0),A)') 'ERROR: Tanh-Sinh k is too low (',ts%k,&
+       write(*,'(2(A,I0),A)') 'ERROR: Tanh-Sinh k (2**k abcissa) is too low (',ts%k,&
             & ') for given level of Richardson extrapolation (',ts%R,&
             &').  Increase k or decrease nst.'
        stop
@@ -524,8 +527,8 @@ contains
     s%Hc = w%Q/(4*PI*f%Kr*f%b)
 
     ! compute derived or dimensionless properties
-    f%sigma = f%Sy/(f%Ss*f%b) ! this is the inverse of Neuman's (1972 & 1974) and Moench's "sigma"
-    f%alphaD = f%kappa/f%sigma
+    f%malamaSigma = f%Sy/(f%Ss*f%b) ! this is the inverse of Neuman's (1972 & 1974) and Moench's "sigma"
+    f%alphaD = f%kappa/f%malamaSigma
     f%betaD = f%beta/s%Lc
 
     ! dimensionless lengths
@@ -577,7 +580,7 @@ contains
 
     if (s%quiet > 0) then
        write(*,'(A,'//RFMT//')') 'kappa   (Kz/Kr):   ',f%kappa
-       write(*,'(A,'//RFMT//')') 'sigma   (Sy/S):   ',f%sigma
+       write(*,'(A,'//RFMT//')') 'sigma   (Sy/S) <NB: this is 1/sigma compared to Neuman & Moench>:   ',f%malamaSigma
        write(*,'(A,'//RFMT//')') 'alpha_D:(kappa/sigma): ',f%alphaD
        write(*,'(A,2('//RFMT//',1X))') 'beta,beta_D: ',f%beta,f%betaD
        write(*,'(3(A,'//RFMT//'))') 'Tc:',s%Tc,' Lc:',s%Lc,' Hc:',s%Hc
@@ -634,6 +637,15 @@ contains
        h%j0z(i) = x
     end do
 
+    if (s%quiet > 2) then
+       write(*,*) 'zeros of Bessel functions, needed for numerical Hankel transform inversion'
+       write(*,*) 'order, x, J0(x)'
+       do i=1,terms
+          write(*,*) i,h%j0z(i),bessel_j0(h%j0z(i)) ! print full accuracy
+       end do
+       write(*,*) 'end of Bessel function zeros'
+    end if
+
     ! split between finite/infinite part should be
     ! small for large time, large for small time
     zRange = maxval(h%j0s(:)) - minval(h%j0s(:))
@@ -667,7 +679,7 @@ contains
 
     ! echo input parameters at head of output file
     write(U,'(A)') '# -*-auto-revert-*-'
-    write(U,'(A,I0,1X,A,I0)') '# model, EP :: ',s%model,trim(s%modelDescrip(s%model))//', ',EP
+    write(U,'(A,I0,1X,A,I0)') '# model, EP precision :: ',s%model,trim(s%modelDescrip(s%model))//', ',EP
     write(U,'(A,3(L1,1X))') '# dimensionless?, timeseries?, piezometer? :: ', &
          & s%dimless, s%timeseries, s%piezometer
     write(U,'(A,'//RFMT//')') '# Q (volumetric pumping rate) :: ', &
@@ -678,9 +690,9 @@ contains
          & w%l, w%d
     write(U,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
          & w%rw, w%rc
-    write(U,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
+    write(U,'(A,2('//RFMT//',1X))') '# Kr,kappa (kappa=Kz/Kr) :: ', f%Kr, f%kappa
     write(U,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
-    write(U,'(A,'//RFMT//')') '# gamma :: ',f%gamma
+    write(U,'(A,'//RFMT//')') '# gamma (dimensionless skin) :: ',f%gamma
     fmt = '(A,I0,A,    ('//RFMT//',1X))     '
     write(fmt(9:12),'(I4.4)') size(lap%timePar)
     write(U,fmt) '# pumping well time behavior :: ',lap%timeType, &
@@ -692,12 +704,12 @@ contains
     write(U,'(A,4(I0,1X))') '# GLquad: J0 split, n 0-accel, GL-order :: ',&
          & h%j0s(:), gl%nacc, gl%ord
     if(s%piezometer) then
-       write(U,'(A,4('//RFMT//',1X))') '# point obs well r,rD,z,zD :: ',&
+       write(U,'(A,4('//RFMT//',1X))') '# point obs piezometer r,rD,z,zD :: ',&
             &s%r(1),s%rD(1),s%z(1),s%zD(1)
     else
        write(U,'(A,3('//RFMT//',1X),I0)') '# screened obs well r,zTop,zBot,zOrd :: ',&
             & s%r(1), s%zTop, s%zBot, s%zOrd
-       write(U,'(A,2('//RFMT//',1X))') '# screened obs well rW, shape factor :: ',&
+       write(U,'(A,2('//RFMT//',1X))') '# screened obs well rW,shape factor :: ',&
             & s%rwobs, s%sF
     end if
     if(s%model == 4 .or. s%model == 5) then
@@ -705,14 +717,14 @@ contains
        write(U,'(A,'//RFMT//')') '# Malama beta linearization parameter :: ',f%beta
     elseif(s%model == 3) then
        fmt = '(A,I0,    (1X,'//RFMT//'))       '
-       write(fmt(7:10),'(I4.4)') f%MoenchAlphaM
-       write(*,fmt) '# Moench Delayed Yield (alpha):: ',f%MoenchAlphaM,f%MoenchAlpha(:)
+       write(fmt(7:10),'(I4.4)') f%MoenchM
+       write(*,fmt) '# Moench Delayed Yield decay coefficients (alpha):: ',f%MoenchM,f%MoenchAlpha(:)
     elseif(s%model == 6) then
        ! mishra/neuman solution
        write(U,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ak,psia,psik,b1 ::',&
             & f%ac,f%ak,f%psia,f%psik,f%b1
        if (s%MNtype == 2) then
-          write(U,'(A,I0,1X,'//RFMT//')') '# Mishra/Neuman FD order,h ::',&
+          write(U,'(A,I0,1X,'//RFMT//')') '# Mishra/Neuman vadose zone finite-difference order, finite-difference spacing ::',&
                & s%order,f%usL/(s%order-1)
        elseif (s%MNtype == 1) then
           write(U, '(A'//RFMT//')') "# NB: Malama's Mishra/Neuman implementation (1) "//&
@@ -724,14 +736,14 @@ contains
     write(U,'(A,I0)') '# times :: ',s%nt
     write(U,'(A,2('//RFMT//',1X))') '# characteristic length, time :: ',s%Lc,s%Tc
     if (s%dimless) then
-       write (U,'(A,/,A,/,A)') '#','#     t_D          '//&
-            & trim(s%modelDescrip(s%model))//'         t*dh/d(log(t))', &
-            & '#-------------------------------------------------------------'
+       write (U,'(A,/,A,/,A)') '#','#     t_D              '//&
+            & trim(s%modelDescrip(s%model))//'             t*dh/d(log(t))', &
+            & '#---------------------------------------------------------------'
     else
        write(U,'(A,1'//RFMT//')') '# characteristic head ::',s%Hc
-       write (U,'(A,/,A,/,A)') '#','#     t            '//&
-            & trim(s%modelDescrip(s%model))//'         t*dh/d(log(t))', &
-            & '#-------------------------------------------------------------'
+       write (U,'(A,/,A,/,A)') '#','#     t                '//&
+            & trim(s%modelDescrip(s%model))//'             t*dh/d(log(t))', &
+            & '#---------------------------------------------------------------'
     end if
 
   end subroutine write_timeseries_header
@@ -770,9 +782,9 @@ contains
          & w%l, w%d
     write(U,'(A,2('//RFMT//',1X))') '# rw,rc (well/casing radii) :: ',&
          & w%rw, w%rc
-    write(U,'(A,2('//RFMT//',1X))') '# Kr,kappa :: ', f%Kr, f%kappa
+    write(U,'(A,2('//RFMT//',1X))') '# Kr,kappa (Kz/Kr) :: ', f%Kr, f%kappa
     write(U,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
-    write(U,'(A,'//RFMT//')') '# gamma :: ',f%gamma
+    write(U,'(A,'//RFMT//')') '# gamma (dimless skin) :: ',f%gamma
     fmt = '(A,I0,A,    ('//RFMT//',1X))     '
     write(fmt(9:12),'(I4.4)') size(lap%timePar)
     write(U,fmt) '# pumping well time behavior :: ',lap%timeType, &
@@ -795,14 +807,14 @@ contains
        write(U,'(A,'//RFMT//')') '# Malama beta linearization parameter :: ',f%beta
     elseif(s%model == 3) then
        fmt = '(A,I0,    (1X,'//RFMT//'))       '
-       write(fmt(7:10),'(I4.4)') f%MoenchAlphaM
-       write(*,fmt) '# Moench Delayed Yield (alpha):: ',f%MoenchAlphaM,f%MoenchAlpha(:)
+       write(fmt(7:10),'(I4.4)') f%MoenchM
+       write(*,fmt) '# Moench Delayed Yield decay coefficients (alpha):: ',f%MoenchM,f%MoenchAlpha(:)
     elseif(s%model == 6) then
        ! mishra/neuman solution
        write(U,'(A,5('//RFMT//',1X),I0)') '# Mishra/Neuman ac,ak,psia,psik,b1 ::',&
             & f%ac,f%ak,f%psia,f%psik,f%b1
        if (s%MNtype == 2) then
-          write(U,'(A,I0,1X,'//RFMT//')') '# Mishra/Neuman FD order,h ::',&
+          write(U,'(A,I0,1X,'//RFMT//')') '# Mishra/Neuman finite-difference order, finite-difference mesh spacing ::',&
                & s%order,f%usL/(s%order-1)
        elseif (s%MNtype == 1) then
           write(U, '(A'//RFMT//')') "# NB: Malama's Mishra/Neuman implementation (1) '//&
