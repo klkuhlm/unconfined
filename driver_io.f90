@@ -524,7 +524,7 @@ contains
     s%Hc = w%Q/(4*PI*f%Kr*f%b)
 
     ! compute derived or dimensionless properties
-    f%sigma = f%Sy/(f%Ss*f%b) ! this is the inverse of Neuman's (1972 & 1974) "sigma"
+    f%sigma = f%Sy/(f%Ss*f%b) ! this is the inverse of Neuman's (1972 & 1974) and Moench's "sigma"
     f%alphaD = f%kappa/f%sigma
     f%betaD = f%beta/s%Lc
 
@@ -535,7 +535,7 @@ contains
     w%rDw = w%rw/s%Lc
     s%rDwobs = s%rwobs/s%Lc
 
-    f%MoenchGamma(:) = f%MoenchAlpha(:)*s%Tc
+    f%MoenchGamma(:) = f%MoenchAlpha(:)*s%Lc*f%Sy/(f%kappa*f%Kr)
 
     ! dimensionless sorptive numbers
     f%acD = f%ac*s%Lc

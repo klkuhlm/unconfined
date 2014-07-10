@@ -15,4 +15,4 @@
 timedata.dat  9999.9      :: file to read time data from (and default t otherwise)
 spacedata.dat  8.51D+1          :: file to read space data from (and default r otherwise)
 1.467D+2  1.447D+2  2  1.67D-1  1.0       :: relative top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
-cape-cod-F377-037-moench-scr2.out
+cape02-orig.out

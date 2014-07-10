@@ -73,7 +73,7 @@ contains
        if (s%model == 3) then
           mm = f%MoenchAlphaM
           ! Moench model -> just alters alphaD
-          xi(1:np) = xi(:)*mm/sum(1.0/(1.0 + (lap%p .X. 1.0/f%MoenchGamma)),dim=2)
+          xi(1:np) = xi(:)*mm/sum(1.0/(f%kappa*w%rDw**2/f%sigma + (lap%p .X. 1.0/f%MoenchGamma)),dim=2)
        end if
 
        if (s%model == 4) then
@@ -102,6 +102,7 @@ contains
           fp(1:np,1:nz) = mishraNeuman2010(a,s%zD,s,lap%p,f,w)
        case(1)
           ! Malama (finiteness condition @ water table) version 
+          ! but doesn't handle partial penetration or wellbore storage
           fp(1:np,1:nz) = mishraNeumanMalama(a,s%zD,lap%p,f)
        case(2)
           ! finite difference solution of ODE in vadose zone
