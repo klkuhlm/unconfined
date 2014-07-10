@@ -17,20 +17,21 @@ line 1 -------------------------------
 --------------------------------------
 
 1.1) quiet output: integer => 0 means no output, 1 means some, 2 or more is "verbose"
-model choice: integer from 0 to 6 => 
+
+1.2) model choice: integer from 0 to 6 => 
  0 = Theis (confined fully penetrating)
  1 = Hantush (confined partially penetrating)
  2 = Hantush-type with wellbore storage
- 3 = Moench 199? unconfined (like Boulton)
+ 3 = Moench et al. 2001 unconfined (like Boulton)
  4 = Malama 2011 fully penetrating (Neuman 72 with extra beta nonlinearity parameter)
  5 = Malama 2011 partially penetrating (Neuman 74 with " " " ")
- 6 = Mishra/Neuman 2011 (includes vadose zone)
+ 6 = Mishra/Neuman 2011 (includes vadose zone) -- has three implementation strategies (see notes below)
 
-1.2) dimensionless output?: logical => solution is computed in dimensionless space, should results be converted back to dimensional (F), or left in dimensionless format (T)?
+1.3) dimensionless output?: logical => solution is computed in dimensionless space, should results be converted back to dimensional (F), or left in dimensionless format (T)?
 
-1.3) timeseries?: logical => solution is either computed as a timeseries (T, single location through time) or a grid of space locations (F, for making contour map) at a single time
+1.4) timeseries?: logical => solution is either computed as a timeseries (T, single location through time) or a grid of space locations (F, for making contour map) at a single time
 
-1.4) piezometer?: logical => are results at a point or integrated over some vertical range representing a monitoring well screen?  If piezometer (T) the locations are just computed at a point (note: piezometer is faster than a screened monitoring well).
+1.5) piezometer?: logical => are results at a point or integrated over some vertical range representing a monitoring well screen?  If piezometer (T) the locations are just computed at a point (note: piezometer is faster than a screened monitoring well).
 
 line 2 -------------------------------
 2.02D-2      :: Q 
