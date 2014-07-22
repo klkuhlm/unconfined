@@ -86,20 +86,33 @@ benchmarking and conducting a "beauty pagent" between the different
 unconfined models.  I am currently working to include the following 
 datasets:
 
-Moench et al., 2001 (Cape Cod, Massachusets); available from the 
-authors electronically, and in a USGS report.
+Moench et al., 2001 (Cape Cod, Massachusets): a 320-gpm 72-hour
+pumping test in a thick glacial outwash aquifer with many shallow
+piezometers and screened observation wells (significan partial
+penetration effects) the thinned PEST dataset is available from the
+authors electronically, and in a report (USGS Professional Paper 1629
+v2). No recovery data.
 
-Wenzel, 1942 (Grand Island, Nebraska); available form a very old
-USGS report.  I have entered this data into spreadsheet form. The 
-spreadsheets are available for anyone to view on Google docs at:
+Wenzel, 1942 (Grand Island, Nebraska): a 540-gpm 48-hour pumping test
+available from an old report (USGS Water Supply Paper 887).  This test
+also has significant partial penetration effects. I have entered this
+data into spreadsheet form. 36 hours of recovery data available. A
+large number of observation piezometers and a few screened wells (82 +
+pumping well) were monitored. The spreadsheets are available for
+anyone to view on Google docs at:
 
 https://docs.google.com/spreadsheet/ccc?key=0AlJMuEYu7Z-5dGJfdzBibk4zNDB4UG9DN1FpQ0FnX1E&usp=sharing
 
-Bevan, 2002 (Borden, Ontario); obtained electronically from the authors.
+Bevan, 2002 (Borden, Ontario); a 12-gpm 168-hour (week long) test was
+obtained electronically from the authors, published in Michael Bevan's
+MS thesis. The aquifer was relatively thin, compared to the Cape Cod
+and Grand Island tests. Moisture content data and geophysical data
+were collected in the vadose zone before, during, and after
+testing. Five days of recovery data were collected.
 
 I will make all the data available as they are cleaned/prepared
 for use in my inverse modeling exercise.
 
 Kris Kuhlman (klkuhlm _at_ sandia _dot_ gov)
-June, 2014
+July, 2014
 
