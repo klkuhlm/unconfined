@@ -70,10 +70,10 @@ contains
 
     open(unit=19, file=inputFileName, status='old', action='read', iostat=ioerr)
     if(ioerr /= 0) then
-       write(*,*) 'ERROR opening main input file '//trim(inputFileName)//&
+       write(*,'(A)') 'ERROR opening main input file '//trim(inputFileName)//&
             & ' for reading'
        if (inputFileName(1:9) == 'input.dat') then
-          write(*,*) 'specify desired input filename at commandline (input.dat is default if none given)'
+          write(*,'(A)') 'specify input filename at commandline (input.dat default if none given)'
        end if
        stop
     end if
@@ -109,7 +109,7 @@ contains
     read(19,*) w%rw, w%rc
 
     ! dimensionless skin
-    read(19,*) f%gamma
+    read(19,*) f%gammaSkin
 
     ! pumping well time behavior
     read(19,*) lap%timeType
@@ -143,7 +143,7 @@ contains
     backspace(19)
     if (s%model == 3) then
        if (f%MoenchM < 1) then 
-          write(*,*) 'ERROR: number of Moench alphas must be >= 1 for model==3',f%MoenchM
+          write(*,'(A,'//RFMT//')') 'ERROR: number of Moench alphas must be >= 1 for model==3 ',f%MoenchM
           stop 777
        end if
     end if
@@ -214,7 +214,8 @@ contains
        write(*,'(A,'//RFMT//')') 'b (initial aquier sat thickness):: ',f%b
        write(*,'(A,2('//RFMT//',1X))') 'l,d (screen bot&top measured from above):: ', w%l, w%d
        write(*,'(A,2('//RFMT//',1X))') 'rw,rc (well and casing radii):: ', w%rw, w%rc
-       write(*,'(A,3('//RFMT//',1X))') 'Kr,kappa (Kz/Kr),gamma (dimless skin):: ', f%Kr, f%kappa, f%gamma
+       write(*,'(A,3('//RFMT//',1X))') 'Kr,kappa (Kz/Kr),gamma (dimless skin):: ', &
+            & f%Kr, f%kappa, f%gammaSkin
        write(*,'(A,2('//RFMT//',1X))') 'Ss,Sy:: ', f%Ss, f%Sy
        if (s%model == 3) then
           fmt = '(A,I0,    (1X,'//RFMT//'))                  '
@@ -227,58 +228,64 @@ contains
                & '(neg air-entry & sat. pressures):: ', f%ac,f%ak,f%psia,f%psik
           write(*,'(A,I0)') 'Mishra&Neuman type of solution (0=naive,2=FD)::',s%MNtype
           write(*,'(A,'//RFMT//')') 'unsaturated zone thickness:: ',f%usL
-          write(*,'(A,I0,'//RFMT//')') 'vadose zone finite-difference order, finite-difference grid spacing:: ',&
-               & s%order,f%usL/(s%order-1)
+          write(*,'(A,I0,'//RFMT//')') 'vadose zone finite-difference order, finite-difference '//&
+               &'grid spacing:: ', s%order,f%usL/(s%order-1)
        end if
     end if
 
-    if(s%model > 0 .and. any([f%gamma, w%d, w%l] < 0.0)) then
-       write(*,*) 'ERROR: negative geometry parameters:', &
-            &  f%gamma, w%d, w%l
+    if(s%model > 0 .and. any([f%gammaSkin, w%d, w%l] < 0.0)) then
+       write(*,'(A,3('//RFMT//',1X))') 'ERROR: negative geometry parameters (gamma, d, l): ', &
+            &  f%gammaSkin, w%d, w%l
        stop
     end if
 
     if (any([f%b,f%Kr,f%Ss] <= 0.0)) then
-       write(*,*) 'ERROR: zero or negative aquifer parametrs:',[f%b,f%Kr,f%Ss]
+       write(*,'(A,3('//RFMT//',1X))') 'ERROR: zero or negative aquifer parametrs (b, Kr, Ss): ',&
+            & [f%b,f%Kr,f%Ss]
        stop
     end if
 
     if(s%model > 2 .and. any([f%kappa,f%Sy] <= 0.0)) then
-       write(*,*) 'ERROR: zero or negative unconfined aquifer parameters:', &
-            &  [f%kappa,f%Sy]
+       write(*,'(A,2('//RFMT//',1X))') 'ERROR: zero or negative unconfined aquifer '//&
+            &'parameters (kappa, Sy): ', [f%kappa,f%Sy]
        stop
     end if
 
     if (s%model > 0 .and. w%d >= w%l) then
-       write(*,*) 'ERROR: screen top/bottom l must be > d; l=',w%l,' d=',w%d
+       write(*,'(2(A,'//RFMT//'))') 'ERROR: screen top/bottom (l must be > d); l=',w%l,' d=',w%d
+       write(*,'(A)') 'NB: d is distance from water table to top of screen'
+       write(*,'(A)') 'NB: l is distance from water table to bottom of screen'
        stop
     end if
 
     if (s%model == 6) then
        if (any([f%ac,f%ak,f%usL,f%psia,f%psik] < 0.0)) then
-          write(*,*) 'ERROR: ivalid Mishra/Neuman parameters',&
-               & f%ac,f%ak,f%usL,f%psia,f%psik
+          write(*,'(A,5('//RFMT//',1X))') 'ERROR: ivalid Mishra/Neuman parameters '//&
+               &'(a_c, a_k, L, psi_a, psi_k)', f%ac,f%ak,f%usL,f%psia,f%psik
           stop
        end if
-       if (s%order < 3) then
-          write(*,*) 'ERROR: order of Mishra/Neuman finite difference matrix must be >=3',s%order
+       if (s%MNtype == 2 .and. s%order < 3) then
+          write(*,'(A,I0)') 'ERROR: order of Mishra/Neuman finite difference must be >=3: ',s%order
           stop
        end if
 
        if (s%MNtype < 0 .and. s%MNtype > 2) then
-          write(*,*) 'ERROR: invalid choice for Mishra/Neuman solution type '&
-               & //'(naive=0,Malama=1,finite difference=2)',s%MNtype
+          write(*,'(A,I0)') 'ERROR: invalid choice for Mishra/Neuman solution type '&
+               & //'(naive=0, Malama=1, finite difference=2) ',s%MNtype
           stop
-       end if
+       end if       
     end if
 
     if ((s%model == 4 .or. s%model == 5) .and. f%beta < 0.0) then
-       write(*,*) 'ERROR: Malama linearization beta cannot be negative',f%beta
+       write(*,'(A,'//RFMT//')') 'ERROR: Malama linearization beta cannot be negative: ',f%beta
        stop
     end if
 
     if (s%model == 3 .and. any(f%MoenchAlpha(:) < 0.0)) then
-       write(*,*) 'ERROR: Moench alpha parameters cannot be negative',f%MoenchAlpha
+       write(*,'(A)') 'ERROR: Moench alphas cannot be negative:'
+       do i=1,f%MoenchM
+          write(*,'(I0,1X,'//RFMT//')') i,f%MoenchAlpha(i)
+       end do
        stop
     end if
 
@@ -299,14 +306,13 @@ contains
     ! ## checking of numerical parameters #####
 
     if (lap%M < 2) then
-       write(*,*)  'ERROR: deHoog number of Fourier Series terms must be >= 1 M=',lap%M
+       write(*,'(A,I0)')  'ERROR: deHoog number of Fourier Series terms must be >= 1 M=',lap%M
        stop
     end if
 
     if (lap%tol < epsilon(lap%tol)) then
        lap%tol = epsilon(lap%tol)
-       write(*,'(A,'//RFMT//')') 'WARNING: increased INVLAP tolerance to ',&
-            & lap%tol
+       write(*,'(A,'//RFMT//')') 'WARNING: increased INVLAP tolerance to ', lap%tol
     end if
 
     if(ts%k - ts%R < 2) then
@@ -322,8 +328,8 @@ contains
     end if
 
     if(any([h%j0s(:),gl%nacc, ts%k] < 1)) then
-       write(*,*) 'ERROR max/min split, # accelerated terms, ',&
-            & 'and tanh-sinh k must be >= 1:',h%j0s(:),gl%nacc, ts%k
+       write(*,'(A,I0,1X,I0,2(A,I0))') 'ERROR max/min split, # accelerated terms, ',&
+            & 'and tanh-sinh k must be >= 1: j0s=',h%j0s(:),' nacc=',gl%nacc,' k=',ts%k
        stop
     end if
 
@@ -350,29 +356,29 @@ contains
 
        ! checking only related to timeseries (observation well parameters)
        if (s%zTop < s%zBot) then
-          write(*,*) 'ERROR: for screened observation wells top of monitoring well'// &
-               &'screen must be at or above bottom',s%zTop,s%zBot
+          write(*,'(2(A,'//RFMT//'))') 'ERROR: for screened observation wells top of '//&
+               &'monitoring well screen must be at or above bottom: top=',s%zTop,' bot=',s%zBot
           stop 666
        end if
 
        if (s%zTop > f%b .or. s%zBot < 0.0) then
-          write(*,*) 'ERROR: top of monitoring well screen must be ',&
-               & 'above bottom and both between 0 and b',s%zTop,s%zBot,f%b
+          write(*,'(3(A,'//RFMT//'))') 'ERROR: top of monitoring well screen must be ',&
+               & 'above bottom and both between 0 and b: top=',s%zTop,' bot=',s%zBot,' b=',f%b
           stop 667
        end if
 
        if (.not. s%piezometer .and. s%zOrd < 1) then
-          write(*,*) 'ERROR: # of quadrature points at ',&
-               & 'monitoring location must be > 0', s%zOrd
+          write(*,'(A,I0)') 'ERROR: # of quadrature points at ',&
+               & 'monitoring location must be > 0: ', s%zOrd
           stop
        end if
 
        if (s%rwobs <= 0.0) then
-          write(*,*) 'ERROR: monitoring well radius must be >0',s%rwobs
+          write(*,'(A,'//RFMT//')') 'ERROR: monitoring well radius must be >0: ',s%rwobs
           stop 668
        end if
        if (s%sF <= 0.0) then
-          write(*,*) 'ERROR: monitoring well shape factor must be >0',s%sF
+          write(*,'(A,'//RFMT//')') 'ERROR: monitoring well shape factor must be >0: ',s%sF
           stop 669
        end if
 
@@ -383,7 +389,7 @@ contains
        if (rval > w%rw) then
           s%r(1) = rval
        else
-          write(*,*) 'ERROR: r must be > rw',rval
+          write(*,'(2(A,'//RFMT//'))') 'ERROR: r must be > rw: r=',s%r(1),' rw=',w%rw
           stop
        end if
 
@@ -400,7 +406,7 @@ contains
        open(unit=22, file=trim(timeFileName), status='old', &
             & action='read',iostat=ioerr)
        if(ioerr /= 0) then
-          write(*,*) 'ERROR opening time input file '// &
+          write(*,'(A)') 'ERROR opening time input file '// &
                & trim(timeFileName)//' for reading'
        end if
 
@@ -428,14 +434,17 @@ contains
           do i=1,numtfile
              read(22,*,iostat=ioerr) s%t(i)
              if(ioerr /= 0) then
-                write(*,*) 'ERROR reading time ',i,&
+                write(*,'(A,I0,A)') 'ERROR reading time ',i,&
                      & ' from input file '//trim(timeFileName)
                 stop
              end if
           end do
           close(22)
           if(any(s%t < 0.0)) then
-             write(*,*) 'ERROR t must be > 0:',s%t
+             write(*,'(A)') 'ERROR all times must be > 0:'
+             do i=1,numtfile
+                write(*,'(I0,1X,'//RFMT//')') i,s%t(i)
+             end do
              stop
           end if
        end if
@@ -449,7 +458,7 @@ contains
        if (tval >= 0.0) then
           s%t(1) = tval
        else
-          write(*,*) 'ERROR: t must be >0',tval
+          write(*,'(A,'//RFMT//')') 'ERROR: t must be >0: ',tval
        end if
 
        ! piezometer doesn't mean anything
@@ -458,7 +467,7 @@ contains
        open(unit=23, file=trim(spaceFileName), status='old', &
             & action='read',iostat=ioerr)
        if(ioerr /= 0) then
-          write(*,*) 'ERROR opening space input file '// &
+          write(*,'(A)') 'ERROR opening space input file '// &
                & trim(spaceFileName)//' for reading'
        end if
 
@@ -483,7 +492,7 @@ contains
        if (computeSpace) then
           s%r = linspace(minR,maxR,numRComp)
           if(minZ < 0.0 .or. maxZ > f%b) then
-             write(*,*) 'ERROR z must be in range 0<=>b',minZ,maxZ
+             write(*,'(2(A,'//RFMT//'))') 'ERROR z must be in range 0<=>b: minZ=',minZ,' maxZ=',maxZ
              stop
           end if
           s%z = linspace(minZ,maxZ,numZcomp)
@@ -491,21 +500,21 @@ contains
           ! radial distances listed on one line
           read(23,*,iostat=ioerr) s%r(1:s%nr)
           if(ioerr /= 0) then
-             write(*,*) 'ERROR reading radial distance ',&
+             write(*,'(A)') 'ERROR reading radial distance ',&
                   & 'from input file '//trim(spaceFileName)
              stop
           elseif(any(s%r < w%rw)) then
-             write(*,*) 'ERROR r must be >= rw',s%r
+             write(*,'(2(A,'//RFMT//'))') 'ERROR r must be >= rw: r=',s%r,' rw=',w%rw
              stop
           end if
           ! vertical depths listed on one line
           read(23,*,iostat=ioerr) s%z(1:s%nz)
           if(ioerr /= 0) then
-             write(*,*) 'ERROR reading vertical depths ',&
+             write(*,'(A)') 'ERROR reading vertical depths ',&
                   & 'from input file '//trim(spaceFileName)
              stop
           elseif(any(s%z < 0.0) .or. any(s%z > f%b)) then
-             write(*,*) 'ERROR z must be in range 0<=>b',s%z
+             write(*,'(2(A,'//RFMT//'))') 'ERROR z must be in range 0<=>b: z=',s%z,' b=',f%b
              stop
           end if
        end if
@@ -587,18 +596,18 @@ contains
        write(*,'(3(A,'//RFMT//'))') 'b_D:',w%bD,' l_D:',w%lD,' d_D:',w%dD
        fmt = '(A,I0,1X,     ('//SFMT//',1X))          '
        write(fmt(10:14),'(I5.5)') s%nz
-       write(*,fmt) 'z  : ',s%nz,s%z
-       write(*,fmt) 'z_D: ',s%nz,s%zD
+       write(*,fmt) 'z   : ',s%nz,s%z
+       write(*,fmt) 'z_D : ',s%nz,s%zD
        fmt = '(A,     (I0,1X))                       '
        write(fmt(4:8),'(I5.5)') s%nz
        write(*,fmt) 'zLay: ',s%zLay
        fmt = '(A,I0,1X,     ('//SFMT//',1X))          '
        write(fmt(10:14),'(I5.5)') s%nr
-       write(*,fmt) 'r  : ',s%nr,s%r
-       write(*,fmt) 'r_D: ',s%nr,s%rD
+       write(*,fmt) 'r   : ',s%nr,s%r
+       write(*,fmt) 'r_D : ',s%nr,s%rD
        write(fmt(10:14),'(I5.5)') s%nt
-       write(*,fmt) 't  : ',s%nt,s%t
-       write(*,fmt) 't_D: ',s%nt,s%tD
+       write(*,fmt) 't   : ',s%nt,s%t
+       write(*,fmt) 't_D : ',s%nt,s%tD
        write(*,'(A,2('//RFMT//',1X),I0)') 'monitoring screen '//&
             & 'zTop, zBot ,zOrd: ', s%zTop, s%zBot, s%zOrd
        write(*,'(A,2('//RFMT//',1X))') 'monitoring well rW and shape factor: ', &
@@ -638,12 +647,12 @@ contains
     end do
 
     if (s%quiet > 2) then
-       write(*,*) 'zeros of Bessel functions, needed for numerical Hankel transform inversion'
-       write(*,*) 'order, x, J0(x)'
+       write(*,'(A)') 'zeros of Bessel functions, needed for numerical Hankel transform inversion'
+       write(*,'(A)') 'order, x, J0(x)'
        do i=1,terms
-          write(*,*) i,h%j0z(i),bessel_j0(h%j0z(i)) ! print full accuracy
+          write(*,'(I0,1X,2(ES22.14,1X))') i,h%j0z(i),bessel_j0(h%j0z(i)) 
        end do
-       write(*,*) 'end of Bessel function zeros'
+       write(*,'(A)') 'end of Bessel function zeros'
     end if
 
     ! split between finite/infinite part should be
@@ -692,7 +701,7 @@ contains
          & w%rw, w%rc
     write(U,'(A,2('//RFMT//',1X))') '# Kr,kappa (kappa=Kz/Kr) :: ', f%Kr, f%kappa
     write(U,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
-    write(U,'(A,'//RFMT//')') '# gamma (dimensionless skin) :: ',f%gamma
+    write(U,'(A,'//RFMT//')') '# gamma (dimensionless skin) :: ',f%gammaSkin
     fmt = '(A,I0,A,    ('//RFMT//',1X))     '
     write(fmt(9:12),'(I4.4)') size(lap%timePar)
     write(U,fmt) '# pumping well time behavior :: ',lap%timeType, &
@@ -784,7 +793,7 @@ contains
          & w%rw, w%rc
     write(U,'(A,2('//RFMT//',1X))') '# Kr,kappa (Kz/Kr) :: ', f%Kr, f%kappa
     write(U,'(A,2('//RFMT//',1X))') '# Ss,Sy :: ',f%Ss, f%Sy
-    write(U,'(A,'//RFMT//')') '# gamma (dimless skin) :: ',f%gamma
+    write(U,'(A,'//RFMT//')') '# gamma (dimless skin) :: ',f%gammaSkin
     fmt = '(A,I0,A,    ('//RFMT//',1X))     '
     write(fmt(9:12),'(I4.4)') size(lap%timePar)
     write(U,fmt) '# pumping well time behavior :: ',lap%timeType, &

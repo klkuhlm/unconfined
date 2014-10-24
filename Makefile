@@ -23,11 +23,11 @@
 ##################################################
 # flags / settings for gfortran >= 4.6 compiler
 
-DEBUG = -O0 -g -Wall -Wextra -fcheck=all -fno-realloc-lhs -std=f2008 -fall-intrinsics
+DEBUG = -O1 -g -Wall -Wextra -fcheck=all -fno-realloc-lhs -std=f2008 -fall-intrinsics
 OMP = -fopenmp
 PERF = -Ofast -flto -mtune=native
 ##DEFAULTS = -fdefault-real-8 -fdefault-integer-8
-F90 = gfortran
+F90 = ~/local/bin/gfortran
 CPP = -cpp
 FREE = -free
 PERFLDFLAGS = $(PERF)

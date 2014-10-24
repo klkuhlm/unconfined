@@ -148,7 +148,7 @@ module types
      real(DP) :: kappa  = -999.  ! Kz/Kr ratio
      real(DP) :: Ss = -999. ! specific storage
      real(DP) :: Sy = -999. ! specific yield
-     real(DP) :: gamma = -999.  ! dimensionless skin (1=no skin)
+     real(DP) :: gammaSkin = -999.  ! dimensionless skin (1=no skin)
      real(DP) :: usL = -999. ! thickness of unsaturated zone
      ! Mishra & Neuman unsaturated parameters
      ! moisture capacity & hydraulic conductivity sorptive numbers (1/length)

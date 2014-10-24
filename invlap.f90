@@ -174,7 +174,7 @@ contains
   ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   subroutine stehfest_salzer_weights(lap)
-    use constants, only : EP, DP 
+    use constants, only : EP 
     use utility, only : fac
     use types, only : invLaplace
     
@@ -209,7 +209,7 @@ contains
   end subroutine stehfest_salzer_weights
 
   function stehfest_pvalues(t,lap) result(p)
-    use constants, only : EP, DP, LN2
+    use constants, only : DP, LN2
     use types, only : invLaplace
 
     real(DP), intent(in) :: t
