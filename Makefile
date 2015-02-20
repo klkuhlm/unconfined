@@ -24,14 +24,25 @@
 # flags / settings for gfortran >= 4.6 compiler
 
 DEBUG = -O1 -g -Wall -Wextra -fcheck=all -fno-realloc-lhs -std=f2008 -fall-intrinsics
+
+# for MS-Windows comment out the following line, since OpenMP doesn't typically work with
+# minGW. I think it might work with cygwin, though.
 OMP = -fopenmp
-PERF = -Ofast -flto -mtune=native
-##DEFAULTS = -fdefault-real-8 -fdefault-integer-8
-F90 = ~/local/bin/gfortran
+
+PERF = -O3 -march=native -static
+
+# either put gfortran in your PATH variable, or specify the path here
+F90 = gfortran
+
+# these are different if using Intel Fortran compiler, etc. Should work for gfortran
 CPP = -cpp
 FREE = -free
-PERFLDFLAGS = $(PERF)
+
 ##################################################
+# user typically shouldn't have to ever modify anything below this point
+##################################################
+
+PERFLDFLAGS = $(PERF)
 
 EXTERNAL = cbessel.o
 HILEV = time.o laplace_hankel_solutions.o driver_io.o integration.o
@@ -49,7 +60,7 @@ DEBUGOUT = debug_$(OUT)
 
 LD = $(F90) -fbacktrace
 
-# can't normally link statically when using OpenMP
+# can't normally link statically when using OpenMP (Linux/MacOS only)
 # following line is an "unsupported" workaround
 #LD += -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
 

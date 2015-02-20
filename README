@@ -23,11 +23,11 @@ http://dx.doi.org/10.1029/2010WR010177
 NB: The Mishra & Neuman solutions given in the WRR papers are somewhat
 ill-behaved.  My code implements them in three different ways.
 
-1a) One approach to solve M/N follows the Malama (2014) simplified
-  formulation -- replacing the no-flow boundary condition at the land
-  surface with a "finiteness" boundary condition.  This solution has
-  only been derived so far for the fully penetrating no wellbore storage
-  case.
+1a) One approach to solve M/N follows the Malama (2014)
+  http://dx.doi.org/10.1002/2013WR014909 simplified formulation --
+  replacing the no-flow boundary condition at the land surface with a
+  "finiteness" boundary condition.  This solution has only been
+  derived so far for the fully penetrating no wellbore storage case.
 
 1b) A second approach to solve M/N discritizes the vadose zone using
   finite differences (in Laplace-Hankel space).  This approach works and
@@ -71,12 +71,18 @@ typing:
 
 make
 
+An unoptimized debugging version (produces some warnings that can be
+safely ignored) can be compiled via:
+
+make debug_driver
+
 On MS-Windows, you will need the mingw compilation environment (OpenMP
 doesn't work under mingw, though -- so single thread only) or the
 Intel Fortran compiler (which works and provides OpenMP as well).  I
-have recently compiled it (Dec 2013) with the free mingw toolchain,
+have recently compiled it (Feb 2015) with the free mingw toolchain,
 and can either provide assistance setting this up, or provide you with
-a binary.
+a binary. There are a few settings in the makefile that must be changed
+to get it to compile using mingw (see comments there)
 
 Data
 ------------------------------------------
@@ -114,5 +120,5 @@ I will make all the data available as they are cleaned/prepared
 for use in my inverse modeling exercise.
 
 Kris Kuhlman (klkuhlm _at_ sandia _dot_ gov)
-July, 2014
+Feb, 2015
 

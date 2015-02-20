@@ -38,6 +38,8 @@ line 2 -------------------------------
 --------------------------------------
 
 2.1) Q: float => volumetric pumping rate [L^3/T]
+note: 1 gallons/minute -> 6.30902E-5 M^3/sec 
+      1 gallons/minute -> 2.22801E-3 ft^3/sec
 
 line 3 -------------------------------
 3.54D-1 7.76D-2  :: l, d 
@@ -47,6 +49,8 @@ line 3 -------------------------------
 
 3.2) d: float => depth [L] from water table to top of well screen (always between 0 and b, and always less than l)
 
+note: these parameters only used in partial-penetration solutions -- they are not used in Theis, Neuman72, and M/N using finiteness simplification
+
 line 4 -------------------------------
 2.54D-2    2.54D-2   :: rw, rc
 --------------------------------------
@@ -55,11 +59,15 @@ line 4 -------------------------------
 
 4.2) rc: float => radius [L] of pumping well tubing at water level (used in wellbore storage)
 
+note: these parameters only used in wellbore-storage solutions (currently only the "Hantush w/ storage" solution) -- they are not used in Theis, Neuman72/74,  Malama, Moench, and Mishra/Neuman
+
 line 5 -------------------------------
 1.0D+0   :: gamma 
 --------------------------------------
 
 5.1) gamma: float => dimensionless wellbore skin factor (1.0 means no skin; parameter associated with wellbore storage)
+
+note: this parameter is not used in any solution currently (traditionally goes in Moench solution, but implemented differently here)
 
 line 6 -------------------------------
 001  0.0D+0  1.0D+0  :: pumping well time behavior and two parameters [T] 
@@ -132,11 +140,11 @@ Mishra/Neuman solution parameters
 
 11.6)  MNtype: integer => type of M/N solution (2 is the best choice for now)
 
-0 = naive implementation of M/N from equations in paper (often doesn't work at intermediate time)
-1 = Malama simplification (fully penetrating case only)
-2 = finite difference solution of ODE in vadoes zone (works pretty well!)
+0 = naive implementation of M/N from equations in paper (often doesn't work at intermediate time due to severe cancellation in complex bessel function routines for fractional order)
+1 = Malama simplification (simpler solution without bessel functions of fractional order, but posed for fully penetrating case only)
+2 = finite difference solution of ODE in vadoes zone (works pretty well, but is slower and depends on mesh refinement -- more nodes is more accurate, but runs slower)
 
-11.7) MNorder: integer => number of grid nodes representing vadose zone when MNtype=2 (10 works ok, unless you have a really huge vadose zone; L>>b)
+11.7) MNorder: integer => number of grid nodes representing vadose zone when MNtype=2 (10 seems to work ok, unless you have a really huge vadose zone; L>>b [think about how much of the vadose zone is contributing to flow during the pumping test, it is probably much less than the total vadose zone in the physical world -- this was the motivation for the finiteness solution of Malama (2014)])
 
 line 12 ------------------------------
 10 1.0D-7  1.0D-8           :: deHoog invlap;  M,alpha,tol

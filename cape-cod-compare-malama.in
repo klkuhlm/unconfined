@@ -1,0 +1,18 @@
+2  5  F  T  T           		    :: quiet?, model, dimensionless?, timeseries?, piezometer? 
+40.0D-3                 		    :: Q (volumetric pumping rate) [L^3/T]
+6.2D+0  2.55D+0         		    :: l,d (depth to bottom/top of screened interval)
+0.065D+0 0.065D+0       		    :: rw, rc (radius of well casing and tubing)
+1.0D+0                  		    :: gamma (dimensionless wellbore skin)
+1  0.0D+0  1.0D+0       		    :: pumping well time behavior and parameters
+6.2                     		    :: b (initial saturated thickness)
+4.10D-3 4.24D-1         		    :: Kr,kappa (horizontal K [L/T] and ratio Kz/Kr)
+3.76D-5  2.5D-1         		    :: Ss,Sy (specific storage [1/L] and specific yield)
+0.0D+0  3  2.78D-4 1.68D-2 4.16D-1          :: Malama linearization parameter, # Moench alphas, list of Moench alphas
+2.9D0  3.7D-1   2.0D0  2.2D-1   2.0D1  2 5  :: Mishra/Neuman 2010; a_c,a_k,  psi_a,psi_k,  L, M/N type (naive=0, malama=1, FD=2), FD order
+26  1.0D-11  1.0D-12      		    :: deHoog invlap;  M,alpha,tol
+6  4                      		    :: tanh-sinh quad;   2^k-1 order, # extrapollation steps
+1  1  10  50              		    :: G-L quad;  min/max zero split, # zeros to integrate, # abcissa/zero
+timedata.dat    9999.9                      :: file to read time data from (and default t otherwise)
+spacedata.dat  1.51D0                       :: file to read space data from (and default r otherwise)
+5.26 0.0  5  1.67D-1  1.0                   :: relative top obs well screen OR piezometer loc, bottom screen, quadrature order across screen (not for piezometer)
+cape02-compare.out
