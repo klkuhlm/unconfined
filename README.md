@@ -1,24 +1,23 @@
-This is the modern Fortran (2003/2008) implementation of my well-test
-simulator.  It performs numerical Laplace-Hankel inversion,
-implementing the the main unconfined approaches still in use today.
-The program is free software (MIT license), which can essentially be
-used, modified, or redistributed for any purpose, given the license is
-left intact.
+This is a modern Fortran (2003/2008) well-test simulator.  It performs
+numerical Laplace-Hankel inversion, implementing the the main
+unconfined approaches still in use today.  The program is free
+software (MIT license), which can essentially be used, modified, or
+redistributed for any purpose, given the license is left intact.
 
 This code is a command-line utility, which reads a text input file and
 writes a text datafile, formatted for simple plotting using available
-software obtained elsewhere (e.g., MS-Excel, Matplotlib, or gnuplot).
-The code is accurate and relatively fast, using OpenMP to execute in
-parallel on a multi-processor computer.
+software obtained elsewhere (e.g., MS-Excel, python matplotlib, or
+gnuplot).  The code is accurate and relatively fast, using OpenMP to
+execute in parallel on a multi-processor Linux or Mac computer (a
+recent Intel compiler is needed to create parallel executables for
+MS-Windows).
 
 The input parameters are explained in input-explanation.txt
 
 The solutions implemented include:
 ------------------------------------------
 1) Mishra & Neuman (2010,2011) : Unsaturated/saturated flow to a partially
-penetrating well.
-http://dx.doi.org/10.1029/2009WR008899
-http://dx.doi.org/10.1029/2010WR010177
+penetrating well. http://dx.doi.org/10.1029/2009WR008899  http://dx.doi.org/10.1029/2010WR010177
 
 NB: The Mishra & Neuman solutions given in the WRR papers are somewhat
 ill-behaved.  My code implements them in three different ways.
@@ -42,20 +41,15 @@ ill-behaved.  My code implements them in three different ways.
 
 2) Malama (2011) : Alternative linearization of the
 moving water table boundary condition.  Basically an improvement on
-Neuman (1974).
-http://dx.doi.org/10.1016/j.jhydrol.2010.11.007
+Neuman (1974). http://dx.doi.org/10.1016/j.jhydrol.2010.11.007
 
 3) Moench (2001,1995) : The hybrid water table boundary condition of
 Moench (1995), but including the multiple delayed yield (α)
 coefficients, as used in the large Cape Cod, Massachusetts pumping
-test in USGS Water Supply Paper 1629.
-http://dx.doi.org/10.1111/j.1745-6584.1995.tb00293.x
-http://pubs.usgs.gov/pp/pp1629/pdf/pp1629ver2.pdf
+test in USGS Water Supply Paper 1629. http://dx.doi.org/10.1111/j.1745-6584.1995.tb00293.x  http://pubs.usgs.gov/pp/pp1629/pdf/pp1629ver2.pdf
 
 4) Neuman (1974,1972) : The standard moving water table solution used
-by most hydrologists for well-test interpretation.
-http://dx.doi.org/10.1029/WR008i004p01031
-http://dx.doi.org/10.1029/WR010i002p00303
+by most hydrologists for well-test interpretation. http://dx.doi.org/10.1029/WR008i004p01031  http://dx.doi.org/10.1029/WR010i002p00303
 
 5) Hantush (1961) : The confined solution which includes the effects
 of partial penetration, but using a three-layer approach of Malama
