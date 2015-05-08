@@ -29,7 +29,7 @@ DEBUG = -O1 -g -Wall -Wextra -fcheck=all -fno-realloc-lhs -std=f2008 -fall-intri
 # minGW. I think it might work with cygwin, though.
 OMP = -fopenmp
 
-PERF = -O3 -march=native -static
+PERF = -O3 -march=native #-static
 
 # either put gfortran in your PATH variable, or specify the path here
 F90 = gfortran
