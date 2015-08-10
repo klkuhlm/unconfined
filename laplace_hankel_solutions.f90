@@ -1,5 +1,5 @@
 !
-! Copyright (c) 2012-2014 Kristopher L. Kuhlman (klkuhlm at sandia dot gov)
+! Copyright (c) 2012-2015 Kristopher L. Kuhlman (klkuhlm at sandia dot gov)
 !
 ! Permission is hereby granted, free of charge, to any person obtaining a copy
 ! of this software and associated documentation files (the "Software"), to deal
@@ -327,7 +327,7 @@ contains
     real(QP) :: nuep, B2 !, nv
     complex(QP), dimension(size(p)) :: phiep
 
-    real(DP), dimension(0:3) :: beta
+    real(QP), dimension(0:3) :: beta
     complex(QP) :: arg1
     complex(QP), dimension(size(p)) :: arg2, B1, delta1, delta2
     complex(QP), dimension(size(p),2,2) :: aa
@@ -354,8 +354,8 @@ contains
     B2 = (a**2)/f%kappa
 
     ! compute v1
-    phiep(1:np) = (0.0_QP, 1.0_QP)*sqrt(4.0*B1/(beta(1)**2))*exp(0.5_QP*beta(1)*f%usLD)
-    nuep = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
+    phiep(1:np) = (0.0_QP, 1.0_QP)*sqrt(4.0_QP*B1/(beta(1)**2))*exp(0.5_QP*beta(1)*f%usLD)
+    nuep = sqrt((beta(3)**2 + 4.0_QP*B2)/beta(1)**2)
 
     do i= 1,np
        J(i,1) = arb_J(nuep, phiep(i))
@@ -380,7 +380,7 @@ contains
 998 format(5(A,2('(',ES12.3E4,',',ES12.3E4,')')))
 
     ! compute v2
-    phiep(1:np) = (0.0_QP, 1.0_QP)*sqrt(4.0*B1/beta(1)**2)
+    phiep(1:np) = (0.0_QP, 1.0_QP)*sqrt(4.0_QP*B1/beta(1)**2)
 
     do i= 1,np
        J(i,1) = arb_J(nuep, phiep(i))
