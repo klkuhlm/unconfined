@@ -288,11 +288,30 @@ contains
   end function hantushstorage
 
   function mishraNeuman2010(a,zD,s,p,f,w) result(sD)
-    use constants, only : DP, EP, EYE
+    use constants, only : DP, EP, QP 
     use types, only : well, formation, solution
     use utility, only : operator(.X.)
-    use cbessel, only : cbesj,cbesy ! Amos routine
     implicit none
+    
+    ! https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fC_005fBINDING.html#ISO_005fC_005fBINDING
+
+    interface
+       function arb_J(nu,z) bind(c,name="arb_J") result(J)
+         use, intrinsic :: iso_c_binding, only : c_float128_complex, c_float128
+         complex(c_float128_complex), intent(in), value :: z
+         real(c_float128), intent(in), value, :: nu
+         complex(c_float128_complex) :: J
+       end function arb_J
+    end interface
+
+    interface
+       function arb_Y(nu,z) bind(c,name="arb_Y") result(Y)
+         use, intrinsic :: iso_c_binding, only : c_float128_complex, c_float128
+         complex(c_float128_complex), intent(in), value :: z
+         real(c_float128), intent(in), value, :: nu
+         complex(c_float128_complex) :: Y
+       end function arb_Y
+    end interface
 
     real(EP), intent(in) :: a
     real(DP), dimension(:), intent(in) :: zD
@@ -305,24 +324,17 @@ contains
     complex(EP), dimension(size(p),size(zD)+1) :: sH
     integer ::  np, nz
 
-    real(EP) :: nuep, B2 !, nv
-    complex(EP), dimension(size(p)) :: phiep
+    real(QP) :: nuep, B2 !, nv
+    complex(QP), dimension(size(p)) :: phiep
 
     real(DP), dimension(0:3) :: beta
-    complex(EP) :: arg1
-    complex(EP), dimension(size(p)) :: arg2, B1, delta1, delta2
-    complex(EP), dimension(size(p),2,2) :: aa
-    complex(EP), dimension(size(p)) :: eta
-    complex(EP), dimension(size(p),2) :: J,Y
+    complex(QP) :: arg1
+    complex(QP), dimension(size(p)) :: arg2, B1, delta1, delta2
+    complex(QP), dimension(size(p),2,2) :: aa
+    complex(QP), dimension(size(p)) :: eta
+    complex(QP), dimension(size(p),2) :: J,Y
 
     integer, parameter :: NPRINT = 2
-
-    ! size integer expected by BF library
-    integer(4), parameter :: kode = 2, num = 2
-    integer(4) :: nzero, ierr
-    complex(DP), dimension(size(p)) :: phi
-    complex(DP), dimension(2) :: tmp
-    real(DP) :: nu
     integer :: i
 
     intrinsic :: isnan
@@ -342,33 +354,19 @@ contains
     B2 = (a**2)/f%kappa
 
     ! compute v1
-    phiep(1:np) = EYE*sqrt(4.0*B1/(beta(1)**2))*exp(0.5_DP*beta(1)*f%usLD)
+    phiep(1:np) = (0.0_QP, 1.0_QP)*sqrt(4.0*B1/(beta(1)**2))*exp(0.5_QP*beta(1)*f%usLD)
     nuep = sqrt((beta(3)**2 + 4.0*B2)/beta(1)**2)
 
-    phi(1:np) = cmplx(phiep(1:np),kind=DP)
-    nu = real(nuep,kind=DP)
-
     do i= 1,np
-       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-            & nz=nzero,ierr=ierr)
-       if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
-          print *, 'ERROR: CBESJ (zD=LD) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero
-       else
-          J(i,1:2) = tmp(1:2)
-       end if
-       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-            &nz=nzero,ierr=ierr)
-       if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
-          print *, 'ERROR: CBESY (zD=LD) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero
-       else
-          Y(i,1:2) = tmp(1:2)
-       end if
+       J(i,1) = arb_J(nuep, phiep(i))
+       J(i,2) = arb_J(nuep + 1.0_QP, phiep(i))
+
+       Y(i,1) = arb_Y(nuep, phiep(i))
+       Y(i,2) = arb_Y(nuep + 1.0_QP, phiep(i))
     end do
 
     ! compute v3
-    arg1 = real(beta(3),EP) + nuep*beta(1)
+    arg1 = real(beta(3),QP) + nuep*beta(1)
     arg2(1:np) = beta(1)*phiep(1:np)
 
     aa(1:np,1,1) = arg1*J(:,1) - arg2(:)*J(:,2)
@@ -382,27 +380,14 @@ contains
 998 format(5(A,2('(',ES12.3E4,',',ES12.3E4,')')))
 
     ! compute v2
-    phiep(1:np) = EYE*sqrt(4.0*B1/beta(1)**2)
-    phi(1:np) = cmplx(phiep,kind=DP)
+    phiep(1:np) = (0.0_QP, 1.0_QP)*sqrt(4.0*B1/beta(1)**2)
 
     do i= 1,np
-       call cbesj(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-            &nz=nzero,ierr=ierr)
-       if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
-          print *, 'ERROR: CBESJ (zD=0) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero
-       else
-          J(i,1:2) = tmp(1:2)
-       end if
+       J(i,1) = arb_J(nuep, phiep(i))
+       J(i,2) = arb_J(nuep + 1.0_QP, phiep(i))
 
-       call cbesy(z=phi(i),fnu=nu,kode=kode,n=num,cy=tmp(1:2),&
-            &nz=nzero,ierr=ierr)
-       if (ierr > 0  .and. ierr /= 3 .and. s%quiet > 1) then
-          print *, 'ERROR: CBESY (zD=0) z=',phi(i),' nu=',nu,&
-               &' i,ierr,nz:',i,ierr,nzero
-       else
-          Y(i,1:2) = tmp(1:2)
-       end if
+       Y(i,1) = arb_Y(nuep, phiep(i))
+       Y(i,2) = arb_Y(nuep + 1.0_QP, phiep(i))
     end do
 
     arg2(1:np) = beta(1)*phiep(1:np)
