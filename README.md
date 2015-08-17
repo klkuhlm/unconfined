@@ -23,7 +23,7 @@ The solutions implemented include:
    code implements them in three different ways.
 
   1. One approach to solve M/N follows the Malama (2014)
-  http://dx.doi.org/10.1002/2013WR014909 simplified formulation --
+  http://dx.doi.org/10.1002/2013WR014909 simplified formulation -
   replacing the no-flow boundary condition at the land surface with a
   "finiteness" boundary condition.  This solution has only been
   derived so far for the fully penetrating no wellbore storage case.
@@ -39,11 +39,13 @@ The solutions implemented include:
   combinations of parameters, and is often suffers from severe
   cancellation in the transition region, between early and late time.
   
-  I now compute the J and Y Bessel functions of fractional order
-  needed for this solution at quad-precision accuracy using arb
-  (http://fredrikj.net/arb/) -- an arbitrary precision special
-  function library written in C. This is a significant new dependency,
-  since it requires the flint, mpfr, and gmp libraries.
+  I now compute the J and Y Bessel functions of complex argument and
+  fractional order needed for this solution at quad-precision accuracy
+  using arb (http://fredrikj.net/arb/) - an arbitrary precision
+  special function library written in C. This is a significant new
+  dependency, since it requires the flint, mpfr, and gmp
+  libraries. These Bessel functions were previously computed using the
+  Amos libraries, which only are double precision.
 
 2. Malama (2011) : Alternative linearization of the moving water table
 boundary condition.  Basically an improvement on Neuman
@@ -81,7 +83,7 @@ safely ignored) can be compiled via:
 make debug_driver
 
 On MS-Windows, you will need the mingw compilation environment (OpenMP
-doesn't work under mingw, though -- so single thread only) or the
+doesn't work under mingw, though - so single thread only) or the
 Intel Fortran compiler (which works and provides OpenMP as well).  I
 have recently compiled it (Feb 2015) with the free mingw toolchain,
 and can either provide assistance setting this up, or provide you with
