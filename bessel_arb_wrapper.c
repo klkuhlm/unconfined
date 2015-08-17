@@ -13,9 +13,11 @@ void arf_set_float128(arf_t res, __float128 x)
 
   // scale results, in case quad-precision value has exponent
   // larger than can be handled by doubles used in conversion
-  
-  //int e;
-  //x = frexpq(x, &e);
+  fmpz_t ef;
+  int ei;
+  long el;
+  x = frexpq(x, &ei);
+  el = (long)ei;
   
   d1 = x;
   d2 = (x - d1);
@@ -29,9 +31,12 @@ void arf_set_float128(arf_t res, __float128 x)
   arf_add(res, res, t, ARF_PREC_EXACT, ARF_RND_DOWN);
   arf_clear(t);
   
-  // not sure how to apply the exponent from frexpq down here
-  // it seems I need to use : arf_set_fmpz_2exp(arf_t y, const fmpz_t m, const fmpz_t e)
-  // but not sure how to get arf and int into fmpz_t form for this.
+  fmpz_init(ef);
+  fmpz_set_si(ef, el);
+  arf_mul_2exp_fmpz(res, res, ef);
+
+  fmpz_clear(ef);
+  
 }
 
 __float128 arf_get_float128(const arf_t x)
@@ -41,8 +46,7 @@ __float128 arf_get_float128(const arf_t x)
   double d1, d2, d3;
   __float128 res;
   
-  // need to do same frexpq scaling (in reverse),
-  // once it is figured out above.
+  // need to do same frexpq scaling (but on arf_t type -- not sure which function to use)
   
   arf_init(t1);
   arf_init(t2);
@@ -62,6 +66,8 @@ __float128 arf_get_float128(const arf_t x)
   arf_clear(t1);
   arf_clear(t2);
   arf_clear(t3);
+
+  // perform an ldexpq here to apply exponent to float128.
   
   return res;
 }

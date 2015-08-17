@@ -290,26 +290,26 @@ contains
   function mishraNeuman2010(a,zD,s,p,f,w) result(sD)
     use constants, only : DP, EP, QP 
     use types, only : well, formation, solution
-    use utility, only : operator(.X.)
+    !!use utility, only : operator(.X.)
     implicit none
     
     ! https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fC_005fBINDING.html#ISO_005fC_005fBINDING
 
     interface
        function arb_J(nu,z) bind(c,name="arb_J") result(J)
-         use, intrinsic :: iso_c_binding, only : c_float128_complex, c_float128
-         complex(c_float128_complex), intent(in), value :: z
-         real(c_float128), intent(in), value, :: nu
-         complex(c_float128_complex) :: J
+         use, intrinsic :: iso_c_binding, only : C_FLOAT128_COMPLEX, C_FLOAT128
+         complex(C_FLOAT128_COMPLEX), intent(in), value :: z
+         real(C_FLOAT128), intent(in), value :: nu
+         complex(C_FLOAT128_COMPLEX) :: J
        end function arb_J
     end interface
 
     interface
        function arb_Y(nu,z) bind(c,name="arb_Y") result(Y)
-         use, intrinsic :: iso_c_binding, only : c_float128_complex, c_float128
-         complex(c_float128_complex), intent(in), value :: z
-         real(c_float128), intent(in), value, :: nu
-         complex(c_float128_complex) :: Y
+         use, intrinsic :: iso_c_binding, only : C_FLOAT128_COMPLEX, C_FLOAT128
+         complex(C_FLOAT128_COMPLEX), intent(in), value :: z
+         real(C_FLOAT128), intent(in), value :: nu
+         complex(C_FLOAT128_COMPLEX) :: Y
        end function arb_Y
     end interface
 
@@ -366,7 +366,7 @@ contains
     end do
 
     ! compute v3
-    arg1 = real(beta(3),QP) + nuep*beta(1)
+    arg1 = beta(3) + nuep*beta(1)
     arg2(1:np) = beta(1)*phiep(1:np)
 
     aa(1:np,1,1) = arg1*J(:,1) - arg2(:)*J(:,2)
@@ -403,8 +403,8 @@ contains
     delta1(1:np) = (aa(:,1,1)*Y(:,1) - aa(:,1,2)*J(:,1))/delta2(:)* &
          & 2.0*eta(:)*sinh(eta(:)) - cosh(eta(:))
 
-    sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(1:np),2,nz)*&
-         &cosh(eta(1:np) .X. s%zD(1:nz))
+    sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(1:np),2,nz)* &
+         & spread(cosh(eta(1:np)),dim=2,ncopies=nz) * spread(s%zD(1:nz),dim=1,ncopies=np)
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
     if (s%quiet > 1) then

@@ -23,7 +23,7 @@
 ##################################################
 # flags / settings for gfortran >= 4.6 compiler
 
-DEBUG = -O1 -g -Wall -Wextra -fcheck=all -fno-realloc-lhs -std=f2008 -fall-intrinsics
+DEBUG = -O0 -g -Wall -Wextra -fcheck=all -fno-realloc-lhs -fall-intrinsics
 
 # for MS-Windows comment out the following line, since OpenMP doesn't typically work with
 # minGW. I think it might work with cygwin, though.
@@ -33,6 +33,9 @@ PERF = -O3 -march=native #-static
 
 # either put gfortran in your PATH variable, or specify the path here
 F90 = gfortran
+
+CC = gcc
+CFLAGS += -I/usr/local/include/flint
 
 # these are different if using Intel Fortran compiler, etc. Should work for gfortran
 CPP = -cpp
@@ -60,18 +63,26 @@ DEBUGOUT = debug_$(OUT)
 
 LD = $(F90) -fbacktrace
 
-# can't normally link statically when using OpenMP (Linux/MacOS only)
-# following line is an "unsupported" workaround
-#LD += -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive
-
 ####### default optimized (no debugging) target ##########################
 # use OMP in optimized link step
-driver: $(OPTOBJS)
-	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS)
+driver: $(OPTOBJS) bessel_arb_wrapper.opt.o
+	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS) \
+	bessel_arb_wrapper.opt.o -larb -lflint -lgmp
 
 ####### compiler debugging ###
-debug_driver: $(DEBUGOBJS)
-	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS)
+debug_driver: $(DEBUGOBJS) bessel_arb_wrapper.debug.o
+	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS) \
+	bessel_arb_wrapper.debug.o -larb -lflint -lgmp
+
+
+# these assume arb c library (and its dependencies like flint, mpfr, and gmp)
+# are compiled with a compatible c compiler (e.g., gcc & gfortran)
+bessel_arb_wrapper.opt.o:bessel_arb_wrapper.c
+	$(CC) -c $(CFLAGS) -O3 -march=native -larb -o $@ $<
+
+bessel_arb_wrapper.debug.o:bessel_arb_wrapper.c
+	$(CC) -Wall -Wextra -c $(CFLAGS) -O0 -g -larb -o $@ $<
+
 
 complex_bessel.mod:cbessel.f90
 
@@ -100,7 +111,7 @@ utility.opt.o utility.mod: utility.f90 constants.mod
 time.opt.o time.mod: time.f90 constants.mod types.mod
 laplace_hankel_solutions.opt.o laplace_hankel_solutions.mod: \
  laplace_hankel_solutions.f90 constants.mod types.mod time.mod \
- utility.mod cbessel.mod
+ utility.mod cbessel.mod bessel_arb_wrapper.opt.o
 driver_io.opt.o driver_io.mod: driver_io.f90 constants.mod types.mod \
  utility.mod
 integration.opt.o integration.mod: integration.f90 constants.mod types.mod
@@ -115,7 +126,7 @@ utility.debug.o utility.mod: utility.f90 constants.mod
 time.debug.o time.mod: time.f90 constants.mod types.mod
 laplace_hankel_solutions.debug.o laplace_hankel_solutions.mod: \
  laplace_hankel_solutions.f90 constants.mod types.mod time.mod \
- utility.mod cbessel.mod
+ utility.mod cbessel.mod bessel_arb_wrapper.debug.o
 driver_io.debug.o driver_io.mod: driver_io.f90 constants.mod types.mod \
  utility.mod
 integration.debug.o integration.mod: integration.f90 constants.mod types.mod
