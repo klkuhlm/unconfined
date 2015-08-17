@@ -28,6 +28,10 @@ program drive_arb
   real(C_FLOAT128) :: nu
   integer :: i
 
+  print *, 'max exponent C_FLOAT128',maxexponent(nu)
+  print *, 'min exponent C_FLOAT128',minexponent(nu)
+  print *, 'spacing(0.0_QP)',spacing(0.0_C_FLOAT128)
+  
   do i=1,8
      z = cmplx(i*PIOV4, 2*i*PIOV4, kind=C_FLOAT128_COMPLEX)
      nu = (i+2)*PIOV4

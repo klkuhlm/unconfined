@@ -13,7 +13,6 @@ void arf_set_float128(arf_t res, __float128 x)
 
   // scale results, in case quad-precision value has exponent
   // larger than can be handled by doubles used in conversion
-  fmpz_t ef;
   int ei;
   long el;
   x = frexpq(x, &ei);
@@ -30,30 +29,37 @@ void arf_set_float128(arf_t res, __float128 x)
   arf_set_d(t, d3);
   arf_add(res, res, t, ARF_PREC_EXACT, ARF_RND_DOWN);
   arf_clear(t);
-  
-  fmpz_init(ef);
-  fmpz_set_si(ef, el);
-  arf_mul_2exp_fmpz(res, res, ef);
 
-  fmpz_clear(ef);
+  // apply scalilng back to arf_t type
+  arf_mul_2exp_si(res, res, el);
   
 }
 
 __float128 arf_get_float128(const arf_t x)
 {
   // conversion from arf type to quad precision float
-  arf_t t1, t2, t3;
+  arf_t tmp, t1, t2, t3;
   double d1, d2, d3;
   __float128 res;
+  long e;
+
+  arf_init(tmp);
   
-  // need to do same frexpq scaling (but on arf_t type -- not sure which function to use)
+  // implement frexpq scaling
+  e = arf_abs_bound_lt_2exp_si(x);
+  if (e < -16381) {
+    return 0.0; // quad precision underflow
+  } else if (e > 16384) {
+    return arf_sgn(x)/0.0; // +/- infinity
+  }
+  arf_mul_2exp_si(tmp, x, -e);
   
   arf_init(t1);
   arf_init(t2);
   arf_init(t3);
   
-  arf_set_round(t1, x, 53, ARF_RND_DOWN);
-  arf_sub(t3, x, t1, ARF_PREC_EXACT, ARF_RND_DOWN);
+  arf_set_round(t1, tmp, 53, ARF_RND_DOWN);
+  arf_sub(t3, tmp, t1, ARF_PREC_EXACT, ARF_RND_DOWN);
   arf_set_round(t2, t3, 53, ARF_RND_DOWN);
   arf_sub(t3, t3, t2, 53, ARF_RND_DOWN);
 
@@ -67,7 +73,8 @@ __float128 arf_get_float128(const arf_t x)
   arf_clear(t2);
   arf_clear(t3);
 
-  // perform an ldexpq here to apply exponent to float128.
+  // apply exponent back onto float128.
+  res = ldexpq(res, e);
   
   return res;
 }
@@ -80,6 +87,8 @@ __complex128 arb_J(__float128 gcc_nu, __complex128 gcc_z)
 
   // libquadmath complex
   __complex128 gcc_J;
+
+  int extra;
   
   acb_init(acb_res);
   acb_init(acb_nu);
@@ -92,10 +101,14 @@ __complex128 arb_J(__float128 gcc_nu, __complex128 gcc_z)
 
   // gcc_nu -> acb_nu (order)
   arf_set_float128(arb_midref(acb_realref(acb_nu)), gcc_nu);
-  
-  // compute bessel function
-  acb_hypgeom_bessel_j(acb_res, acb_nu, acb_z, 159); // not sure about this precision
 
+  extra = 30;
+  do {
+    // compute Bessel function with higher precision until it is at least QP precise
+    acb_hypgeom_bessel_j(acb_res, acb_nu, acb_z, 113 + extra);
+    extra *= 2;
+  } while (acb_rel_accuracy_bits(acb_res) < 113);
+    
   //  arb_res -> gcc_K1
   __real__(gcc_J) = arf_get_float128(arb_midref(acb_realref(acb_res)));
   __imag__(gcc_J) = arf_get_float128(arb_midref(acb_imagref(acb_res)));
@@ -115,6 +128,13 @@ __complex128 arb_Y(__float128 gcc_nu, __complex128 gcc_z)
 
   // libquadmath complex
   __complex128 gcc_Y;
+
+  int extra;
+
+  // a macro defined in libquadmath (smallest full precision real)
+  if (fabsq(gcc_z) < FLT128_MIN) {
+    return -1.0/0.0; // Y(0) = -inf
+  }
   
   acb_init(acb_res);
   acb_init(acb_nu);
@@ -128,8 +148,12 @@ __complex128 arb_Y(__float128 gcc_nu, __complex128 gcc_z)
   // gcc_nu -> acb_nu (order)
   arf_set_float128(arb_midref(acb_realref(acb_nu)), gcc_nu);
 
-  // compute bessel function
-  acb_hypgeom_bessel_y(acb_res, acb_nu, acb_z, 159); // not sure about this precsion
+  extra = 30;
+  do {
+    // compute bessel function
+    acb_hypgeom_bessel_y(acb_res, acb_nu, acb_z, 113 + extra);
+    extra *= 2;
+  } while (acb_rel_accuracy_bits(acb_res) < 113);
 
   //  arb_res -> gcc_K1
   __real__(gcc_Y) = arf_get_float128(arb_midref(acb_realref(acb_res)));
