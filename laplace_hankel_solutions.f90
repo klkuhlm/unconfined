@@ -357,12 +357,14 @@ contains
     phiep(1:np) = (0.0_QP, 1.0_QP)*sqrt(4.0_QP*B1/(beta(1)**2))*exp(0.5_QP*beta(1)*f%usLD)
     nuep = sqrt((beta(3)**2 + 4.0_QP*B2)/beta(1)**2)
 
+    !!print *, 'first loop',nuep
     do i= 1,np
        J(i,1) = arb_J(nuep, phiep(i))
        J(i,2) = arb_J(nuep + 1.0_QP, phiep(i))
 
        Y(i,1) = arb_Y(nuep, phiep(i))
        Y(i,2) = arb_Y(nuep + 1.0_QP, phiep(i))
+       !!print *, i,phiep(i),':: J',J(i,:),':: Y',Y(i,:)
     end do
 
     ! compute v3
@@ -382,12 +384,14 @@ contains
     ! compute v2
     phiep(1:np) = (0.0_QP, 1.0_QP)*sqrt(4.0_QP*B1/beta(1)**2)
 
+    !!print *, 'second loop',nuep
     do i= 1,np
        J(i,1) = arb_J(nuep, phiep(i))
        J(i,2) = arb_J(nuep + 1.0_QP, phiep(i))
 
        Y(i,1) = arb_Y(nuep, phiep(i))
        Y(i,2) = arb_Y(nuep + 1.0_QP, phiep(i))
+       !!print *, i,phiep(i),':: J',J(i,:),':: Y',Y(i,:)
     end do
 
     arg2(1:np) = beta(1)*phiep(1:np)

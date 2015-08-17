@@ -130,11 +130,6 @@ __complex128 arb_Y(__float128 gcc_nu, __complex128 gcc_z)
   __complex128 gcc_Y;
 
   int extra;
-
-  // a macro defined in libquadmath (smallest full precision real)
-  if (fabsq(gcc_z) < FLT128_MIN) {
-    return -1.0/0.0; // Y(0) = -inf
-  }
   
   acb_init(acb_res);
   acb_init(acb_nu);
