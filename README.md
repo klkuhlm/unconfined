@@ -36,8 +36,14 @@ The solutions implemented include:
   
   3. The third approach to solving M/N implements the solution listed
   in their paper directly (and naively). This approach fails for some
-  combinations of parameters, and is often suffers from severe cancell-
-  ation in the transition region, between early and late time.
+  combinations of parameters, and is often suffers from severe
+  cancellation in the transition region, between early and late time.
+  
+  I now compute the J and Y Bessel functions of fractional order
+  needed for this solution at quad-precision accuracy using arb
+  (http://fredrikj.net/arb/) -- an arbitrary precision special
+  function library written in C. This is a significant new dependency,
+  since it requires the flint, mpfr, and gmp libraries.
 
 2. Malama (2011) : Alternative linearization of the moving water table
 boundary condition.  Basically an improvement on Neuman
@@ -117,5 +123,5 @@ I will make all the data available as they are cleaned/prepared
 for use in my inverse modeling exercise.
 
 Kris Kuhlman (klkuhlm _at_ sandia _dot_ gov)
-Feb, 2015
+Aug, 2015
 
