@@ -290,11 +290,9 @@ contains
   function mishraNeuman2010(a,zD,s,p,f,w) result(sD)
     use constants, only : DP, EP, QP 
     use types, only : well, formation, solution
-    !!use utility, only : operator(.X.)
     implicit none
     
     ! https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fC_005fBINDING.html#ISO_005fC_005fBINDING
-
     interface
        function arb_J(nu,z) bind(c,name="arb_J") result(J)
          use, intrinsic :: iso_c_binding, only : C_FLOAT128_COMPLEX, C_FLOAT128
@@ -303,7 +301,6 @@ contains
          complex(C_FLOAT128_COMPLEX) :: J
        end function arb_J
     end interface
-
     interface
        function arb_Y(nu,z) bind(c,name="arb_Y") result(Y)
          use, intrinsic :: iso_c_binding, only : C_FLOAT128_COMPLEX, C_FLOAT128
@@ -324,7 +321,7 @@ contains
     complex(EP), dimension(size(p),size(zD)+1) :: sH
     integer ::  np, nz
 
-    real(QP) :: nuep, B2 !, nv
+    real(QP) :: nuep, B2
     complex(QP), dimension(size(p)) :: phiep
 
     real(QP), dimension(0:3) :: beta
@@ -336,8 +333,6 @@ contains
 
     integer, parameter :: NPRINT = 2
     integer :: i
-
-    intrinsic :: isnan
 
     np = size(p)
     nz = size(zD)
@@ -357,14 +352,12 @@ contains
     phiep(1:np) = (0.0_QP, 1.0_QP)*sqrt(4.0_QP*B1/(beta(1)**2))*exp(0.5_QP*beta(1)*f%usLD)
     nuep = sqrt((beta(3)**2 + 4.0_QP*B2)/beta(1)**2)
 
-    !!print *, 'first loop',nuep
     do i= 1,np
        J(i,1) = arb_J(nuep, phiep(i))
        J(i,2) = arb_J(nuep + 1.0_QP, phiep(i))
 
        Y(i,1) = arb_Y(nuep, phiep(i))
        Y(i,2) = arb_Y(nuep + 1.0_QP, phiep(i))
-       !!print *, i,phiep(i),':: J',J(i,:),':: Y',Y(i,:)
     end do
 
     ! compute v3
@@ -384,14 +377,12 @@ contains
     ! compute v2
     phiep(1:np) = (0.0_QP, 1.0_QP)*sqrt(4.0_QP*B1/beta(1)**2)
 
-    !!print *, 'second loop',nuep
     do i= 1,np
        J(i,1) = arb_J(nuep, phiep(i))
        J(i,2) = arb_J(nuep + 1.0_QP, phiep(i))
 
        Y(i,1) = arb_Y(nuep, phiep(i))
        Y(i,2) = arb_Y(nuep + 1.0_QP, phiep(i))
-       !!print *, i,phiep(i),':: J',J(i,:),':: Y',Y(i,:)
     end do
 
     arg2(1:np) = beta(1)*phiep(1:np)
@@ -453,20 +444,9 @@ contains
     eta(1:np) = sqrt(etasq(:))
     Delta0(1:np) = eta(:)*sinh(eta(:)) - u(:)*cosh(eta(:))
 
-!!$    where(spread(zd > 1.0,1,np))
-!!$       ! unsaturated zone solution
-!!$       sD(1:np,1:nz) = 2.0_EP*spread(sinh(eta),2,nz)/&
-!!$            & (spread(p*eta*f%kappa,2,nz)*Delta0)*&
-!!$            & exp(spread(u,2,nz)*spread(zD - 1.0_EP,1,np))
-!!$    elsewhere
-
     ! saturated zone solution
     sD(1:np,1:nz) = 2.0/spread(f%kappa*etasq,2,nz)* &   
          & (1.0 + spread(u/Delta0,2,nz)*cosh(eta .X. zD))
-
-!!$       ! average solution (fully penetrating observation well) for testing
-!!$    sD(1:np,1:nz) = 2.0/spread(p*etasq*f%kappa,2,nz)* &
-!!$         & (1.0 + spread(u*sinh(eta)/(eta*Delta0),2,nz))
 
   end function mishraNeumanMalama
 
@@ -531,12 +511,10 @@ contains
 
     ! super-diagonal (last entry (n) is undefined)
     c(1:np,1:n-1) = invhsq - beta(3)/h
-!!$    c(1:np,n) = -999999.9
 
     ! sub-diagonal (first entry 1 is undefined, second entry is different)
     aa(1:np,2:n) = invhsq
     aa(1:np,2) = aa(1:np,2)*cosh(eta(:))
-!!$    aa(1:np,1) = 7777777.7
 
     ! right-hand side (all zero but first and second rows)
     v(1:np,3:n) = 0.0_EP
