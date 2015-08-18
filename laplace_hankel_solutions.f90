@@ -329,74 +329,71 @@ contains
     complex(EP), dimension(size(p),size(zD)+1) :: sH
     integer ::  np, nz
 
-    real(QP) :: nu, B2
-    complex(QP), dimension(size(p)) :: phi
+    real(QP) :: nu, C
+    complex(QP), dimension(size(p)) :: phi, arg2
     complex(QP), parameter :: EYE = (0.0_QP, 1.0_QP)
 
-    real(QP), dimension(0:3) :: beta
+    real(QP), dimension(3) :: beta
     complex(QP) :: arg1
-    complex(QP), dimension(size(p)) :: arg2, B1, delta1, delta2
-    complex(QP), dimension(size(p),2,2) :: aa
+    complex(QP), dimension(size(p)) :: B, chi, q
     complex(QP), dimension(size(p)) :: eta
-    complex(QP), dimension(size(p),2) :: J,Y
+    complex(QP), dimension(size(p),0:1) :: J,Y
 
     integer :: i
 
     np = size(p)
     nz = size(zD)
 
-    beta(0) = f%ac*f%Sy/f%Ss
-    beta(1) = f%lambdaD      ! b*(ak-ac)
-    beta(2) = f%ak*f%b1      ! ak*(psi_a - psi_k);
+    beta(1) = f%lambdaD      ! b*(ak-ac)  <lambda>
+    beta(2) = f%ak*f%b1      ! ak*(psi_a - psi_k); 
     beta(3) = f%akD
 
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0_DP],s,p,f,w)
 
-    B1(1:np) = p(:)*beta(0)*exp(-beta(2))/f%kappa
-    B2 = (a**2)/f%kappa
+    ! <between D7 & D8>
+    B(1:np) = p(:)*f%ac*f%Sy/(f%Kr*f%kappa)*exp(-beta(2))
+    C = (a**2)/f%kappa 
 
-    ! compute v1
-    phi(1:np) = 2.0_QP*EYE/beta(1)*sqrt(B1)*exp(0.5_QP*beta(1)*f%usLD)
-    nu = sqrt((beta(3)**2 + 4.0_QP*B2)/beta(1)**2)
+    ! <between D8 & D9>
+    phi(1:np) = 2.0_QP*EYE/beta(1)*sqrt(B)*exp(0.5_QP*beta(1)*f%usLD) ! phi(L)
+    nu = sqrt(beta(3)**2 + 4.0_QP*C)/beta(1) ! <n>
 
     do i= 1,np
-       J(i,1) = arb_J(nu, phi(i))
-       J(i,2) = arb_J(nu + 1.0_QP, phi(i))
+       J(i,0) = arb_J(nu, phi(i))
+       J(i,1) = arb_J(nu + 1.0_QP, phi(i))
 
-       Y(i,1) = arb_Y(nu, phi(i))
-       Y(i,2) = arb_Y(nu + 1.0_QP, phi(i))
+       Y(i,0) = arb_Y(nu, phi(i))
+       Y(i,1) = arb_Y(nu + 1.0_QP, phi(i))
     end do
 
-    ! compute v3
     arg1 = beta(3) + nu*beta(1)
     arg2(1:np) = beta(1)*phi(1:np)
 
-    aa(1:np,1,1) = arg1*J(:,1) - arg2(:)*J(:,2)
-    aa(1:np,1,2) = arg1*Y(:,1) - arg2(:)*Y(:,2)
+    ! <D11>
+    chi(1:np) = -(arg1*J(:,0) - arg2(:)*J(:,1))/(arg1*Y(:,0) - arg2(:)*Y(:,1))
 
-    ! compute v2
-    phi(1:np) = 2.0_QP*EYE/beta(1)*sqrt(B1)
+    ! phi(0)
+    phi(1:np) = 2.0_QP*EYE/beta(1)*sqrt(B)
 
     do i= 1,np
-       J(i,1) = arb_J(nu, phi(i))
-       J(i,2) = arb_J(nu + 1.0_QP, phi(i))
+       J(i,0) = arb_J(nu, phi(i))
+       J(i,1) = arb_J(nu + 1.0_QP, phi(i))
 
-       Y(i,1) = arb_Y(nu, phi(i))
-       Y(i,2) = arb_Y(nu + 1.0_QP, phi(i))
+       Y(i,0) = arb_Y(nu, phi(i))
+       Y(i,1) = arb_Y(nu + 1.0_QP, phi(i))
     end do
 
-    arg2(1:np) = beta(1)*phi(1:np)
-    aa(1:np,2,1) = arg1*J(:,1) - arg2(:)*J(:,2)
-    aa(1:np,2,2) = arg1*Y(:,1) - arg2(:)*Y(:,2)
+    ! <D13>
+    q(1:np) = arg1/2.0_QP - EYE*sqrt(B)*(J(:,1) + chi(:)*Y(:,1))/(J(:,0) + chi(:)*Y(:,0))
 
-    delta2(1:np) = aa(:,1,1)*aa(:,2,2) - aa(:,1,2)*aa(:,2,1)
-    delta1(1:np) = (aa(:,1,1)*Y(:,1) - aa(:,1,2)*J(:,1))/delta2(:)* &
-         & 2.0*eta(:)*sinh(eta(:)) - cosh(eta(:))
+    ! <C17>  <<<<<< need to check this is properly non-dimensionalized
+    sU(1:np,1:nz) = -spread(sH(1:np,nz+1)/ &
+         & (cosh(eta(:)*w%bD) - eta(:)/q(:)*sinh(eta(:)*w%bD)),2,nz)* &
+         & cosh(spread(eta(:),2,nz)*spread(zD(:),1,np))
 
-    sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(1:np)*cosh(eta(1:np)),2,nz)* &
-         & spread(s%zD(1:nz),dim=1,ncopies=np)
-    sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
+    ! <B1>
+    sD(1:np,1:nz) = sH(:,:) + sU(:,:)
 
   end function mishraNeuman2010
 
