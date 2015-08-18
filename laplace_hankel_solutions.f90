@@ -340,7 +340,6 @@ contains
     complex(QP), dimension(size(p)) :: eta
     complex(QP), dimension(size(p),2) :: J,Y
 
-    integer, parameter :: NPRINT = 2
     integer :: i
 
     np = size(p)
@@ -376,13 +375,6 @@ contains
     aa(1:np,1,1) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(1:np,1,2) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
-    if (s%quiet > 1) then
-       write(*,998) 'zD=LD phi:',phi(1:NPRINT),'J:',J(1:NPRINT,1),&
-            & 'Y:',Y(1:NPRINT,1),'a(1,1)',aa(1:NPRINT,1,1),'a(1,2)',aa(1:NPRINT,1,2)
-    end if
-
-998 format(5(A,2('(',ES12.3E4,',',ES12.3E4,')')))
-
     ! compute v2
     phi(1:np) = 2.0_QP*EYE/beta(1)*sqrt(B1)
 
@@ -398,11 +390,6 @@ contains
     aa(1:np,2,1) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(1:np,2,2) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
-    if (s%quiet > 1) then
-       write(*,998) 'zD=0  phi:',phi(1:NPRINT),'J:',J(1:NPRINT,1),&
-            &'Y:',Y(1:NPRINT,1),'a(2,1)',aa(1:NPRINT,2,1),'a(2,2)',aa(1:NPRINT,2,2)
-    end if
-
     delta2(1:np) = aa(:,1,1)*aa(:,2,2) - aa(:,1,2)*aa(:,2,1)
     delta1(1:np) = (aa(:,1,1)*Y(:,1) - aa(:,1,2)*J(:,1))/delta2(:)* &
          & 2.0*eta(:)*sinh(eta(:)) - cosh(eta(:))
@@ -411,12 +398,6 @@ contains
          & spread(s%zD(1:nz),dim=1,ncopies=np)
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
-    if (s%quiet > 1) then
-       write(*,999) ' nu:',nu,' sU:',su(1:NPRINT,1),&
-            &' D1:',delta1(1:NPRINT),' D2:',delta2(1:NPRINT),' sH:',sH(1:NPRINT,1)
-    end if
-
-999 format(A,ES11.3E3,4(A,2('(',ES12.3E4,',',ES12.3E4,')')))
   end function mishraNeuman2010
 
   function mishraNeumanMalama(a,zD,p,f) result(sD)
