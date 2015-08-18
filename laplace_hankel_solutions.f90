@@ -96,8 +96,13 @@ contains
        ! Mishra/Neuman  2010 model
        select case(s%MNtype)
        case(0)
+#ifdef USE_ARB_LIBRARY          
           ! naive implementation of paper (often doesnt work)
           fp(1:np,1:nz) = mishraNeuman2010(a,s%zD,s,lap%p,f,w)
+#else
+          stop 'ERROR: must compile code with arb dependency (and '//&
+               &'USE_ARB_LIBRARY preprocessor flag) for this option'
+#endif
        case(1)
           ! Malama (finiteness condition @ land surface) version 
           ! but doesn't handle partial penetration or wellbore storage
@@ -295,6 +300,7 @@ contains
 
   end function hantushstorage
 
+#ifdef USE_ARB_LIBRARY
   function mishraNeuman2010(a,zD,s,p,f,w) result(sD)
     use constants, only : DP, EP, QP 
     use types, only : well, formation, solution
@@ -396,7 +402,8 @@ contains
     sD(1:np,1:nz) = sH(:,1:nz) + sU(:,:)
 
   end function mishraNeuman2010
-
+#endif ! USE_ARB_LIBRARY
+  
   function mishraNeumanMalama(a,zD,p,f) result(sD)
     use constants, only : DP, EP
     use types, only : well, formation, solution

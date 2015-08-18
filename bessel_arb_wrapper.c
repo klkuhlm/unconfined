@@ -60,19 +60,20 @@ __float128 arf_get_float128(const arf_t x)
   
   arf_set_round(t1, tmp, 53, ARF_RND_DOWN);
   arf_sub(t3, tmp, t1, ARF_PREC_EXACT, ARF_RND_DOWN);
+  arf_clear(tmp);
   arf_set_round(t2, t3, 53, ARF_RND_DOWN);
   arf_sub(t3, t3, t2, 53, ARF_RND_DOWN);
 
   d1 = arf_get_d(t1, ARF_RND_DOWN);
   d2 = arf_get_d(t2, ARF_RND_DOWN);
   d3 = arf_get_d(t3, ARF_RND_DOWN);
-  
-  res = ((__float128) d1) + ((__float128) d2) + ((__float128) d3);
 
   arf_clear(t1);
   arf_clear(t2);
   arf_clear(t3);
 
+  res = ((__float128) d1) + ((__float128) d2) + ((__float128) d3);
+  
   // apply exponent back onto float128.
   res = ldexpq(res, e);
   
