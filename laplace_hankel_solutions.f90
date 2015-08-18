@@ -393,7 +393,7 @@ contains
          & cosh(spread(eta(:),2,nz)*spread(zD(:),1,np))
 
     ! <B1>
-    sD(1:np,1:nz) = sH(:,:) + sU(:,:)
+    sD(1:np,1:nz) = sH(:,1:nz) + sU(:,:)
 
   end function mishraNeuman2010
 
