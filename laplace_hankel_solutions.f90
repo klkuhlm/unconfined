@@ -71,7 +71,7 @@ contains
 
        if (s%model == 3) then
           ! Moench model -> just alters alphaD
-          xi(1:np) = xi(:)*f%MoenchM/sum(1.0/(1.0 + (lap%p .X. 1.0/f%MoenchGamma)),dim=2)
+          xi(1:np) = xi(:)*f%MoenchM/sum(1.0_EP/(1.0_EP + (lap%p .X. 1.0_EP/f%MoenchGamma)),dim=2)
        end if
 
        if (s%model == 4) then
@@ -87,7 +87,7 @@ contains
                & cosh(eta) + xi*sinh(eta),2,nz)
        elsewhere
           fp(1:np,1:nz) = udp(:,1:nz) - spread(udp(:,nz+1),2,nz)* &
-               & exp(eta .X. (s%zD - 1.0))/&
+               & exp(eta .X. (s%zD - 1.0_EP))/&
                & spread(1.0_EP + f%beta*eta*xi + xi,2,nz)
        end where
        deallocate(eta,xi,udp)
@@ -99,7 +99,7 @@ contains
           ! naive implementation of paper (often doesnt work)
           fp(1:np,1:nz) = mishraNeuman2010(a,s%zD,s,lap%p,f,w)
        case(1)
-          ! Malama (finiteness condition @ water table) version 
+          ! Malama (finiteness condition @ land surface) version 
           ! but doesn't handle partial penetration or wellbore storage
           fp(1:np,1:nz) = mishraNeumanMalama(a,s%zD,lap%p,f)
        case(2)
@@ -144,11 +144,15 @@ contains
     complex(EP), dimension(3,size(p),size(zD)) :: g
     complex(EP), dimension(2,size(p),size(zD)) :: ff
     integer, dimension(size(p),size(zD)) :: zLay
+    real(EP) :: dD1, lD1
     integer :: np,nz
 
     nz = size(zD) ! # z vals requested of this function
     np = size(p)
 
+    dD1 = 1.0_EP - w%dD
+    lD1 = 1.0_EP - w%lD
+    
     ! are # zvals requested same as given in program input?
     if(sol%nz == nz) then
        ! called directly
@@ -163,20 +167,20 @@ contains
     eta(1:np) = sqrt((p(:) + a**2)/f%kappa)
 
     ! above well screen
-     g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zD(1:nz)))
-    ff(1,1:np,1:nz) = spread(sinh(eta*w%dD),2,nz)
-    ff(2,1:np,1:nz) = spread(sinh(eta*(1.0 - w%lD)),2,nz)
+     g(1,1:np,1:nz) = cosh(eta(:) .X. (dD1 - zD(1:nz)))
+    ff(1,1:np,1:nz) = spread(sinh(eta(:)*w%dD),2,nz)
+    ff(2,1:np,1:nz) = spread(sinh(eta(:)*lD1),2,nz)
 
-    g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zD) + ff(2,:,:)*&
-         & cosh(eta .X. (1.0 - zD)))/spread(sinh(eta),2,nz)
+    g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta(:) .X. zD(:)) + ff(2,:,:)*&
+         & cosh(eta(:) .X. (1.0_EP - zD)))/spread(sinh(eta(:)),2,nz)
 
     ! below well screen
-    g(3,1:np,1:nz) = spread(exp(-eta*(1.0 - w%lD)) - &
-         & (ff(1,:,1) + exp(-eta)*ff(2,:,1))/sinh(eta),2,nz)
+    g(3,1:np,1:nz) = spread(exp(-eta(:)*lD1) - &
+         & (ff(1,:,1) + exp(-eta(:))*ff(2,:,1))/sinh(eta(:)),2,nz)
 
     where(zLay == 1)
        ! below well screen (0 <= zD <= 1-lD)
-       udp(1:np,1:nz) = g(3,:,:)*cosh(eta .X. zD)
+       udp(1:np,1:nz) = g(3,:,:)*cosh(eta(:) .X. zD(:))
     elsewhere
        where (zLay == 2)
           ! next to well screen (1-lD < zD < 1-dD)
@@ -213,6 +217,7 @@ contains
     complex(EP), dimension(3,size(p),size(zD)) :: ff
     complex(EP), dimension(2,size(p),size(zD)) :: g
 
+    real(EP) :: dD1, lD1
     real(DP) :: CDw, tDb
     integer :: np,nz,i
 
@@ -224,6 +229,9 @@ contains
     np = size(p)
     nz = size(zd)
 
+    dD1 = 1.0_EP - w%dD
+    lD1 = 1.0_EP - w%lD
+
     ! are # zvals requested same as given in program input?
     if(sol%nz == nz) then
        zLay(1:np,1:nz) = spread(sol%zLay(:),1,np)
@@ -232,7 +240,7 @@ contains
     end if
 
     ! dimensionless pumping wellbore storage coefficient
-    CDw = w%rDw**2/(2.0*(w%l - w%d)*f%Ss)
+    CDw = w%rDw**2/(2.0_DP*(w%l - w%d)*f%Ss)
 
     ! dimensionless well delay time
     tDb = PI*sol%rDwobs**2/(sol%sF*f%Ss)
@@ -249,26 +257,26 @@ contains
        end if
     end do
 
-    A0(1:np) = 2.0/(p(:)*CDw*K(0,:) + xi(:)*K(1,:))
-    uDf(1:np) = A0(:)/((p + a**2)*(p*tDb + 1.0_EP))  !!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    A0(1:np) = 2.0_EP/(p(:)*CDw*K(0,:) + xi(:)*K(1,:))
+    uDf(1:np) = A0(:)/((p(:) + a**2)*(p(:)*tDb + 1.0_EP))  !!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     where (zLay == 3)
-       g(1,1:np,1:nz) = cosh(eta(:) .X. (1.0 - w%dD - zd(:)))
+       g(1,1:np,1:nz) = cosh(eta(:) .X. (dD1 - zd(:)))
     end where
 
     where (zLay == 1 .or. zLay == 2)
        ff(1,1:np,1:nz) = spread(sinh(eta(:)*w%dD),2,nz)
-       ff(2,1:np,1:nz) = spread(sinh(eta(:)*(1.0 - w%lD)),2,nz)
+       ff(2,1:np,1:nz) = spread(sinh(eta(:)*lD1),2,nz)
     end where
 
     where (zLay == 2 .or. zLay == 3)
-       g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta .X. zd) + &
-            & ff(2,:,:)*cosh(eta .X. (1.0 - zd)))/&
+       g(2,1:np,1:nz) = (ff(1,:,:)*cosh(eta(:) .X. zd(:)) + &
+            & ff(2,:,:)*cosh(eta(:) .X. (1.0_EP - zd(:))))/&
             & spread(sinh(eta(:)),2,nz)
     end where
 
     where (zLay == 1)
-       ff(3,1:np,1:nz) = spread(exp(-eta(:)*(1.0 - w%lD)) - &
+       ff(3,1:np,1:nz) = spread(exp(-eta(:)*lD1) - &
             & (ff(1,:,1) + exp(-eta(:))*ff(2,:,1))/sinh(eta(:)),2,nz)
     end where
 
@@ -276,7 +284,7 @@ contains
        uDp(1:np,1:nz) = g(1,:,:) - g(2,:,:)
     elsewhere
        where (zLay == 1) !!(spread(zD < (1.0-w%lD),2,nz))
-          uDp(1:np,1:nz) = ff(3,:,:)*cosh(eta .X. zd)
+          uDp(1:np,1:nz) = ff(3,:,:)*cosh(eta(:) .X. zd(:))
        elsewhere
           ! zLay == 2
           uDp(1:np,1:nz) = 1.0_EP - g(2,:,:)
@@ -321,8 +329,9 @@ contains
     complex(EP), dimension(size(p),size(zD)+1) :: sH
     integer ::  np, nz
 
-    real(QP) :: nuep, B2
-    complex(QP), dimension(size(p)) :: phiep
+    real(QP) :: nu, B2
+    complex(QP), dimension(size(p)) :: phi
+    complex(QP), parameter :: EYE = (0.0_QP, 1.0_QP)
 
     real(QP), dimension(0:3) :: beta
     complex(QP) :: arg1
@@ -338,8 +347,8 @@ contains
     nz = size(zD)
 
     beta(0) = f%ac*f%Sy/f%Ss
-    beta(1) = f%lambdaD  ! b*(ak-ac)
-    beta(2) = f%ak*f%b1  ! ak*(psi_a - psi_k);
+    beta(1) = f%lambdaD      ! b*(ak-ac)
+    beta(2) = f%ak*f%b1      ! ak*(psi_a - psi_k);
     beta(3) = f%akD
 
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
@@ -349,48 +358,48 @@ contains
     B2 = (a**2)/f%kappa
 
     ! compute v1
-    phiep(1:np) = (0.0_QP, 1.0_QP)*sqrt(4.0_QP*B1/(beta(1)**2))*exp(0.5_QP*beta(1)*f%usLD)
-    nuep = sqrt((beta(3)**2 + 4.0_QP*B2)/beta(1)**2)
+    phi(1:np) = 2.0_QP*EYE/beta(1)*sqrt(B1)*exp(0.5_QP*beta(1)*f%usLD)
+    nu = sqrt((beta(3)**2 + 4.0_QP*B2)/beta(1)**2)
 
     do i= 1,np
-       J(i,1) = arb_J(nuep, phiep(i))
-       J(i,2) = arb_J(nuep + 1.0_QP, phiep(i))
+       J(i,1) = arb_J(nu, phi(i))
+       J(i,2) = arb_J(nu + 1.0_QP, phi(i))
 
-       Y(i,1) = arb_Y(nuep, phiep(i))
-       Y(i,2) = arb_Y(nuep + 1.0_QP, phiep(i))
+       Y(i,1) = arb_Y(nu, phi(i))
+       Y(i,2) = arb_Y(nu + 1.0_QP, phi(i))
     end do
 
     ! compute v3
-    arg1 = beta(3) + nuep*beta(1)
-    arg2(1:np) = beta(1)*phiep(1:np)
+    arg1 = beta(3) + nu*beta(1)
+    arg2(1:np) = beta(1)*phi(1:np)
 
     aa(1:np,1,1) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(1:np,1,2) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
     if (s%quiet > 1) then
-       write(*,998) 'zD=LD phi:',phiep(1:NPRINT),'J:',J(1:NPRINT,1),&
+       write(*,998) 'zD=LD phi:',phi(1:NPRINT),'J:',J(1:NPRINT,1),&
             & 'Y:',Y(1:NPRINT,1),'a(1,1)',aa(1:NPRINT,1,1),'a(1,2)',aa(1:NPRINT,1,2)
     end if
 
 998 format(5(A,2('(',ES12.3E4,',',ES12.3E4,')')))
 
     ! compute v2
-    phiep(1:np) = (0.0_QP, 1.0_QP)*sqrt(4.0_QP*B1/beta(1)**2)
+    phi(1:np) = 2.0_QP*EYE/beta(1)*sqrt(B1)
 
     do i= 1,np
-       J(i,1) = arb_J(nuep, phiep(i))
-       J(i,2) = arb_J(nuep + 1.0_QP, phiep(i))
+       J(i,1) = arb_J(nu, phi(i))
+       J(i,2) = arb_J(nu + 1.0_QP, phi(i))
 
-       Y(i,1) = arb_Y(nuep, phiep(i))
-       Y(i,2) = arb_Y(nuep + 1.0_QP, phiep(i))
+       Y(i,1) = arb_Y(nu, phi(i))
+       Y(i,2) = arb_Y(nu + 1.0_QP, phi(i))
     end do
 
-    arg2(1:np) = beta(1)*phiep(1:np)
+    arg2(1:np) = beta(1)*phi(1:np)
     aa(1:np,2,1) = arg1*J(:,1) - arg2(:)*J(:,2)
     aa(1:np,2,2) = arg1*Y(:,1) - arg2(:)*Y(:,2)
 
     if (s%quiet > 1) then
-       write(*,998) 'zD=0  phi:',phiep(1:NPRINT),'J:',J(1:NPRINT,1),&
+       write(*,998) 'zD=0  phi:',phi(1:NPRINT),'J:',J(1:NPRINT,1),&
             &'Y:',Y(1:NPRINT,1),'a(2,1)',aa(1:NPRINT,2,1),'a(2,2)',aa(1:NPRINT,2,2)
     end if
 
@@ -398,12 +407,12 @@ contains
     delta1(1:np) = (aa(:,1,1)*Y(:,1) - aa(:,1,2)*J(:,1))/delta2(:)* &
          & 2.0*eta(:)*sinh(eta(:)) - cosh(eta(:))
 
-    sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(1:np),2,nz)* &
-         & spread(cosh(eta(1:np)),dim=2,ncopies=nz) * spread(s%zD(1:nz),dim=1,ncopies=np)
+    sU(1:np,1:nz) = spread(sH(1:np,nz+1)/delta1(1:np)*cosh(eta(1:np)),2,nz)* &
+         & spread(s%zD(1:nz),dim=1,ncopies=np)
     sD(1:np,1:nz) = sH(1:np,1:nz) + sU(1:np,1:nz)
 
     if (s%quiet > 1) then
-       write(*,999) ' nu:',nuep,' sU:',su(1:NPRINT,1),&
+       write(*,999) ' nu:',nu,' sU:',su(1:NPRINT,1),&
             &' D1:',delta1(1:NPRINT),' D2:',delta2(1:NPRINT),' sH:',sH(1:NPRINT,1)
     end if
 
