@@ -335,70 +335,65 @@ contains
     complex(EP), dimension(size(p),size(zD)+1) :: sH
     integer ::  np, nz
 
-    real(QP) :: nu, C
+    real(QP) :: nu, nu1, C
     complex(QP), dimension(size(p)) :: phi, arg2
     complex(QP), parameter :: EYE = (0.0_QP, 1.0_QP)
 
-    real(QP), dimension(3) :: beta
     complex(QP) :: arg1
-    complex(QP), dimension(size(p)) :: B, chi, q
+    complex(QP), dimension(size(p)) :: BD, chi, q
     complex(QP), dimension(size(p)) :: eta
     complex(QP), dimension(size(p),0:1) :: J,Y
-
     integer :: i
 
     np = size(p)
     nz = size(zD)
 
-    beta(1) = f%lambdaD      ! b*(ak-ac)  <lambda>
-    beta(2) = f%ak*f%b1      ! ak*(psi_a - psi_k); 
-    beta(3) = f%akD
-
     eta(1:np) = sqrt((a**2 + p(1:np))/f%kappa)
     sH(1:np,1:nz+1) = hantush(a,[zD,1.0_DP],s,p,f,w)
 
-    ! <between D7 & D8>
-    B(1:np) = p(:)*f%ac*f%Sy/(f%Kr*f%kappa)*exp(-beta(2))
-    C = (a**2)/f%kappa 
+    ! <between D7 & D8> ! <<<<<< <1/rD**2 ?>
+    BD(1:np) = p(:)*f%acD*f%Sy/(f%Ss*f%b*f%kappa)*exp(f%akD*(f%psikD - f%psiaD)) 
+    C = (a**2)/f%kappa ! <<<<<< <also y**2, except for r**2/r_D**2 factor?>
 
     ! <between D8 & D9>
-    phi(1:np) = 2.0_QP*EYE/beta(1)*sqrt(B)*exp(0.5_QP*beta(1)*f%usLD) ! phi(L)
-    nu = sqrt(beta(3)**2 + 4.0_QP*C)/beta(1) ! <n>
-
+    phi(1:np) = EYE*2.0_QP/f%lambdaD*sqrt(BD)*exp(f%lambdaD*f%usLD/2.0_QP) ! phi(L_D)
+    nu = sqrt((f%akD**2 + 4.0_QP*C)/f%lambdaD**2) ! <n>
+    nu1 = nu + 1.0_QP
+    
     do i= 1,np
        J(i,0) = arb_J(nu, phi(i))
-       J(i,1) = arb_J(nu + 1.0_QP, phi(i))
+       J(i,1) = arb_J(nu1, phi(i))
 
        Y(i,0) = arb_Y(nu, phi(i))
-       Y(i,1) = arb_Y(nu + 1.0_QP, phi(i))
+       Y(i,1) = arb_Y(nu1, phi(i))
     end do
 
-    arg1 = beta(3) + nu*beta(1)
-    arg2(1:np) = beta(1)*phi(1:np)
+    arg1 = f%akD + nu*f%lambdaD
+    arg2(1:np) = f%lambdaD*phi(1:np)
 
-    ! <D11>
+    ! <Eqns D11 and 25>
     chi(1:np) = -(arg1*J(:,0) - arg2(:)*J(:,1))/(arg1*Y(:,0) - arg2(:)*Y(:,1))
 
     ! phi(0)
-    phi(1:np) = 2.0_QP*EYE/beta(1)*sqrt(B)
+    phi(1:np) = EYE*2.0_QP/f%lambdaD*sqrt(BD)
 
     do i= 1,np
        J(i,0) = arb_J(nu, phi(i))
-       J(i,1) = arb_J(nu + 1.0_QP, phi(i))
+       J(i,1) = arb_J(nu1, phi(i))
 
        Y(i,0) = arb_Y(nu, phi(i))
-       Y(i,1) = arb_Y(nu + 1.0_QP, phi(i))
+       Y(i,1) = arb_Y(nu1, phi(i))
     end do
 
-    ! <D13>
-    q(1:np) = arg1/2.0_QP - EYE*sqrt(B)*(J(:,1) + chi(:)*Y(:,1))/(J(:,0) + chi(:)*Y(:,0))
+    ! <Eqns D13 and 26>
+    q(1:np) = arg1/2.0_QP - EYE*sqrt(BD)*(J(:,1) + chi(:)*Y(:,1))/(J(:,0) + chi(:)*Y(:,0))
 
-    ! <C17>  <<<<<< need to check this is properly non-dimensionalized
+    ! <Eqns C17 and 23> ((but C20 and C21 have sinh -> cosh??))  
     sU(1:np,1:nz) = -spread(sH(1:np,nz+1)/ &
-         & (cosh(eta(:)*w%bD) - eta(:)/q(:)*sinh(eta(:)*w%bD)),2,nz)* &
+         & (cosh(eta(:)) - eta(:)/q(:)*sinh(eta(:))),2,nz)* &
          & cosh(spread(eta(:),2,nz)*spread(zD(:),1,np))
 
-    ! <B1>
+    ! <Eqns B1 and 19>
     sD(1:np,1:nz) = sH(:,1:nz) + sU(:,:)
 
   end function mishraNeuman2010
