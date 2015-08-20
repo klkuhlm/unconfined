@@ -29,7 +29,7 @@ DEBUG = -O0 -g -Wall -Wextra -fcheck=all -fno-realloc-lhs -fall-intrinsics
 # minGW. I think it might work with cygwin, though.
 OMP = -fopenmp
 
-PERF = -O3 -march=native #-static
+PERF = -O3 -march=native -flto
 
 # either put gfortran in your PATH variable, or specify the path here
 F90 = gfortran
@@ -42,10 +42,6 @@ CFLAGS += -I/usr/local/include/flint
 # just comment out these next two lines. All other models will still be available.
 DEBUG += -cpp -DUSE_ARB_LIBRARY
 PERF += -cpp -DUSE_ARB_LIBRARY
-
-# these are different if using Intel Fortran compiler, etc. Should work for gfortran
-CPP = -cpp
-FREE = -free
 
 ##################################################
 # user typically shouldn't have to ever modify anything below this point

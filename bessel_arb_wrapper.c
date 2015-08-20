@@ -118,6 +118,7 @@ __complex128 arb_J(__float128 gcc_nu, __complex128 gcc_z)
   acb_clear(acb_nu);
   acb_clear(acb_z);
 
+  flint_cleanup();
   return gcc_J;
 }
 
@@ -159,6 +160,7 @@ __complex128 arb_Y(__float128 gcc_nu, __complex128 gcc_z)
   acb_clear(acb_nu);
   acb_clear(acb_z);
 
+  flint_cleanup();
   return gcc_Y;
 }
 
