@@ -34,12 +34,13 @@ PERF = -O3 -march=native -flto
 # either put gfortran in your PATH variable, or specify the path here
 F90 = gfortran
 
-# I need to include path to flint includes on my installation (update path for yours)
+# include path to flint on my system (update path)
 CC = gcc
 CFLAGS += -I/usr/local/include/flint  
 
 # if you don't want to use the ARB library (and the Mishra-Neuman model option 0 that depends on it)
-# just comment out these next two lines. All other models will still be available.
+# just comment out the -DUSE_ARB_LIBRARY in the next two lines.
+# All other models will still be available.
 DEBUG += -cpp -DUSE_ARB_LIBRARY
 PERF += -cpp -DUSE_ARB_LIBRARY
 
