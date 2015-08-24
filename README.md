@@ -4,10 +4,10 @@ unconfined approaches still in use today.  The program is free
 software (MIT license), which can essentially be used, modified, or
 redistributed for any purpose, given the license is left intact.
 
-This code is a command-line utility, which reads a text input file and
+This simulator is a command-line utility, which reads a text input file and
 writes a text datafile, formatted for simple plotting using available
 software obtained elsewhere (e.g., MS-Excel, python matplotlib, or
-gnuplot).  The code is accurate and relatively fast, using OpenMP to
+gnuplot).  The simulator is accurate and relatively fast, using OpenMP to
 execute in parallel on a multi-processor Linux or Mac computer (a
 recent Intel compiler is needed to create parallel executables for
 MS-Windows).
@@ -19,8 +19,8 @@ The solutions implemented include:
 1. Mishra & Neuman (2010,2011) : Unsaturated/saturated flow to a
    partially penetrating well. http://dx.doi.org/10.1029/2009WR008899
    http://dx.doi.org/10.1029/2010WR010177 NB: The Mishra & Neuman
-   solutions given in the WRR papers are somewhat ill-behaved.  My
-   code implements them in three different ways.
+   solutions given in the WRR papers are numerically somewhat ill-behaved.
+   This simulator implements them in three different ways.
 
   1. One approach to solve M/N follows the Malama (2014)
   http://dx.doi.org/10.1002/2013WR014909 simplified formulation -
@@ -67,7 +67,7 @@ of partial penetration, but using a three-layer approach of Malama
 6. Theis (1935) : The confined fully penetrating solution, which all
 other solutions build upon.
 
-The code is distributed as a collection of Fortran source files and a
+The simulator is distributed as a collection of Fortran source files and a
 makefile.  On Linux/Unix/Mac platforms this is trivial to turn into a
 command-line program, by simply going to the source directory and
 typing:
