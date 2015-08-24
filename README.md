@@ -35,18 +35,15 @@ The solutions implemented include:
   penetration, but no wellbore storage for now.
   
   3. The third approach to solving M/N implements the solution listed
-  in their paper directly (and naively). This approach fails for some
-  combinations of parameters, and is often suffers from severe
-  cancellation in the transition region, between early and late time.
-  
-  I now compute the J and Y Bessel functions of complex argument and
-  fractional order needed for this solution at quad-precision accuracy
-  using arb (http://fredrikj.net/arb/) - an arbitrary precision
+  in their paper close to the notation used in that paper. Because this 
+  approach used to fail for some combinations of parameters, it is now 
+  computed in quad precision. The J and Y Bessel functions of complex 
+  argument and fractional order needed for this solution at quad-precision 
+  accuracy using arb (http://fredrikj.net/arb/) - an arbitrary precision
   special function library written in C. This is a significant new
-  dependency, since it requires the flint, mpfr, and gmp
-  libraries. These Bessel functions were previously computed using the
-  Amos libraries, which only are double precision.
-
+  dependency, since it requires the flint, mpfr, and gmp libraries. 
+  Many thanks to Fredrik Johansson who helped out using his library.
+  
 2. Malama (2011) : Alternative linearization of the moving water table
 boundary condition.  Basically an improvement on Neuman
 (1974). http://dx.doi.org/10.1016/j.jhydrol.2010.11.007
