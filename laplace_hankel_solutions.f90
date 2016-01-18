@@ -397,7 +397,9 @@ contains
     sD(1:np,1:nz) = sH(:,1:nz) + sU(:,:)
 
   end function mishraNeuman2010
-#endif ! USE_ARB_LIBRARY
+
+  ! endif for USE_ARB_LIBRARY
+#endif 
   
   function mishraNeumanMalama(a,zD,p,f) result(sD)
     use constants, only : DP, EP

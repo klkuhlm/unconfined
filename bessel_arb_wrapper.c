@@ -11,6 +11,10 @@ void arf_set_float128(arf_t res, __float128 x)
   double d1, d2, d3;
   arf_t t;
 
+  if (!isfinite(__real__(x)) || !isfinite(__imag__(x))) {
+    return;
+  }
+  
   // scale results, in case quad-precision value has exponent
   // larger than can be handled by doubles used in conversion
   int ei;
@@ -89,13 +93,11 @@ __complex128 arb_J(__float128 gcc_nu, __complex128 gcc_z)
   // libquadmath complex
   __complex128 gcc_J;
 
-  int extra;
-  
   acb_init(acb_res);
   acb_init(acb_nu);
   acb_zero(acb_nu);
   acb_init(acb_z);
-  
+
   // gcc_z -> acb_z (argument)
   arf_set_float128(arb_midref(acb_realref(acb_z)), __real__(gcc_z));
   arf_set_float128(arb_midref(acb_imagref(acb_z)), __imag__(gcc_z));
@@ -103,7 +105,7 @@ __complex128 arb_J(__float128 gcc_nu, __complex128 gcc_z)
   // gcc_nu -> acb_nu (order)
   arf_set_float128(arb_midref(acb_realref(acb_nu)), gcc_nu);
 
-  extra = 30;
+  int extra = 30;
   do {
     // compute Bessel function with higher precision until it is at least QP precise
     acb_hypgeom_bessel_j(acb_res, acb_nu, acb_z, 113 + extra);
@@ -131,8 +133,6 @@ __complex128 arb_Y(__float128 gcc_nu, __complex128 gcc_z)
   // libquadmath complex
   __complex128 gcc_Y;
 
-  int extra;
-  
   acb_init(acb_res);
   acb_init(acb_nu);
   acb_zero(acb_nu);
@@ -145,7 +145,7 @@ __complex128 arb_Y(__float128 gcc_nu, __complex128 gcc_z)
   // gcc_nu -> acb_nu (order)
   arf_set_float128(arb_midref(acb_realref(acb_nu)), gcc_nu);
 
-  extra = 30;
+  int extra = 30;
   do {
     // compute bessel function
     acb_hypgeom_bessel_y(acb_res, acb_nu, acb_z, 113 + extra);
