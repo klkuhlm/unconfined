@@ -91,7 +91,7 @@ Data
 ------------------------------------------
 
 I am in the process of collecting unconfined pumping datasets for
-benchmarking and conducting a "beauty pagent" between the different 
+benchmarking and conducting a "beauty pageant" between the different 
 unconfined models.  I am currently working to include the following 
 datasets:
 
@@ -122,5 +122,5 @@ I will make all the data available as they are cleaned/prepared
 for use in my inverse modeling exercise.
 
 Kris Kuhlman (klkuhlm _at_ sandia _dot_ gov)
-Aug, 2015
+April, 2016
 
