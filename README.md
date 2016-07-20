@@ -118,8 +118,7 @@ were collected in the vadose zone before, during, and after
 testing. Five days of recovery data were collected.
 
 These data are available in the git repository (i.e., see borden, cape_cod, 
-and grand-island directories of source tree) as I am using in my 
-inverse modeling exercise.
+and grand-island directories of source tree).
 
 Kris Kuhlman (klkuhlm _at_ sandia _dot_ gov)
 July, 2016
