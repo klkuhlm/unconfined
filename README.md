@@ -90,10 +90,9 @@ to get it to compile using mingw (see comments there)
 Data
 ------------------------------------------
 
-I am in the process of collecting unconfined pumping datasets for
+The respository includes three unconfined pumping datasets for
 benchmarking and conducting a "beauty pageant" between the different 
-unconfined models.  I am currently working to include the following 
-datasets:
+unconfined models:
 
 * Moench et al., 2001 (Cape Cod, Massachusets): a 320-gpm 72-hour
 pumping test in a thick glacial outwash aquifer with many shallow
@@ -108,7 +107,7 @@ test also has significant partial penetration effects. I have entered
 this data into spreadsheet form. 36 hours of recovery data
 available. A large number of observation piezometers and a few
 screened wells (82 + pumping well) were monitored. The spreadsheets
-are available for anyone to view on Google docs at:
+are available on Google docs at:
 https://docs.google.com/spreadsheet/ccc?key=0AlJMuEYu7Z-5dGJfdzBibk4zNDB4UG9DN1FpQ0FnX1E&usp=sharing
 
 * Bevan, 2002 (Borden, Ontario); a 12-gpm 168-hour (week long) test was
@@ -118,9 +117,10 @@ and Grand Island tests. Moisture content data and geophysical data
 were collected in the vadose zone before, during, and after
 testing. Five days of recovery data were collected.
 
-I will make all the data available as they are cleaned/prepared
-for use in my inverse modeling exercise.
+These data are available in the git repository (i.e., see borden, cape_cod, 
+and grand-island directories of source tree) as I am using in my 
+inverse modeling exercise.
 
 Kris Kuhlman (klkuhlm _at_ sandia _dot_ gov)
-April, 2016
+July, 2016
 
