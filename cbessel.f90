@@ -1,4 +1,4 @@
-Module CBessel
+Module Complex_Bessel
 
   !      REMARK ON ALGORITHM 644, COLLECTED ALGORITHMS FROM ACM.
   !      THIS WORK PUBLISHED IN TRANSACTIONS ON MATHEMATICAL SOFTWARE,
@@ -8,17 +8,26 @@ Module CBessel
   ! Date: 2002-02-08  Time: 17:53:05
   ! Latest revision - 16 April 2002
 
-  IMPLICIT NONE
+  implicit none
 
-  ! same selected_real_kind as in calling program
-  INTEGER, PARAMETER, private  :: dp = SELECTED_REAL_KIND(p=15, r=300)
+  private
+  public  :: cbesh, cbesi, cbesj, cbesk, cbesy, cairy, cbiry 
 
-  PRIVATE
-  PUBLIC  :: cbesh, cbesi, cbesj, cbesk, cbesy, gamln, cairy, cbiry
-
+  ! Oct 2011: replaced function gamln() with Fortran2008 built-in log_gamma()
+  
+  ! June 2013 consolidated common constants from individual routines
+  integer, parameter, private  :: DP = selected_real_kind(15, 307)
+  real(DP), parameter, private :: HPI = 2.0_DP*atan(1.0_DP)   !! PI/2 = 1.57079632679489662
+  real(DP), parameter, private :: PI =  4.0_DP*atan(1.0_DP)   !! PI = 3.14159265358979324
+  real(DP), parameter, private :: THPI = 6.0_DP*atan(1.0_DP)  !! 3*PI/2 = 4.71238898038469
+  real(DP), parameter, private :: RTPI = 1.0_DP/(8.0_DP*atan(1.0_DP))  !! 1/(2*PI) = 0.159154943091895
+  real(DP), parameter, private :: RTHPI = sqrt(8.0_DP*atan(1.0_DP))/2.0_DP !! sqrt(2*pi)/2 = 1.25331413731550
+  real(DP), parameter, private :: SPI = 3.0_DP/(2.0_DP*atan(1.0_DP))  ! 6/pi = 1.90985931710274 
+  complex(DP), parameter, private :: CONE =  (1.0_DP,0.0_DP),  CTWO = (2.0_DP,0.0_DP)
+  complex(DP), parameter, private :: CZERO = (0.0_DP,0.0_DP),  CI =   (0.0_DP,1.0_DP)
+  real(DP), parameter, private :: ULP = 2.0_DP
 
 CONTAINS
-
 
   SUBROUTINE cbesh(z, fnu, kode, m, n, cy, nz, ierr)
     !***BEGIN PROLOGUE  CBESH
@@ -179,14 +188,12 @@ CONTAINS
          bb, ascle, rtol, atol
     INTEGER       :: i, inu, inuh, ir, k, k1, k2, mm, mr, nn, nuf, nw
 
-    REAL (dp), PARAMETER  :: hpi = atan(1.0_DP)/8.0_DP !1.57079632679489662_dp
-
     !***FIRST EXECUTABLE STATEMENT  CBESH
     nz = 0
     xx = REAL(z, KIND=dp)
     yy = AIMAG(z)
     ierr = 0
-    IF (xx == 0.0_dp .AND. yy == 0.0_dp) ierr = 1
+    IF (abs(xx)*ULP < spacing(0.0_dp) .AND. abs(yy)*ULP < spacing(0.0_dp)) ierr = 1
     IF (fnu < 0.0_dp) ierr = 1
     IF (m < 1 .OR. m > 2) ierr = 1
     IF (kode < 1 .OR. kode > 2) ierr = 1
@@ -260,8 +267,9 @@ CONTAINS
                    END IF
                 END IF
 
-10              IF (.NOT.(xn < 0.0_dp .OR. (xn == 0.0_dp .AND. yn < 0.0_dp  &
+10              IF (.NOT.(xn < 0.0_dp .OR. (abs(xn)*ULP < spacing(0.0_dp) .AND. yn < 0.0_dp  &
                      .AND. m == 2))) THEN
+
                    !-----------------------------------------------------------------------
                    !     RIGHT HALF PLANE COMPUTATION, XN >= 0.  .AND.  (XN.NE.0.  .OR.
                    !     YN >= 0.  .OR.  M=1)
@@ -281,10 +289,10 @@ CONTAINS
                 !     UNIFORM ASYMPTOTIC EXPANSIONS FOR FNU > FNUL
                 !-----------------------------------------------------------------------
                 mr = 0
-                IF (.NOT.(xn >= 0.0_dp .AND. (xn /= 0.0_dp .OR. yn >= 0.0_dp  &
+                IF (.NOT.(xn >= 0.0_dp .AND. (abs(xn)*ULP >= spacing(0.0_dp) .OR. yn >= 0.0_dp  &
                      .OR. m /= 2))) THEN
                    mr = -mm
-                   IF (xn == 0.0_dp .AND. yn < 0.0_dp) zn = -zn
+                   IF (abs(xn)*ULP < spacing(0.0_dp) .AND. yn < 0.0_dp) zn = -zn
                 END IF
                 CALL cbunk(zn, fnu, kode, mr, nn, cy, nw, tol, elim, alim)
                 IF (nw < 0) GO TO 60
@@ -507,8 +515,6 @@ CONTAINS
          tol, xx, yy, az, fn, bb, ascle, rtol, atol
     INTEGER       :: i, inu, k, k1, k2, nn
 
-    REAL (dp), PARAMETER     :: pi = atan(1.0_DP)/4.0_DP !3.14159265358979324_dp
-    COMPLEX (dp), PARAMETER  :: cone = (1.0_dp, 0.0_dp)
 
     !***FIRST EXECUTABLE STATEMENT  CBESI
     ierr = 0
@@ -761,8 +767,6 @@ CONTAINS
     REAL (dp)     :: aa, alim, arg, dig, elim, fnul, rl, r1, r1m5, r2,  &
          tol, yy, az, fn, bb, ascle, rtol, atol
     INTEGER       :: i, inu, inuh, ir, k1, k2, nl, k
-
-    REAL (dp), PARAMETER  :: hpi = atan(1.0_DP)/8.0_DP !1.570796326794896619_dp
 
     !***FIRST EXECUTABLE STATEMENT  CBESJ
     ierr = 0
@@ -1020,7 +1024,7 @@ CONTAINS
     nz = 0
     xx = REAL(z, KIND=dp)
     yy = AIMAG(z)
-    IF (yy == 0.0_dp .AND. xx == 0.0_dp) ierr = 1
+    IF (abs(yy)*ULP < spacing(0.0_dp) .AND. abs(xx)*ULP < spacing(0.0_dp)) ierr = 1
     IF (fnu < 0.0_dp) ierr = 1
     IF (kode < 1 .OR. kode > 2) ierr = 1
     IF (n < 1) ierr = 1
@@ -1291,25 +1295,25 @@ CONTAINS
     INTEGER, INTENT(OUT)       :: nz
     INTEGER, INTENT(OUT)       :: ierr
 
-    COMPLEX (dp)  :: ci, csgn, cspn, cwrk(n), ex, zu, zv, zz, zn
+    complex(DP), parameter :: ci = CMPLX(0.0_dp, 1.0_dp, KIND=dp) !! KLK
+    COMPLEX (dp)  :: csgn, cspn, cwrk(n), ex, zu, zv, zz, zn
     REAL (dp)     :: arg, elim, ey, r1, r2, tay, xx, yy, ascle, rtol,  &
          atol, tol, aa, bb, ffnu, rhpi, r1m5
     INTEGER       :: i, ifnu, k, k1, k2, nz1, nz2, i4
     COMPLEX (dp), PARAMETER  :: cip(4) = (/ (1.0_dp, 0.0_dp), (0.0_dp, 1.0_dp),  &
          (-1.0_dp, 0.0_dp), (0.0_dp, -1.0_dp) /)
-    REAL (dp), PARAMETER     :: hpi = atan(1.0_DP)/8.0_DP !1.57079632679489662_dp
 
     !***FIRST EXECUTABLE STATEMENT  CBESY
     xx = REAL(z, KIND=dp)
     yy = AIMAG(z)
     ierr = 0
     nz = 0
-    IF (xx == 0.0_dp .AND. yy == 0.0_dp) ierr = 1
+    IF (abs(xx)*ULP < spacing(0.0_dp) .AND. abs(yy)*ULP < spacing(0.0_dp)) ierr = 1
     IF (fnu < 0.0_dp) ierr = 1
     IF (kode < 1 .OR. kode > 2) ierr = 1
     IF (n < 1) ierr = 1
     IF (ierr /= 0) RETURN
-    ci = CMPLX(0.0_dp, 1.0_dp, KIND=dp)
+    !!ci = CMPLX(0.0_dp, 1.0_dp, KIND=dp)
     zz = z
     IF (yy < 0.0_dp) zz = CONJG(z)
     zn = -ci * zz
@@ -1384,7 +1388,7 @@ CONTAINS
              zu = zu * atol
              cy(i) = zu - zv
              IF (yy < 0.0_dp) cy(i) = CONJG(cy(i))
-             IF (cy(i) == CMPLX(0.0_dp, 0.0_dp, KIND=dp) .AND. ey == 0.0_dp) nz = nz + 1
+             IF (abs(cy(i))*ULP < spacing(0.0_dp) .AND. abs(ey)*ULP < spacing(0.0_dp)) nz = nz + 1
              csgn = ci * csgn
              cspn = -ci * cspn
           END DO
@@ -1530,7 +1534,8 @@ CONTAINS
     REAL (dp), PARAMETER  :: tth = 6.66666666666666667D-01,  &
          c1 = 3.55028053887817240D-01, c2 = 2.58819403792806799D-01,  &
          coef = 1.83776298473930683D-01
-    COMPLEX (dp), PARAMETER  :: cone = (1.0_dp, 0.0_dp)
+
+
 
     !***FIRST EXECUTABLE STATEMENT  CAIRY
     ierr = 0
@@ -1646,7 +1651,7 @@ CONTAINS
        ck = -ABS(bk)
        zta = CMPLX(ck, ak, KIND=dp)
     END IF
-    IF (zi == 0.0_dp) THEN
+    IF (abs(zi)*ULP < spacing(0.0_dp)) THEN
        IF (zr <= 0.0_dp) THEN
           zta = CMPLX(0.0_dp, ak, KIND=dp)
        END IF
@@ -1868,8 +1873,7 @@ CONTAINS
     INTEGER       :: k, k1, k2, nz
     REAL (dp), PARAMETER  :: tth = 6.66666666666666667D-01,  &
          c1 = 6.14926627446000736D-01, c2 = 4.48288357353826359D-01,  &
-         coef = 5.77350269189625765D-01, pi = 3.141592653589793238_dp
-    complex(dp), PARAMETER  :: cone = (1.0_dp,0.0_dp)
+         coef = 5.77350269189625765D-01
 
     !***FIRST EXECUTABLE STATEMENT  CBIRY
     ierr = 0
@@ -1989,7 +1993,7 @@ CONTAINS
        ck = -ABS(bk)
        zta = CMPLX(ck, ak, KIND=dp)
     END IF
-    IF (zi == 0.0_dp .AND. zr <= 0.0_dp) zta = CMPLX(0.0_dp, ak, KIND=dp)
+    IF (abs(zi)*ULP < spacing(0.0_dp) .AND. zr <= 0.0_dp) zta = CMPLX(0.0_dp, ak, KIND=dp)
     aa = REAL(zta, KIND=dp)
     IF (kode /= 2) THEN
        !-----------------------------------------------------------------------
@@ -2083,17 +2087,16 @@ CONTAINS
     INTEGER, INTENT(IN)           :: ikflg
     INTEGER, INTENT(IN)           :: ipmtr
     REAL (dp), INTENT(IN)         :: tol
-    INTEGER, INTENT(IN OUT)       :: init
+    INTEGER, INTENT(INOUT)       :: init
     COMPLEX (dp), INTENT(OUT)     :: phi
-    COMPLEX (dp), INTENT(IN OUT)  :: zeta1
-    COMPLEX (dp), INTENT(IN OUT)  :: zeta2
-    COMPLEX (dp), INTENT(IN OUT)  :: total
-    COMPLEX (dp), INTENT(IN OUT)  :: cwrk(16)
+    COMPLEX (dp), INTENT(INOUT)  :: zeta1
+    COMPLEX (dp), INTENT(INOUT)  :: zeta2
+    COMPLEX (dp), INTENT(INOUT)  :: total
+    COMPLEX (dp), INTENT(INOUT)  :: cwrk(16)
 
     COMPLEX (dp)  :: cfn, crfn, s, sr, t, t2,  zn
     REAL (dp)     :: ac, rfn, test, tstr, tsti
     INTEGER       :: i, j, k, l
-    COMPLEX (dp), PARAMETER  :: czero = (0.0_dp,0.0_dp), cone = (1.0_dp, 0.0_dp)
     REAL (dp), PARAMETER     :: con(2) = (/ 3.98942280401432678D-01, &
          1.25331413731550025_dp /)
     REAL (dp), PARAMETER  :: c(120) = (/  &
@@ -2240,7 +2243,7 @@ CONTAINS
     INTEGER, INTENT(IN)           :: kode
     INTEGER, INTENT(IN)           :: ikflg
     INTEGER, INTENT(IN)           :: n
-    COMPLEX (dp), INTENT(IN OUT)  :: y(n)
+    COMPLEX (dp), INTENT(INOUT)  :: y(n)
     INTEGER, INTENT(OUT)          :: nuf
     REAL (dp), INTENT(IN)         :: tol
     REAL (dp), INTENT(IN)         :: elim
@@ -2490,8 +2493,7 @@ CONTAINS
          rho2, scle, tfnf, tst, x
     INTEGER       :: i, iaz, ifnu, inu, itime, k, kk, km, m
 
-    COMPLEX (dp), PARAMETER  :: czero = (0.0_dp,0.0_dp), cone = (1.0_dp,0.0_dp), &
-         ctwo = (2.0_dp,0.0_dp)
+    intrinsic :: log_gamma
 
     scle = 1.0E+3 * TINY(0.0_dp) / tol
     nz = 0
@@ -2569,7 +2571,7 @@ CONTAINS
     p2 = CMPLX(scle, 0.0_dp, KIND=dp)
     fnf = fnu - ifnu
     tfnf = fnf + fnf
-    bk = gamln(fkk+tfnf+1.0_dp) - gamln(fkk+1.0_dp) - gamln(tfnf+1.0_dp)
+    bk = log_gamma(fkk+tfnf+1.0_dp) - log_gamma(fkk+1.0_dp) - log_gamma(tfnf+1.0_dp)
     bk = EXP(bk)
     sum = czero
     km = kk - inu
@@ -2613,7 +2615,7 @@ CONTAINS
     pt = z
     IF (kode == 2) pt = pt - x
     p1 = -fnf * LOG(rz) + pt
-    ap = gamln(1.0_dp+fnf)
+    ap = log_gamma(1.0_dp+fnf)
     pt = p1 - ap
     !-----------------------------------------------------------------------
     !     THE DIVISION EXP(PT)/(SUM+P2) IS ALTERED TO AVOID OVERFLOW
@@ -2894,11 +2896,7 @@ CONTAINS
          1.44193250839954639D-02, 1.38184805735341786D-02, 1.32643378994276568D-02, &
          1.27517121970498651D-02, 1.22761545318762767D-02, 1.18338262398482403D-02 /)
     REAL (dp), PARAMETER  :: ex1 = 3.33333333333333333D-01,  &
-         & ex2 = 6.66666666666666667D-01, &
-         & hpi = atan(1.0_DP)/8.0_DP, &  ! 1.57079632679489662_dp
-         & pi = atan(1.0_DP)/4.0_DP, &  ! 3.14159265358979324_dp
-         & thpi = 4.71238898038468986_dp
-    COMPLEX (dp), PARAMETER  :: czero = (0.0_dp,0.0_dp), cone = (1.0_dp,0.0_dp)
+         ex2 = 6.66666666666666667D-01
 
     ! Associate arrays alfa & beta
 
@@ -3050,7 +3048,7 @@ CONTAINS
     ang = thpi
     IF (zthr < 0.0_dp .OR. zthi >= 0.0_dp) THEN
        ang = hpi
-       IF (zthr /= 0.0_dp) THEN
+       IF (abs(zthr)*ULP >= spacing(0.0_dp)) THEN
           ang = ATAN(zthi/zthr)
           IF (zthr < 0.0_dp) ang = ang + pi
        END IF
@@ -3174,11 +3172,12 @@ CONTAINS
     REAL (dp)     :: aa, acz, ak, arm, ascle, atol, az, dfnu,  &
          fnup, rak1, rs, rtr1, s, ss, x
     INTEGER       :: i, ib, iflag, il, k, l, m, nn, nw
-    complex (dp), PARAMETER  :: czero = (0.0_dp,0.0_dp), cone = (1.0_dp,0.0_dp)
+
+    intrinsic :: log_gamma
 
     nz = 0
     az = ABS(z)
-    IF (az /= 0.0_dp) THEN
+    IF (abs(az)*ULP >= spacing(0.0_dp)) THEN
        x = REAL(z, KIND=dp)
        arm = 1.0D+3 * TINY(0.0_dp)
        rtr1 = SQRT(arm)
@@ -3198,7 +3197,7 @@ CONTAINS
           !     UNDERFLOW TEST
           !-----------------------------------------------------------------------
           ak1 = ck * dfnu
-          ak = gamln(fnup)
+          ak = log_gamma(fnup)
           ak1 = ak1 - ak
           IF (kode == 2) ak1 = ak1 - x
           rak1 = REAL(ak1, KIND=dp)
@@ -3254,7 +3253,7 @@ CONTAINS
           IF (nn <= 2) RETURN
           k = nn - 2
           ak = k
-          rz = (cone+cone) / z
+          rz = ctwo / z
           IF (iflag == 1) GO TO 80
           ib = 3
 
@@ -3289,10 +3288,10 @@ CONTAINS
           GO TO 60
        END IF
        nz = n
-       IF (fnu == 0.0_dp) nz = nz - 1
+       IF (abs(fnu)*ULP < spacing(0.0_dp)) nz = nz - 1
     END IF
     y(1) = czero
-    IF (fnu == 0.0_dp) y(1) = cone
+    IF (abs(fnu)*ULP < spacing(0.0_dp)) y(1) = cone
     IF (n == 1) RETURN
     y(2:n) = czero
     RETURN
@@ -3334,11 +3333,6 @@ CONTAINS
          dnu2, fdn, rtr1, s, sgn, sqk, x, yy
     INTEGER       :: i, ib, il, inu, j, jl, k, koded, m, nn
 
-    REAL (dp), PARAMETER     :: pi = atan(1.0_DP)/4.0_DP, &  ! 3.14159265358979324_dp
-         & rtpi = 0.159154943091895336_dp
-    ! rtpi = reciprocal of 2.pi
-    COMPLEX (dp), PARAMETER  :: czero = (0.0_dp,0.0_dp), cone = (1.0_dp,0.0_dp)
-
     nz = 0
     az = ABS(z)
     x = REAL(z, KIND=dp)
@@ -3374,7 +3368,7 @@ CONTAINS
        jl = int(rl + rl + 2)
        yy = AIMAG(z)
        p1 = czero
-       IF (yy /= 0.0_dp) THEN
+       IF (abs(yy)*ULP >= spacing(0.0_dp)) THEN
           !-----------------------------------------------------------------------
           !     CALCULATE EXP(PI*(0.5+FNU+N-IL)*I) TO MINIMIZE LOSSES OF
           !     SIGNIFICANCE WHEN FNU OR N IS LARGE
@@ -3424,7 +3418,7 @@ CONTAINS
        nn = n
        k = nn - 2
        ak = k
-       rz = (cone+cone) / z
+       rz = ctwo / z
        ib = 3
        DO  i = ib, nn
           y(k) = CMPLX(ak+fnu, 0.0_dp, KIND=dp) * rz * y(k+1) + y(k+2)
@@ -3463,9 +3457,9 @@ CONTAINS
     INTEGER, INTENT(IN)        :: n
     COMPLEX (dp), INTENT(OUT)  :: y(n)
     INTEGER, INTENT(OUT)       :: nz
-    REAL (dp), INTENT(IN OUT)  :: tol
-    REAL (dp), INTENT(IN OUT)  :: elim
-    REAL (dp), INTENT(IN OUT)  :: alim
+    REAL (dp), INTENT(INOUT)  :: tol
+    REAL (dp), INTENT(INOUT)  :: elim
+    REAL (dp), INTENT(INOUT)  :: alim
 
     REAL (dp)  :: ax, ay, xx, yy
 
@@ -3523,8 +3517,6 @@ CONTAINS
          fmr, fn, fnf, rs1, sgn, spn, x
     INTEGER       :: i, ib, iflag, ifn, il, init(2), inu, iuf, k, kdflg, kflag, &
          kk, m, nw, j, ipard, initd, ic
-    COMPLEX (dp), PARAMETER  :: czero = (0.0_dp,0.0_dp), cone = (1.0_dp,0.0_dp)
-    REAL (dp), PARAMETER     :: pi = atan(1.0_DP)/4.0_DP !3.14159265358979324_dp
 
     kdflg = 1
     nz = 0
@@ -3610,7 +3602,7 @@ CONTAINS
        y(i) = czero
        nz = nz + 1
        IF (i /= 1) THEN
-          IF (y(i-1) /= czero) THEN
+          IF (abs(y(i-1))*ULP >= spacing(0.0_dp)) THEN
              y(i-1) = czero
              nz = nz + 1
           END IF
@@ -3787,7 +3779,7 @@ CONTAINS
        y(kk) = s1 * cspn + s2
        kk = kk - 1
        cspn = -cspn
-       IF (c2 == czero) THEN
+       IF (abs(c2)*ULP < spacing(0.0_dp)) THEN
           kdflg = 1
           CYCLE
        END IF
@@ -3888,13 +3880,10 @@ CONTAINS
          c2m, c2r, crsc, cscl, fmr, fn, fnf, rs1, sar, sgn, spn, x, yy
     INTEGER       :: i, ib, iflag, ifn, il, in, inu, iuf, k, kdflg, kflag, kk,  &
          nai, ndai, nw, idum, j, ipard, ic
-    COMPLEX (dp), PARAMETER  :: czero = (0.0_dp,0.0_dp), cone = (1.0_dp,0.0_dp),  &
-         ci = (0.0_dp,1.0_dp),   &
+    COMPLEX (dp), PARAMETER  :: ci = (0.0_dp,1.0_dp),   &
          cr1 = (1.0_dp, 1.73205080756887729_dp),  &
          cr2 = (-0.5_dp, -8.66025403784438647D-01)
-    REAL (dp), PARAMETER     :: hpi = atan(1.0_DP)/8.0_DP,  & ! 1.57079632679489662_dp
-         pi =  atan(1.0_DP)/4.0_DP, &  ! 3.14159265358979324_dp,
-         aic = 1.26551212348464539_dp
+    REAL (dp), PARAMETER     :: aic = 1.26551212348464539_dp
     COMPLEX (dp), PARAMETER  :: cip(4) = (/ (1.0_dp,0.0_dp), (0.0_dp,-1.0_dp),  &
          (-1.0_dp,0.0_dp), (0.0_dp,1.0_dp) /)
 
@@ -4010,7 +3999,7 @@ CONTAINS
        cs = -ci * cs
        nz = nz + 1
        IF (i /= 1) THEN
-          IF (y(i-1) /= czero) THEN
+          IF (abs(y(i-1))*ULP >= spacing(0.0_dp)) THEN
              y(i-1) = czero
              nz = nz + 1
           END IF
@@ -4197,7 +4186,7 @@ CONTAINS
        kk = kk - 1
        cspn = -cspn
        cs = -cs * ci
-       IF (c2 == czero) THEN
+       IF (abs(c2)*ULP < spacing(0.0_dp)) THEN
           kdflg = 1
           CYCLE
        END IF
@@ -4469,7 +4458,6 @@ CONTAINS
          rz, sum, s1, s2, zeta1, zeta2, cy(2)
     REAL (dp)     :: aphi, ascle, bry(3), c2i, c2m, c2r, fn, rs1, yy
     INTEGER       :: i, iflag, init, k, m, nd, nn, nuf, nw
-    COMPLEX (dp), PARAMETER  :: czero = (0.0_dp,0.0_dp), cone = (1.0_dp,0.0_dp)
 
     nz = 0
     nd = n
@@ -4654,12 +4642,10 @@ CONTAINS
     REAL (dp)     :: aarg, ang, aphi, ascle, ay, bry(3), car, c2i, c2m,  &
          c2r, fn, rs1, sar, yy
     INTEGER       :: i, iflag, in, inu, j, k, nai, nd, ndai, nn, nuf, nw, idum
-    COMPLEX (dp), PARAMETER  :: czero = (0.0_dp,0.0_dp), cone = (1.0_dp,0.0_dp), &
-         ci = (0.0_dp,1.0_dp)
+    COMPLEX (dp), PARAMETER  :: ci = (0.0_dp,1.0_dp)
     COMPLEX (dp), PARAMETER  :: cip(4) = (/ (1.0_dp,0.0_dp), (0.0_dp,1.0_dp),  &
          (-1.0_dp,0.0_dp), (0.0_dp,-1.0_dp) /)
-    REAL (dp), PARAMETER     :: hpi = atan(1.0_DP)/4.0_DP, &  ! 1.57079632679489662_dp
-         & aic = 1.265512123484645396_dp
+    REAL (dp), PARAMETER     :: aic = 1.265512123484645396_dp
 
     nz = 0
     nd = n
@@ -4864,12 +4850,12 @@ CONTAINS
     !***END PROLOGUE  CS1S2
 
     COMPLEX (dp), INTENT(IN)      :: zr
-    COMPLEX (dp), INTENT(IN OUT)  :: s1
-    COMPLEX (dp), INTENT(IN OUT)  :: s2
+    COMPLEX (dp), INTENT(INOUT)  :: s1
+    COMPLEX (dp), INTENT(INOUT)  :: s2
     INTEGER, INTENT(OUT)          :: nz
     REAL (dp), INTENT(IN)         :: ascle
     REAL (dp), INTENT(IN)         :: alim
-    INTEGER, INTENT(IN OUT)       :: iuf
+    INTEGER, INTENT(INOUT)       :: iuf
 
     COMPLEX (dp)  :: c1, s1d
     REAL (dp)     :: aa, aln, as1, as2, xx
@@ -4881,8 +4867,8 @@ CONTAINS
     as2 = ABS(s2)
     aa = REAL(s1, KIND=dp)
     aln = AIMAG(s1)
-    IF (aa /= 0.0_dp .OR. aln /= 0.0_dp) THEN
-       IF (as1 /= 0.0_dp) THEN
+    IF (abs(aa)*ULP >= spacing(0.0_dp) .OR. abs(aln)*ULP >= spacing(0.0_dp)) THEN
+       IF (abs(as1)*ULP >= spacing(0.0_dp)) THEN
           xx = REAL(zr, KIND=dp)
           aln = -xx - xx + LOG(as1)
           s1d = s1
@@ -4917,7 +4903,7 @@ CONTAINS
     !***ROUTINES CALLED  (NONE)
     !***END PROLOGUE  CSHCH
 
-    COMPLEX (dp), INTENT(IN OUT)  :: z
+    COMPLEX (dp), INTENT(INOUT)  :: z
     COMPLEX (dp), INTENT(OUT)     :: csh
     COMPLEX (dp), INTENT(OUT)     :: cch
 
@@ -4964,8 +4950,6 @@ CONTAINS
          rap1, rho, test, test1
     INTEGER       :: i, id, idnu, inu, itime, k, kk, magz
 
-    complex (dp), PARAMETER  :: czero = (0.0_dp,0.0_dp), cone = (1.0_dp,0.0_dp)
-
     az = ABS(z)
     inu = int(fnu)
     idnu = inu + n - 1
@@ -4976,7 +4960,7 @@ CONTAINS
     id = idnu - magz - 1
     itime = 1
     k = 1
-    rz = (cone+cone) / z
+    rz = ctwo / z
     t1 = fnup * rz
     p2 = -t1
     p1 = cone
@@ -5026,7 +5010,7 @@ CONTAINS
        p2 = pt
        t1 = t1 - cone
     END DO
-    IF (REAL(p1, KIND=dp) == 0.0_dp .AND. AIMAG(p1) == 0.0_dp) THEN
+    IF (abs(real(p1))*ULP < spacing(0.0_dp) .AND. abs(AIMAG(p1))*ULP < spacing(0.0_dp)) THEN
        p1 = CMPLX(tol, tol, KIND=dp)
     END IF
     cy(n) = p2 / p1
@@ -5037,7 +5021,7 @@ CONTAINS
     cdfnu = fnu * rz
     DO  i = 2, n
        pt = cdfnu + t1 * rz + cy(k+1)
-       IF (REAL(pt, KIND=dp) == 0.0_dp .AND. AIMAG(pt) == 0.0_dp) THEN
+       IF (abs(REAL(pt))*ULP < spacing(0.0_dp) .AND. abs(AIMAG(pt))*ULP < spacing(0.0_dp)) THEN
           pt = CMPLX(tol, tol, KIND=dp)
        END IF
        cy(k) = cone / pt
@@ -5078,18 +5062,15 @@ CONTAINS
 
     INTEGER, PARAMETER       :: kmax = 30
     REAL (dp), PARAMETER     :: r1 = 2.0_dp
-    COMPLEX (dp), PARAMETER  :: czero = (0.0_dp,0.0_dp), cone = (1.0_dp,0.0_dp), &
-         ctwo = (2.0_dp,0.0_dp)
 
-    REAL (dp), PARAMETER  :: pi = 3.14159265358979324_dp,  &
-         rthpi = 1.25331413731550025_dp, spi = 1.90985931710274403_dp,  &
-         hpi = 1.57079632679489662_dp, fpi = 1.89769999331517738_dp,  &
-         tth = 6.66666666666666666D-01
+    REAL (dp), PARAMETER  :: fpi = 1.89769999331517738_dp, tth = 6.66666666666666666D-01
 
     REAL (dp), PARAMETER  :: cc(8) = (/ 5.77215664901532861D-01,  &
          -4.20026350340952355D-02, -4.21977345555443367D-02, 7.21894324666309954D-03, &
          -2.15241674114950973D-04, -2.01348547807882387D-05, 1.13302723198169588D-06, &
          6.11609510448141582D-09 /)
+
+    intrinsic :: log_gamma
 
     xx = REAL(z, KIND=dp)
     yy = AIMAG(z)
@@ -5111,7 +5092,7 @@ CONTAINS
     rz = ctwo / z
     inu = int(fnu + 0.5_dp)
     dnu = fnu - inu
-    IF (ABS(dnu) /= 0.5_dp) THEN
+    IF (ABS(dnu - 0.5_DP)*ULP >= spacing(0.0_dp)) THEN
        dnu2 = 0.0_dp
        IF (ABS(dnu) > tol) dnu2 = dnu * dnu
        IF (caz <= r1) THEN
@@ -5122,7 +5103,7 @@ CONTAINS
           smu = LOG(rz)
           fmu = smu * dnu
           CALL cshch(fmu, csh, cch)
-          IF (dnu /= 0.0_dp) THEN
+          IF (abs(dnu)*ULP >= spacing(0.0_dp)) THEN
              fc = dnu * pi
              fc = fc / SIN(fc)
              smu = csh / dnu
@@ -5131,7 +5112,7 @@ CONTAINS
           !-----------------------------------------------------------------------
           !     GAM(1-Z)*GAM(1+Z)=PI*Z/SIN(PI*Z), T1=1/GAM(1-DNU), T2=1/GAM(1+DNU)
           !-----------------------------------------------------------------------
-          t2 = EXP(-gamln(a2))
+          t2 = EXP(-log_gamma(a2))
           t1 = 1.0_dp / (t2*fc)
           IF (ABS(dnu) <= 0.1_dp) THEN
              !-----------------------------------------------------------------------
@@ -5235,15 +5216,15 @@ CONTAINS
        coef = coef * pt
     END IF
 
-50  IF (ABS(dnu) == 0.5_dp) GO TO 210
+50  IF (ABS(dnu - 0.5_DP)*ULP < spacing(0.0_dp)) GO TO 210
     !-----------------------------------------------------------------------
     !     MILLER ALGORITHM FOR ABS(Z) > R1
     !-----------------------------------------------------------------------
     ak = COS(pi*dnu)
     ak = ABS(ak)
-    IF (ak == 0.0_dp) GO TO 210
+    IF (abs(ak)*ULP < spacing(0.0_dp)) GO TO 210
     fhs = ABS(0.25_dp - dnu2)
-    IF (fhs == 0.0_dp) GO TO 210
+    IF (abs(fhs)*ULP < spacing(0.0_dp)) GO TO 210
     !-----------------------------------------------------------------------
     !     COMPUTE R2=F(E). IF ABS(Z) >= R2, USE FORWARD RECURRENCE TO
     !     DETERMINE THE BACKWARD INDEX K. R2=F(E) IS A STRAIGHT LINE ON
@@ -5254,7 +5235,7 @@ CONTAINS
     t1 = MAX(t1,12.0_dp)
     t1 = MIN(t1,60.0_dp)
     t2 = tth * t1 - 6.0_dp
-    IF (xx == 0.0_dp) THEN
+    IF (abs(xx)*ULP < spacing(0.0_dp)) THEN
        t1 = hpi
     ELSE
        t1 = ATAN(yy/xx)
@@ -5532,7 +5513,7 @@ CONTAINS
     COMPLEX (dp), INTENT(OUT)  :: y(n)
     INTEGER, INTENT(OUT)       :: nz
     COMPLEX (dp), INTENT(IN)   :: rz
-    REAL (dp), INTENT(IN OUT)  :: ascle
+    REAL (dp), INTENT(INOUT)  :: ascle
     REAL (dp), INTENT(IN)      :: tol
     REAL (dp), INTENT(IN)      :: elim
 
@@ -5653,19 +5634,17 @@ CONTAINS
     INTEGER, INTENT(IN)        :: n
     COMPLEX (dp), INTENT(OUT)  :: y(n)
     INTEGER, INTENT(OUT)       :: nz
-    REAL (dp), INTENT(IN OUT)  :: rl
-    REAL (dp), INTENT(IN OUT)  :: fnul
+    REAL (dp), INTENT(INOUT)  :: rl
+    REAL (dp), INTENT(INOUT)  :: fnul
     REAL (dp), INTENT(IN)      :: tol
-    REAL (dp), INTENT(IN OUT)  :: elim
-    REAL (dp), INTENT(IN OUT)  :: alim
+    REAL (dp), INTENT(INOUT)  :: elim
+    REAL (dp), INTENT(INOUT)  :: alim
 
     COMPLEX (dp)  :: ck, cs, cscl, cscr, csgn, cspn, css(3), csr(3), c1, c2,  &
          rz, sc1, sc2, st, s1, s2, zn, cy(2)
     REAL (dp)     :: arg, ascle, as2, bscle, bry(3), cpn, c1i, c1m, c1r,  &
          fmr, sgn, spn, yy
     INTEGER       :: i, inu, iuf, kflag, nn, nw
-    REAL (dp), PARAMETER     :: pi = atan(1.0_DP)/4.0_DP !3.14159265358979324_dp
-    COMPLEX (dp), PARAMETER  :: cone = (1.0_dp, 0.0_dp)
 
     nz = 0
     zn = -z
@@ -5913,175 +5892,6 @@ CONTAINS
   END SUBROUTINE cbinu
 
 
-
-  FUNCTION gamln(z) RESULT(fn_val)
-
-    ! KLK, replaced with call to intrinsic function
-    ! N.B. Argument IERR has been removed.
-
-    !***BEGIN PROLOGUE  GAMLN
-    !***DATE WRITTEN   830501   (YYMMDD)
-    !***REVISION DATE  830501   (YYMMDD)
-    !***CATEGORY NO.  B5F
-    !***KEYWORDS  GAMMA FUNCTION,LOGARITHM OF GAMMA FUNCTION
-    !***AUTHOR  AMOS, DONALD E., SANDIA NATIONAL LABORATORIES
-    !***PURPOSE  TO COMPUTE THE LOGARITHM OF THE GAMMA FUNCTION
-    !***DESCRIPTION
-
-    !   GAMLN COMPUTES THE NATURAL LOG OF THE GAMMA FUNCTION FOR Z > 0.
-    !   THE ASYMPTOTIC EXPANSION IS USED TO GENERATE VALUES GREATER THAN ZMIN
-    !   WHICH ARE ADJUSTED BY THE RECURSION G(Z+1)=Z*G(Z) FOR Z <= ZMIN.
-    !   THE FUNCTION WAS MADE AS PORTABLE AS POSSIBLE BY COMPUTIMG ZMIN FROM THE
-    !   NUMBER OF BASE 10 DIGITS IN A WORD,
-    !   RLN = MAX(-LOG10(EPSILON(0.0_dp)), 0.5E-18)
-    !   LIMITED TO 18 DIGITS OF (RELATIVE) ACCURACY.
-
-    !   SINCE INTEGER ARGUMENTS ARE COMMON, A TABLE LOOK UP ON 100
-    !   VALUES IS USED FOR SPEED OF EXECUTION.
-
-    !  DESCRIPTION OF ARGUMENTS
-
-    !      INPUT
-    !        Z      - REAL ARGUMENT, Z > 0.0_dp
-
-    !      OUTPUT
-    !        GAMLN  - NATURAL LOG OF THE GAMMA FUNCTION AT Z
-    !        IERR   - ERROR FLAG
-    !                 IERR=0, NORMAL RETURN, COMPUTATION COMPLETED
-    !                 IERR=1, Z <= 0.0_dp,    NO COMPUTATION
-
-    !***REFERENCES  COMPUTATION OF BESSEL FUNCTIONS OF COMPLEX ARGUMENT
-    !                 BY D. E. AMOS, SAND83-0083, MAY 1983.
-    !***ROUTINES CALLED  I1MACH,R1MACH
-    !***END PROLOGUE  GAMLN
-
-    REAL (dp), INTENT(IN)  :: z
-    REAL (dp)              :: fn_val
-    
-    intrinsic :: log_gamma
-    fn_val = log_gamma(z)
-
-!!$
-!!$    INTEGER    :: i, i1m, k, mz, nz
-!!$    REAL (dp)  :: fln, fz, rln, s, tlg, trm, tst, t1, wdtol,  &
-!!$         zdmy, zinc, zm, zmin, zp, zsq
-!!$
-!!$    !           LNGAMMA(N), N=1,100
-!!$    REAL (dp), PARAMETER  :: gln(100) = (/ 0.00000000000000000_dp,  &
-!!$         0.00000000000000000_dp, 6.93147180559945309D-01, 1.79175946922805500_dp,   &
-!!$         3.17805383034794562_dp, 4.78749174278204599_dp, 6.57925121201010100_dp,    &
-!!$         8.52516136106541430_dp, 1.06046029027452502D+01, 1.28018274800814696D+01,  &
-!!$         1.51044125730755153D+01, 1.75023078458738858D+01, 1.99872144956618861D+01, &
-!!$         2.25521638531234229D+01, 2.51912211827386815D+01, 2.78992713838408916D+01, &
-!!$         3.06718601060806728D+01, 3.35050734501368889D+01, 3.63954452080330536D+01, &
-!!$         3.93398841871994940D+01, 4.23356164607534850D+01, 4.53801388984769080D+01, &
-!!$         4.84711813518352239D+01, 5.16066755677643736D+01, 5.47847293981123192D+01, &
-!!$         5.80036052229805199D+01, 6.12617017610020020D+01, 6.45575386270063311D+01, &
-!!$         6.78897431371815350D+01, 7.12570389671680090D+01, 7.46582363488301644D+01, &
-!!$         7.80922235533153106D+01, 8.15579594561150372D+01, 8.50544670175815174D+01, &
-!!$         8.85808275421976788D+01, 9.21361756036870925D+01, 9.57196945421432025D+01, &
-!!$         9.93306124547874269D+01, 1.02968198614513813D+02, 1.06631760260643459D+02, &
-!!$         1.10320639714757395D+02, 1.14034211781461703D+02, 1.17771881399745072D+02, &
-!!$         1.21533081515438634D+02, 1.25317271149356895D+02, 1.29123933639127215D+02, &
-!!$         1.32952575035616310D+02, 1.36802722637326368D+02, 1.40673923648234259D+02, &
-!!$         1.44565743946344886D+02, 1.48477766951773032D+02, 1.52409592584497358D+02, &
-!!$         1.56360836303078785D+02, 1.60331128216630907D+02, 1.64320112263195181D+02, &
-!!$         1.68327445448427652D+02, 1.72352797139162802D+02, 1.76395848406997352D+02, &
-!!$         1.80456291417543771D+02, 1.84533828861449491D+02, 1.88628173423671591D+02, &
-!!$         1.92739047287844902D+02, 1.96866181672889994D+02, 2.01009316399281527D+02, &
-!!$         2.05168199482641199D+02, 2.09342586752536836D+02, 2.13532241494563261D+02, &
-!!$         2.17736934113954227D+02, 2.21956441819130334D+02, 2.26190548323727593D+02, &
-!!$         2.30439043565776952D+02, 2.34701723442818268D+02, 2.38978389561834323D+02, &
-!!$         2.43268849002982714D+02, 2.47572914096186884D+02, 2.51890402209723194D+02, &
-!!$         2.56221135550009525D+02, 2.60564940971863209D+02, 2.64921649798552801D+02, &
-!!$         2.69291097651019823D+02, 2.73673124285693704D+02, 2.78067573440366143D+02, &
-!!$         2.82474292687630396D+02, 2.86893133295426994D+02, 2.91323950094270308D+02, &
-!!$         2.95766601350760624D+02, 3.00220948647014132D+02, 3.04686856765668715D+02, &
-!!$         3.09164193580146922D+02, 3.13652829949879062D+02, 3.18152639620209327D+02, &
-!!$         3.22663499126726177D+02, 3.27185287703775217D+02, 3.31717887196928473D+02, &
-!!$         3.36261181979198477D+02, 3.40815058870799018D+02, 3.45379407062266854D+02, &
-!!$         3.49954118040770237D+02, 3.54539085519440809D+02, 3.59134205369575399D+02 /)
-!!$
-!!$    !             COEFFICIENTS OF ASYMPTOTIC EXPANSION
-!!$    REAL (dp), PARAMETER  :: cf(22) = (/  &
-!!$         8.33333333333333333D-02, -2.77777777777777778D-03,  &
-!!$         7.93650793650793651D-04, -5.95238095238095238D-04,  &
-!!$         8.41750841750841751D-04, -1.91752691752691753D-03,  &
-!!$         6.41025641025641026D-03, -2.95506535947712418D-02,  &
-!!$         1.79644372368830573D-01, -1.39243221690590112_dp,   &
-!!$         1.34028640441683920D+01, -1.56848284626002017D+02,  &
-!!$         2.19310333333333333D+03, -3.61087712537249894D+04,  &
-!!$         6.91472268851313067D+05, -1.52382215394074162D+07,  &
-!!$         3.82900751391414141D+08, -1.08822660357843911D+10,  &
-!!$         3.47320283765002252D+11, -1.23696021422692745D+13,  &
-!!$         4.88788064793079335D+14, -2.13203339609193739D+16 /)
-!!$
-!!$    !             LN(2*PI)
-!!$    REAL (dp), PARAMETER  :: con = 1.83787706640934548_dp
-!!$
-!!$    !***FIRST EXECUTABLE STATEMENT  GAMLN
-!!$    IF (z > 0.0_dp) THEN
-!!$       IF (z <= 101.0_dp) THEN
-!!$          nz = int(z)
-!!$          fz = z - nz
-!!$          IF (fz <= 0.0_dp) THEN
-!!$             IF (nz <= 100) THEN
-!!$                fn_val = gln(nz)
-!!$                RETURN
-!!$             END IF
-!!$          END IF
-!!$       END IF
-!!$       wdtol = EPSILON(0.0_dp)
-!!$       wdtol = MAX(wdtol, 0.5D-18)
-!!$       i1m = DIGITS(0.0_dp)
-!!$       rln = LOG10( REAL( RADIX(0.0_dp), KIND=dp) ) * i1m
-!!$       fln = MIN(rln,20.0_dp)
-!!$       fln = MAX(fln,3.0_dp)
-!!$       fln = fln - 3.0_dp
-!!$       zm = 1.8000_dp + 0.3875_dp * fln
-!!$       mz = int(zm + 1)
-!!$       zmin = mz
-!!$       zdmy = z
-!!$       zinc = 0.0_dp
-!!$       IF (z < zmin) THEN
-!!$          zinc = zmin - nz
-!!$          zdmy = z + zinc
-!!$       END IF
-!!$       zp = 1.0_dp / zdmy
-!!$       t1 = cf(1) * zp
-!!$       s = t1
-!!$       IF (zp >= wdtol) THEN
-!!$          zsq = zp * zp
-!!$          tst = t1 * wdtol
-!!$          DO  k = 2, 22
-!!$             zp = zp * zsq
-!!$             trm = cf(k) * zp
-!!$             IF (ABS(trm) < tst) EXIT
-!!$             s = s + trm
-!!$          END DO
-!!$       END IF
-!!$
-!!$       IF (zinc == 0.0_dp) THEN
-!!$          tlg = LOG(z)
-!!$          fn_val = z * (tlg-1.0_dp) + 0.5_dp * (con-tlg) + s
-!!$          RETURN
-!!$       END IF
-!!$       zp = 1.0_dp
-!!$       nz = int(zinc)
-!!$       DO  i = 1, nz
-!!$          zp = zp * (z + (i-1))
-!!$       END DO
-!!$       tlg = LOG(zdmy)
-!!$       fn_val = zdmy * (tlg-1.0_dp) - LOG(zp) + 0.5_dp * (con-tlg) + s
-!!$       RETURN
-!!$    END IF
-!!$
-!!$    WRITE(*, *) '** ERROR: Zero or -ve argument for function GAMLN **'
-    RETURN
-  END FUNCTION gamln
-
-
-
   SUBROUTINE cuchk(y, nz, ascle, tol)
     !***BEGIN PROLOGUE  CUCHK
     !***REFER TO CSERI,CUOIK,CUNK1,CUNK2,CUNI1,CUNI2,CKSCL
@@ -6139,7 +5949,7 @@ CONTAINS
     COMPLEX (dp), INTENT(IN)   :: z
     REAL (dp), INTENT(IN)      :: fnu
     INTEGER, INTENT(IN)        :: kode
-    INTEGER, INTENT(IN OUT)    :: mr
+    INTEGER, INTENT(INOUT)    :: mr
     INTEGER, INTENT(IN)        :: n
     COMPLEX (dp), INTENT(OUT)  :: y(n)
     INTEGER, INTENT(OUT)       :: nz
@@ -6151,7 +5961,6 @@ CONTAINS
     COMPLEX (dp)  :: csgn, cspn, c1, c2, zn, cy(2)
     REAL (dp)     :: arg, ascle, az, cpn, dfnu, fmr, sgn, spn, yy
     INTEGER       :: inu, iuf, nn, nw
-    REAL (dp), PARAMETER  :: pi = 3.14159265358979324_dp
 
     nz = 0
     zn = -z
@@ -6221,4 +6030,4 @@ CONTAINS
     RETURN
   END SUBROUTINE cacai
 
-END Module CBessel
+END Module Complex_Bessel
