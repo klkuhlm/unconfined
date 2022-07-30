@@ -26,7 +26,7 @@
 DEBUG = -O0 -g -Wall -Wextra -fcheck=all -fno-realloc-lhs -fall-intrinsics
 
 # for MS-Windows comment out the following line, since OpenMP doesn't typically work with
-# minGW. I think it might work with cygwin, though.
+# minGW. I think it might work with cygwin, though. I haven't tested this recently
 OMP = -fopenmp
 
 PERF = -O3 -march=native -flto
@@ -38,11 +38,18 @@ F90 = gfortran
 CC = gcc
 CFLAGS += -I/usr/local/include/flint  
 
-# if you don't want to use the ARB library (and the Mishra-Neuman model option 0 that depends on it)
-# just comment out the -DUSE_ARB_LIBRARY in the next two lines.
+
+# if you want to use the ARB library (and the Mishra-Neuman model option 0 that depends on it)
+# specify ARB=1 (or any other value) at the command line or export as a variable visible to make
 # All other models will still be available.
-DEBUG += -cpp #-DUSE_ARB_LIBRARY
-PERF += -cpp #-DUSE_ARB_LIBRARY
+
+ifdef ARB
+  DEBUG += -cpp -DUSE_ARB_LIBRARY
+  PERF += -cpp -DUSE_ARB_LIBRARY
+else
+  DEBUG += -cpp
+  PERF += -cpp
+endif
 
 ##################################################
 # user typically shouldn't have to ever modify anything below this point
@@ -68,22 +75,27 @@ LD = $(F90) -fbacktrace
 
 ####### default optimized (no debugging) target ##########################
 # use OMP in optimized link step
-driver: $(OPTOBJS) #bessel_arb_wrapper.opt.o
-	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS) #bessel_arb_wrapper.opt.o -larb -lflint -lgmp
 
-####### compiler debugging ###
-debug_driver: $(DEBUGOBJS) #bessel_arb_wrapper.debug.o
-	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS) #bessel_arb_wrapper.debug.o -larb -lflint -lgmp
-
-
+ifdef ARB
+driver: $(OPTOBJS) bessel_arb_wrapper.opt.o  
+	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS) bessel_arb_wrapper.opt.o -larb -lflint -lgmp
+debug_driver: $(DEBUGOBJS) bessel_arb_wrapper.debug.o
+	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS) bessel_arb_wrapper.debug.o -larb -lflint -lgmp
 ## these assume arb c library (and its dependencies like flint, mpfr, and gmp)
 ## are compiled with a compatible c compiler (e.g., gcc & gfortran)
-#bessel_arb_wrapper.opt.o:bessel_arb_wrapper.c
-#	$(CC) -c $(CFLAGS) -O3 -march=native -larb -o $@ $<
-#
-#bessel_arb_wrapper.debug.o:bessel_arb_wrapper.c
-#	$(CC) -Wall -Wextra -c $(CFLAGS) -O0 -g -larb -o $@ $<
+bessel_arb_wrapper.opt.o:bessel_arb_wrapper.c
+	$(CC) -c $(CFLAGS) -O3 -march=native -larb -o $@ $<
 
+bessel_arb_wrapper.debug.o:bessel_arb_wrapper.c
+	$(CC) -Wall -Wextra -c $(CFLAGS) -O0 -g -larb -o $@ $<
+else
+driver: $(OPTOBJS)
+	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS)
+debug_driver: $(DEBUGOBJS)
+	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS)
+endif
+
+####### compiler debugging ###
 
 complex_bessel.mod:cbessel.f90
 
@@ -110,9 +122,15 @@ types.opt.o types.mod: types.f90 constants.mod
 invlap.opt.o invlap.mod: invlap.f90 constants.mod types.mod
 utility.opt.o utility.mod: utility.f90 constants.mod
 time.opt.o time.mod: time.f90 constants.mod types.mod
+ifdef ARB
 laplace_hankel_solutions.opt.o laplace_hankel_solutions.mod: \
  laplace_hankel_solutions.f90 constants.mod types.mod time.mod \
- utility.mod cbessel.mod #bessel_arb_wrapper.opt.o
+ utility.mod cbessel.mod bessel_arb_wrapper.opt.o
+else
+laplace_hankel_solutions.opt.o laplace_hankel_solutions.mod: \
+ laplace_hankel_solutions.f90 constants.mod types.mod time.mod \
+ utility.mod cbessel.mod
+endif
 driver_io.opt.o driver_io.mod: driver_io.f90 constants.mod types.mod \
  utility.mod
 integration.opt.o integration.mod: integration.f90 constants.mod types.mod
@@ -125,9 +143,15 @@ types.debug.o types.mod: types.f90 constants.mod
 invlap.debug.o invlap.mod: invlap.f90 constants.mod types.mod
 utility.debug.o utility.mod: utility.f90 constants.mod
 time.debug.o time.mod: time.f90 constants.mod types.mod
+ifdef ARB
 laplace_hankel_solutions.debug.o laplace_hankel_solutions.mod: \
  laplace_hankel_solutions.f90 constants.mod types.mod time.mod \
- utility.mod cbessel.mod #bessel_arb_wrapper.debug.o
+ utility.mod cbessel.mod bessel_arb_wrapper.debug.o
+else
+laplace_hankel_solutions.debug.o laplace_hankel_solutions.mod: \
+ laplace_hankel_solutions.f90 constants.mod types.mod time.mod \
+ utility.mod cbessel.mod
+endif
 driver_io.debug.o driver_io.mod: driver_io.f90 constants.mod types.mod \
  utility.mod
 integration.debug.o integration.mod: integration.f90 constants.mod types.mod
