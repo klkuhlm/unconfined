@@ -8,11 +8,11 @@ The solutions implemented include:
 ------------------------------------------
 1. Mishra & Neuman (2010,2011) : Unsaturated/saturated flow to a partially penetrating well. http://dx.doi.org/10.1029/2009WR008899 http://dx.doi.org/10.1029/2010WR010177 NB: The Mishra & Neuman solutions given in the WRR papers are numerically somewhat ill-behaved. his simulator implements them in three different ways.
 
-  1a. One approach to solve M/N follows the Malama (2014) http://dx.doi.org/10.1002/2013WR014909 simplified formulation - replacing the no-flow boundary condition at the land surface with a "finiteness" boundary condition.  This solution has only been derived so far for the fully penetrating no wellbore storage case.
-
-  1b. A second approach to solve M/N discritizes the vadose zone using finite differences (in Laplace-Hankel space).  This approach works and can be used as a "check" on the algebra and mathematics in the closed-form Laplace-space approaches.  This allows partial penetration, but no wellbore storage for now.
-  
-  1c. The third approach to solving M/N implements the solution listed in their paper close to the notation used in that paper. Because this approach used to fail for some combinations of parameters, it is now computed in quad precision. The J and Y Bessel functions of complex argument and fractional order needed for this solution at quad-precision accuracy using arb (http://fredrikj.net/arb/) - an arbitrary precision special function library written in C. This is a significant new dependency, since it requires the flint, mpfr, and gmp libraries. Many thanks to Fredrik Johansson who helped out using his library.
+   1a. One approach to solve M/N follows the Malama (2014) http://dx.doi.org/10.1002/2013WR014909 simplified formulation - replacing the no-flow boundary condition at the land surface with a "finiteness" boundary condition.  This solution has only been derived so far for the fully penetrating no wellbore storage case.
+   
+   1b. A second approach to solve M/N discritizes the vadose zone using finite differences (in Laplace-Hankel space).  This approach works and can be used as a "check" on the algebra and mathematics in the closed-form Laplace-space approaches.  This allows partial penetration, but no wellbore storage for now.
+   
+   1c. The third approach to solving M/N implements the solution listed in their paper close to the notation used in that paper. Because this approach used to fail for some combinations of parameters, it is now computed in quad precision. The J and Y Bessel functions of complex argument and fractional order needed for this solution at quad-precision accuracy using arb (http://fredrikj.net/arb/) - an arbitrary precision special function library written in C. This is a significant new dependency, since it requires the flint, mpfr, and gmp libraries. Many thanks to Fredrik Johansson who helped out using his library.
   
 2. Malama (2011) : Alternative linearization of the moving water table boundary condition.  Basically an improvement on Neuman (1974). http://dx.doi.org/10.1016/j.jhydrol.2010.11.007
 
@@ -24,13 +24,19 @@ The solutions implemented include:
 
 6. Theis (1935) : The confined fully penetrating solution, which all other solutions build upon.
 
-The simulator is distributed as a collection of Fortran source files and a makefile.  On Linux/Unix/Mac platforms this is trivial to turn into a command-line program, by simply going to the source directory and typing:
+The simulator is distributed as a collection of Fortran source files and a makefile.  On Linux/Unix/Mac platforms this is trivial to turn into a command-line program, by simply going to the source directory and running:
 
-make
+make [driver]
 
-An unoptimized debugging version (produces some warnings that can be safely ignored) can be compiled via:
+The driver argument is implied. An unoptimized debugging version (produces some warnings that can be safely ignored) can be compiled via:
 
 make debug_driver
+
+If you want to build the ARB capabilities (only needed for the Mishra-Neuman solution), specify
+
+make ARB=1
+
+The default is to not build with ARB.
 
 On MS-Windows, you will need the mingw compilation environment (OpenMP doesn't work under mingw, though - so single thread only) or the Intel Fortran compiler (which works and provides OpenMP as well).  I have previously compiled it (Feb 2015) with the free mingw toolchain, and can either provide assistance setting this up, or provide you with a binary (I don't have access to a Windows computer now). There are a few settings in the makefile that must be changed to get it to compile using mingw (see comments there)
 
