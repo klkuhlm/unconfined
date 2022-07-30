@@ -1,5 +1,5 @@
 !
-! Copyright (c) 2012-2015 Kristopher L. Kuhlman (klkuhlm at sandia dot gov)
+! Copyright (c) 2012-2022 Kristopher L. Kuhlman (klkuhlm at sandia dot gov)
 !
 ! Permission is hereby granted, free of charge, to any person obtaining a copy
 ! of this software and associated documentation files (the "Software"), to deal
@@ -101,7 +101,7 @@ contains
           fp(1:np,1:nz) = mishraNeuman2010(a,s%zD,s,lap%p,f,w)
 #else
           stop 'ERROR: must compile code with arb dependency (and '//&
-               &'USE_ARB_LIBRARY preprocessor flag) for this option'
+               &'USE_ARB_LIBRARY preprocessor flag) for this Mishra/Neumann 2010 model, type 0'
 #endif
        case(1)
           ! Malama (finiteness condition @ land surface) version 

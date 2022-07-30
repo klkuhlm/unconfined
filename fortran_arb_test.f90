@@ -1,6 +1,7 @@
 program drive_arb
 
   ! compute bessel function using Arb
+  ! by Kris Kuhlman, with help from Frederik Johansson
 
   use, intrinsic :: iso_c_binding, only : C_FLOAT128_COMPLEX, C_FLOAT128
   

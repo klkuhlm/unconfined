@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012-2019 Kristopher L. Kuhlman (klkuhlm at sandia dot gov)
+# Copyright (c) 2012-2022 Kristopher L. Kuhlman (klkuhlm at sandia dot gov)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -41,8 +41,8 @@ CFLAGS += -I/usr/local/include/flint
 # if you don't want to use the ARB library (and the Mishra-Neuman model option 0 that depends on it)
 # just comment out the -DUSE_ARB_LIBRARY in the next two lines.
 # All other models will still be available.
-DEBUG += -cpp -DUSE_ARB_LIBRARY
-PERF += -cpp -DUSE_ARB_LIBRARY
+DEBUG += -cpp #-DUSE_ARB_LIBRARY
+PERF += -cpp #-DUSE_ARB_LIBRARY
 
 ##################################################
 # user typically shouldn't have to ever modify anything below this point
@@ -68,23 +68,21 @@ LD = $(F90) -fbacktrace
 
 ####### default optimized (no debugging) target ##########################
 # use OMP in optimized link step
-driver: $(OPTOBJS) bessel_arb_wrapper.opt.o
-	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS) \
-	bessel_arb_wrapper.opt.o -larb -lflint -lgmp
+driver: $(OPTOBJS) #bessel_arb_wrapper.opt.o
+	$(LD)  $(PERFLDFLAGS) $(OMP) -o $(OUT) $(OPTOBJS) #bessel_arb_wrapper.opt.o -larb -lflint -lgmp
 
 ####### compiler debugging ###
-debug_driver: $(DEBUGOBJS) bessel_arb_wrapper.debug.o
-	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS) \
-	bessel_arb_wrapper.debug.o -larb -lflint -lgmp
+debug_driver: $(DEBUGOBJS) #bessel_arb_wrapper.debug.o
+	$(LD) -o $(DEBUGOUT) $(DEBUGOBJS) #bessel_arb_wrapper.debug.o -larb -lflint -lgmp
 
 
-# these assume arb c library (and its dependencies like flint, mpfr, and gmp)
-# are compiled with a compatible c compiler (e.g., gcc & gfortran)
-bessel_arb_wrapper.opt.o:bessel_arb_wrapper.c
-	$(CC) -c $(CFLAGS) -O3 -march=native -larb -o $@ $<
-
-bessel_arb_wrapper.debug.o:bessel_arb_wrapper.c
-	$(CC) -Wall -Wextra -c $(CFLAGS) -O0 -g -larb -o $@ $<
+## these assume arb c library (and its dependencies like flint, mpfr, and gmp)
+## are compiled with a compatible c compiler (e.g., gcc & gfortran)
+#bessel_arb_wrapper.opt.o:bessel_arb_wrapper.c
+#	$(CC) -c $(CFLAGS) -O3 -march=native -larb -o $@ $<
+#
+#bessel_arb_wrapper.debug.o:bessel_arb_wrapper.c
+#	$(CC) -Wall -Wextra -c $(CFLAGS) -O0 -g -larb -o $@ $<
 
 
 complex_bessel.mod:cbessel.f90
@@ -114,7 +112,7 @@ utility.opt.o utility.mod: utility.f90 constants.mod
 time.opt.o time.mod: time.f90 constants.mod types.mod
 laplace_hankel_solutions.opt.o laplace_hankel_solutions.mod: \
  laplace_hankel_solutions.f90 constants.mod types.mod time.mod \
- utility.mod cbessel.mod bessel_arb_wrapper.opt.o
+ utility.mod cbessel.mod #bessel_arb_wrapper.opt.o
 driver_io.opt.o driver_io.mod: driver_io.f90 constants.mod types.mod \
  utility.mod
 integration.opt.o integration.mod: integration.f90 constants.mod types.mod
@@ -129,7 +127,7 @@ utility.debug.o utility.mod: utility.f90 constants.mod
 time.debug.o time.mod: time.f90 constants.mod types.mod
 laplace_hankel_solutions.debug.o laplace_hankel_solutions.mod: \
  laplace_hankel_solutions.f90 constants.mod types.mod time.mod \
- utility.mod cbessel.mod bessel_arb_wrapper.debug.o
+ utility.mod cbessel.mod #bessel_arb_wrapper.debug.o
 driver_io.debug.o driver_io.mod: driver_io.f90 constants.mod types.mod \
  utility.mod
 integration.debug.o integration.mod: integration.f90 constants.mod types.mod
