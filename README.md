@@ -1,5 +1,7 @@
 This is a modern Fortran (i.e., 2003/2008) well-test simulator.  It performs numerical Laplace-Hankel inversion, implementing the the main unconfined approaches in use today.  The program is free software (MIT license), which can be used, modified, or redistributed for any purpose, given the license is left intact.
 
+The publications by the author of this software (Kristopher Kuhlman) can be found at: http://kris.kuhlmans.net 
+
 This simulator is only a command-line utility, which reads a text input file, computes a solution given the inputs, and writes a simple text output file formatted for plotting using available software obtained elsewhere (e.g., MS-Excel, python matplotlib, or gnuplot).  The simulator is accurate and relatively fast, using OpenMP to execute in parallel on a multi-processor Linux or Mac computer (a recent Intel compiler is needed to create parallel executables for MS-Windows).
 
 The input parameters are explained in input-explanation.txt
@@ -52,7 +54,3 @@ The respository includes three unconfined pumping datasets for benchmarking and 
 * Bevan, 2002 (Borden, Ontario); a 12-gpm 168-hour (week long) test was obtained electronically from the authors, published in Michael Bevan's MS thesis. The aquifer was relatively thin, compared to the Cape Cod and Grand Island tests. Moisture content data and geophysical data were collected in the vadose zone before, during, and after testing. Five days of recovery data were collected.
 
 These data are available in the git repository (i.e., see borden, cape_cod, and grand-island directories of source tree).
-
-Kris Kuhlman (klkuhlm _at_ sandia _dot_ gov)
-July, 2022
-
